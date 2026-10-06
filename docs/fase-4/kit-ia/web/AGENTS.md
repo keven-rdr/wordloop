@@ -20,6 +20,8 @@ Vale junto com o `AGENTS.md` da raiz (que vence em conflito).
 - Só `stylex.create` com **tokens** (`shared/ui/tokens/*.stylex.ts`): cores, espaço, raio, tipografia, movimento. Breakpoints por `bp.*` (mobile-first); `prefers-reduced-motion` respeitado.
 - Alvo de toque ≥ 48 px; contraste WCAG 2.2 AA; sem `style={{}}` (exceto valor dinâmico via função do `stylex.create`).
 - Versões `@stylexjs/*` **exatas** e sempre juntas.
+- **Condições dentro do valor da propriedade**, nunca no nível do objeto: `transitionDuration: { default: '120ms', [bp.reduceMotion]: '0s' }`, `boxShadow: { default: …, ':active': … }` (o StyleX rejeita `[bp.x]: { … }` solto).
+- `tsc` é o TypeScript 7 (`@typescript/native`); `typescript` é um alias do TS 6 só para ferramentas (typescript-eslint, hey-api). Não troque.
 
 ## Regras de código (Sonar, aplicadas nas linhas alteradas)
 `??` em vez de `||` para valor nulável (S6606) · sem ternário aninhado (S3358) · sem `as` desnecessário (S4325) · props `Readonly` (S6759) · elemento nativo em vez de role ARIA (S6819) · sem template literal aninhado (S4624) · classes de regex concisas (S6353).

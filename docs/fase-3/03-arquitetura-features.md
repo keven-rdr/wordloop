@@ -113,7 +113,7 @@ DDL completo do estado do usuário em [schema-learning.sql](schema-learning.sql)
 
 | Risco | Mitigação |
 |---|---|
-| **TypeScript 7.0.2** (compilador novo) e ferramentas que usam a API JS (typescript-eslint, plugins) | testar no spike; plano B: fixar TS 6.x `[VERIFICAR]` |
+| ~~TypeScript 7.0.2 e ferramentas que usam a API JS~~ **Resolvido no Sprint 0a:** `typescript-eslint` e `hey-api` exigem a API do TS 6; usar `"typescript": "npm:@typescript/typescript6@^6.0.2"` + `"@typescript/native": "npm:typescript@7.0.2"` (`tsc` 7). Ver `docs/sprint-0a/spike-report.md` | convivência TS 6 (API) + TS 7 (`tsc`); reavaliar no TS 7.1 |
 | StyleX + Vite 8 + Vitest 5 + React Compiler | spike (ver 03d) |
 | `hey-api` 0.x muda de API | versão exata; geração isolada em uma pasta |
 | `oapi-codegen` só em OpenAPI 3.0 | escrever 3.0.x; Huma é a saída se 3.1 virar necessidade |

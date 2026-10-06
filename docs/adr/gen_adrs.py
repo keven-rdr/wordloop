@@ -164,6 +164,12 @@ ADRS = [
   "Pode ter menos apelo que apps com pontos: validar no teste de usabilidade.",
   "XP e ligas; barra de 5 itens com 'Ler' sempre visível (recusada pelo dono).",
   "fase-5/05-ux-ui-fluxos.md"),
+ ("TypeScript 7 nativo (`tsc`) com alias TS 6 para as ferramentas",
+  "O Sprint 0a mostrou que `typescript-eslint` e `hey-api` ainda exigem a API JS do TypeScript 6; o TS 7 não expõe API programática estável (prevista para o 7.1).",
+  "`@typescript/native` (`npm:typescript@7.0.2`) fornece o `tsc` 7 para tipagem e build; o pacote `typescript` é um alias de `@typescript/typescript6` para ferramentas que usam a API. Vite, Vitest e Biome não dependem do pacote. `skipLibCheck: true`.",
+  "Duas versões do compilador em `devDependencies` (o `tsc6` fica disponível); reavaliar a configuração quando o TS 7.1 trouxer a nova API; ADR 0013 mantém o StyleX 0.x com versões exatas.",
+  "TypeScript 6 puro (perde o `tsc` nativo); TypeScript 7 puro (quebra lint e geração do cliente); trocar de ferramenta de lint.",
+  "sprint-0a/spike-report.md"),
 ]
 
 

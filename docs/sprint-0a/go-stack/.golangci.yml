@@ -1,0 +1,19 @@
+version: "2"
+linters:
+  default: none
+  enable: [govet, errcheck, staticcheck, funlen, cyclop, depguard]
+  settings:
+    funlen: { lines: 40, statements: -1 }
+    cyclop: { max-complexity: 10 }
+    depguard:
+      rules:
+        # Camada HTTP não conhece o driver do banco (exemplo de regra de arquitetura imposta por lint)
+        http-sem-pgx:
+          files: ["**/internal/api/*.go", "!$test"]
+          deny:
+            - pkg: github.com/jackc/pgx
+              desc: "a camada HTTP não acessa o banco; passe por um caso de uso"
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters: [funlen, cyclop]

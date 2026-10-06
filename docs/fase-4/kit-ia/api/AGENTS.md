@@ -27,7 +27,9 @@ Vale junto com o `AGENTS.md` da raiz (que vence em conflito).
 ## Testes
 - Todo caso de uso tem teste de unidade; handlers e repositórios têm teste de integração (Testcontainers, tag `integration`).
 - `internal/srs`: golden vectors + testes de propriedade (`rapid`) + simulação (`cmd/srs-sim`).
-- Comando: `cd api && go test ./...` (unidade) · `go test -tags=integration ./...`.
+- Comando: `cd api && go test ./...` (unidade) · `go test -tags=integration ./...` (exige **Docker ligado**; localmente use `TESTCONTAINERS_RYUK_DISABLED=true`).
+- Lint: `golangci-lint` v2 com `.golangci.yml` e `.go-arch-lint.yml` (`deepScan: false`, `_test.go` e `gen/` excluídos), ambos validados no Sprint 0a (`docs/sprint-0a/go-stack`).
+- Geração: `go generate ./...` (`oapi-codegen` e `sqlc` com versão fixa). Migração com função PL/pgSQL: envolver em `-- +goose StatementBegin/End`.
 
 ## Limites
 Arquivo ≤ 300 linhas · função ≤ 40 · ciclomática ≤ 10 · ≤ 12 arquivos/pacote · módulo ≤ 60 arquivos (acima: dividir por funcionalidade).

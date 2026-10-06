@@ -11,6 +11,7 @@ PWA de vocabulário de inglês com repetição espaçada (Go + React + StyleX). 
 | 4 | [engenharia](fase-4/04-engenharia.md) · [workflows](fase-4/workflows/) · [deploy](fase-4/deploy/deploy-skeleton.md) · [kit de IA](fase-4/kit-ia/) | repositório, CI/CD, versão, ambientes, qualidade |
 | 5 | [UX/UI](fase-5/05-ux-ui-fluxos.md) · [wireframes](fase-5/05b-wireframes.md) | telas, fluxos, acessibilidade, PWA |
 | 6 | [roadmap e backlog](fase-6/06-roadmap-backlog.md) · [seed](fase-6/seed/README.md) | sprints, MoSCoW, seed e amostra |
-| — | [ADRs](adr/README.md) · [referências auditadas](referencias.md) | 26 decisões registradas; nível de verificação de cada fonte |
+| 0a | [relatório dos spikes](sprint-0a/spike-report.md) · [web](sprint-0a/web-stack/) · [contrato](sprint-0a/contract/) · [Go](sprint-0a/go-stack/) · [PostgreSQL](sprint-0a/postgres/) | resultado real da pilha (front, contrato, Go, PostgreSQL); Sprint 0a concluído |
+| — | [ADRs](adr/README.md) · [referências auditadas](referencias.md) | 27 decisões registradas; nível de verificação de cada fonte |
 
 **Convenção de rótulos:** `[PREMISSA]` assumi · `[VERIFICAR]` não confirmei em fonte primária · `[DECISÃO SUA]` só o dono decide. Esqueletos de workflow, Compose, SQL e Mermaid **não foram executados** (exceto onde o documento diz o contrário).

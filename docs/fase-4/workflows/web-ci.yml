@@ -33,7 +33,7 @@ jobs:
       - run: npm ci
       - run: npx biome ci ./src ./e2e              # Biome: formatação + lint geral
       - run: npx eslint ./src                      # ESLint SÓ: plugin StyleX + max-lines/complexity + imports entre features
-      - run: npx tsc -b                            # [VERIFICAR] compatibilidade com TypeScript 7
+      - run: npx tsc -b                            # tsc 7 (@typescript/native); typescript-eslint usa o alias TS 6 (Sprint 0a)
       - run: npm run check:i18n                    # chaves iguais em pt-BR e en-US; sem string de UI fora de t()
       - run: npm run check:structure
       - name: cliente gerado está em dia

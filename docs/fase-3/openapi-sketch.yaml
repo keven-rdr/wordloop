@@ -5,7 +5,13 @@ info:
   description: "Esboço de contrato (Fase 3). Fonte da verdade; cliente TypeScript e servidor Go são gerados daqui."
 servers:
   - url: /api/v1
-tags: [meta, identity, catalog, learning, progress, reminders]
+tags:
+  - { name: meta }
+  - { name: identity }
+  - { name: catalog }
+  - { name: learning }
+  - { name: progress }
+  - { name: reminders }
 
 paths:
   /version:

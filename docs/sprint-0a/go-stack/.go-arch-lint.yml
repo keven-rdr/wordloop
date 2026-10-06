@@ -1,0 +1,18 @@
+version: 3
+allow:
+  depOnAnyVendor: true
+  deepScan: false          # só imports (a análise profunda deu falso positivo com interface embutida)
+workdir: internal
+excludeFiles:
+  - "^.*_test\.go$"   # testes externos (package x_test) importam o próprio pacote
+  - "^.*/gen/.*$"
+components:
+  api:      { in: api }
+  apigen:   { in: api/gen }
+  learning: { in: learning/** }
+deps:
+  api:
+    mayDependOn: [apigen]          # a camada HTTP não importa módulos de negócio diretamente
+    anyVendorDeps: true
+  apigen:   { anyVendorDeps: true }
+  learning: { anyVendorDeps: true }   # um módulo não importa outro nem a camada HTTP

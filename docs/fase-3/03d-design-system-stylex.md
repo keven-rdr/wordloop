@@ -48,13 +48,16 @@ const styles = stylex.create({
   bar:  { height: 12, borderRadius: radius.full, backgroundColor: color.surface },
   fill: (pct: number) => ({ width: `${pct}%`, backgroundColor: color.primary, transitionDuration: motion.base }), // barra de progresso
   heat: (level: 0|1|2|3|4) => ({ opacity: [0.12, 0.35, 0.55, 0.8, 1][level] }),                                    // mapa de calor
-  button: { backgroundColor: color.primary, boxShadow: `0 4px 0 ${color.primaryEdge}`, minHeight: 48,
-            ':active': { transform: 'translateY(4px)', boxShadow: `0 0 0 ${color.primaryEdge}` },
-            [bp.reduceMotion]: { transitionDuration: '0s' } },
+  // CONDIÇÕES (pseudo-classe, media query) vão DENTRO do valor de cada propriedade (validado no Sprint 0a):
+  button: { backgroundColor: color.primary, minHeight: 48,
+            boxShadow: { default: `0 4px 0 ${color.primaryEdge}`, ':active': `0 0 0 ${color.primaryEdge}` },
+            transform: { default: null, ':active': 'translateY(4px)' },
+            transitionDuration: { default: '120ms', [bp.reduceMotion]: '0s' } },
 });
 const pop = stylex.keyframes({ from: { transform: 'scale(0.9)' }, to: { transform: 'scale(1)' } });
 ```
 Funções em `stylex.create` geram estilo dinâmico por variável CSS inline (sem classe nova por valor). Alvo de toque ≥ 48 px.
+> **Correção (Sprint 0a):** a versão anterior deste trecho colocava `[bp.reduceMotion]: { … }` no nível do objeto, o que o StyleX 0.19.1 **rejeita** ("Invalid pseudo or at-rule"). Em *media query* e pseudo-classe, o objeto condicional fica no valor da propriedade. Código real validado: [`docs/sprint-0a/web-stack`](../sprint-0a/web-stack/src/ui/Button.tsx).
 
 ## 4. Primitivas do MVP
 

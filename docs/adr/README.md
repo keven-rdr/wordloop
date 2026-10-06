@@ -30,3 +30,4 @@ Gerados por `gen_adrs.py` em 2026-10-06. Cada ADR é curto; o raciocínio comple
 | 0024 | [Licenças: código MIT e conteúdo CC BY-SA 4.0](0024-licencas-codigo-mit-e-conteudo-cc-by-sa-4-0.md) | `fase-2/02-pedagogia-conteudo.md; fase-4/04-engenharia.md` |
 | 0025 | [Kit de instruções para IA: `AGENTS.md` canônico, hook e skill](0025-kit-de-instrucoes-para-ia-agents-md-canonico-hook.md) | `fase-4/04-engenharia.md; fase-4/kit-ia/` |
 | 0026 | [Experiência: sem XP, ranking nem mascote; sequência por revisão; barra de 4 itens](0026-experiencia-sem-xp-ranking-nem-mascote-sequencia.md) | `fase-5/05-ux-ui-fluxos.md` |
+| 0027 | [TypeScript 7 nativo (`tsc`) com alias TS 6 para as ferramentas](0027-typescript-7-nativo-tsc-com-alias-ts-6-para-as.md) | `sprint-0a/spike-report.md` |

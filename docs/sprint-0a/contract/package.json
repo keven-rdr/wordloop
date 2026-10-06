@@ -1,0 +1,1 @@
+{"name":"spike-api","private":true,"type":"module","dependencies":{"@apidevtools/swagger-parser":"13.1.0","@hey-api/openapi-ts":"0.99.0","@tanstack/react-query":"5.104.1","valibot":"1.5.0"},"devDependencies":{"typescript":"npm:@typescript/typescript6@^6.0.2"}}
