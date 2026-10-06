@@ -1,6 +1,6 @@
 # Fase 0 — Alinhamento
 
-> Status: aguardando respostas do usuário. Data de referência: 2026-10-06.
+> Status: respostas recebidas (ver seção 6, que **prevalece** sobre as seções 3–5); faltam poucos dados. Data de referência: 2026-10-06.
 > Rótulos: `[PREMISSA]` assumi; `[VERIFICAR]` não confirmei em fonte primária; `[DECISÃO SUA]` só o usuário decide.
 
 ## 1. O que verifiquei
@@ -83,3 +83,63 @@ Fatos confirmados em 2026-10-06: Go 1.27.1 estável; `@stylexjs/stylex` e `@styl
 Correções aceitas: i18n sem registro central; Web Push em vez de webhook; UI pt-BR + en-US; Biome + ESLint só para StyleX; imagem única; sem MinIO.
 
 Pendente: respostas às perguntas 1–15 (seção 4) e dados `[PREENCHER]` (nível, tempo diário, dispositivos, VM). Recomendações iniciais: repo público monorepo, Sonar Cloud + trunk-based, Compose, multiusuário com LGPD mínima, identidade decidida na Fase 3 conforme RAM da VM. Próxima etapa: Fase 1 (SRS).
+
+## 6. Decisões do usuário (prevalecem sobre o resto deste documento)
+
+| Tema | Decisão |
+|---|---|
+| VM | Contabo Cloud VPS: 6 vCPU, 12 GB RAM, 100 GB NVMe (ou 200 GB SSD), 300 Mbit/s. SO e domínio ainda faltam. Cabe tst + prd + Keycloak com folga `[VERIFICAR]` na Fase 4 |
+| Ambientes | **dev, tst, prd** (hmg foi removido). tst = promoção automática; prd = aprovação manual |
+| Banco | PostgreSQL |
+| Repositório | público, monorepo; já existe: `github.com/keven-rdr/wordloop` (1 commit em `main`; pasta local já vinculada) |
+| Branches / Sonar | PRs para `develop` (nome convencional do Contratos; o usuário escreveu "developer": confirmar). Sonar Cloud Free analisa PR/branch **só da branch principal do projeto no Sonar**: configurar `develop` como branch principal lá, assim as PRs para `develop` são analisadas. PRs `develop → main` (release) ficam sem análise, aceitável porque o código já foi analisado `[VERIFICAR]` na Fase 4 |
+| Identidade | aceitou "decidir na Fase 3"; com 12 GB, Keycloak passa a ser a recomendação provisória |
+| Deploy | Docker Compose + overlays + GitHub Environments |
+| Front | primitives + tokens StyleX; roteamento por arquivo ou manifesto |
+| Escopo | **TTS, PWA offline e nivelamento entram no MVP** (risco de escopo registrado; a Fase 6 sequencia em incrementos) |
+| Usuários | multiusuário (LGPD mínima) |
+| Imagens | bancos abertos + curadoria offline |
+| Kit de IA | sim, enxuto |
+| Metas | sugestões padrão; ao fim de cada ciclo o app pergunta de novo, e a nova meta vale independentemente de a anterior ter sido cumprida |
+| Licença | app open source; licença do código a definir (padrão proposto: MIT; conteúdo CC BY-SA separado) |
+| Dev local | Windows + Docker Desktop |
+
+### Lembretes = notificação-desafio (definição do usuário)
+
+1. A notificação traz uma **pergunta curta** (ex.: `sort = ?`, `cat = ?`, `between = ?`, `I live in a hot country = ?`), a qualquer momento dentro das regras do usuário.
+2. O toque abre o app **direto na pergunta** (deep link); o usuário responde.
+3. Depois da resposta: opção **"explique a resposta"** e, se errou, **"entender por que errei"**; a **imagem entra aqui**, como contexto depois da tentativa de recuperação (coerente com Carpenter & Olson 2012 `[VERIFICAR]`).
+4. A resposta atualiza o % de conhecimento; se for baixo, o item volta com **perguntas relacionadas** até atingir nível maior.
+
+Implicações já identificadas:
+- Web Push **não** permite digitar nem validar a resposta dentro da notificação de forma confiável (botões de ação não existem no iOS; não há campo de texto). A resposta acontece no app.
+- "A qualquer momento" convive com anti-fadiga: janela de horários do usuário, máximo por dia, horário silencioso. Sorteio do instante dentro da janela.
+- A pergunta vem de um item **vencido ou em aprendizado**, nunca de um item dominado fora do prazo.
+- "Perguntas relacionadas" = o **mesmo item** em outro exercício/contexto (cloze, outra frase, imagem→palavra), **não** palavras semanticamente próximas, para evitar interferência (Tinkham 1993; Nakata & Suzuki 2019 `[VERIFICAR]`).
+- O texto da pergunta aparece na tela de bloqueio: aceitável para vocabulário; opção de ocultar em Configurações.
+
+### Ainda faltam
+
+Nível atual de inglês; tempo diário disponível; dispositivos (Android/iPhone/PC); SO e domínio da VM; horas por semana para construir o projeto (e prazo, se houver); confirmar `develop` × `developer`; licença do código (MIT?).
+
+### Resumo de continuidade (substitui o da seção 5)
+
+Projeto `wordloop` (repositório antes chamado `poorAnki`): PWA mobile-first de vocabulário de inglês para falantes de pt-BR, com repetição espaçada guiada por feedback (Difícil/Médio/Fácil após cada resposta), imagens como contexto após a recuperação, e progressão até leitura de páginas. Open source, público, monorepo em `github.com/keven-rdr/wordloop`; multiusuário. Stack: API em Go (monólito modular, hexagonal por módulo, PostgreSQL) + React 19 + TypeScript + Vite + StyleX (0.19.1, decidido). Branches `develop`/`main`; Sonar Cloud Free com `develop` como branch principal; GitHub Actions; imagem única promovida entre ambientes dev/tst/prd com config em runtime; deploy em Contabo VPS (6 vCPU, 12 GB) com Docker Compose + overlays. Identidade: Keycloak provisório (decide na Fase 3). Entram no MVP: TTS, PWA offline e nivelamento (risco de escopo; sequenciar na Fase 6). Lembretes são notificações-desafio (pergunta curta → abre o app → resposta → explicação/imagem → % de conhecimento → itens relacionados), via Web Push (VAPID). Fatos de 2026-10-06: Go 1.27.1; StyleX/unplugin 0.19.1; plugin-react 6.1.2 sem Babel por padrão; MinIO arquivado (sem MinIO); Sonar Free limita análise à branch principal. Só planejamento, 6 fases com parada. Próxima: Fase 1 (SRS).
+
+## 7. Atualização final da Fase 0 (respostas do usuário)
+
+| Tema | Decisão / consequência |
+|---|---|
+| Nível do usuário | **Baixo** (vocabulário muito raso; não entende nem com legenda). `[PREMISSA]` ≈ A1 do CEFR. Consequências: o nivelamento precisa discriminar bem abaixo de ~1.000 palavras; conteúdo inicial = palavras de altíssima frequência com frases curtas e traduções PT-BR; explicações e UI em pt-BR; áudio (TTS) entra cedo, porque o gargalo declarado é compreensão auditiva |
+| Tempo diário | Cerca de 60 min, **mas dinâmico**: o app pergunta ao usuário ao **iniciar** a meta; ao **fim da semana** reseta e pergunta de novo (a nova meta vale independentemente de ter cumprido a anterior) |
+| Tempo semanal | É a **soma** do que foi estudado nos dias (60 min num dia, 20 em outro); o app só apresenta o total |
+| Princípio de produto | O que importa não é o tempo, e sim **entrar, exercitar e melhorar**. A meta existe para motivar o retorno ao app, não para ser fixa. Métrica de sucesso sensível a melhora (ex.: palavras que passaram a ser lembradas, tendência de acerto, cobertura de vocabulário), e não "minutos cumpridos". Fica como requisito para o painel (Fase 3) e para as metas (Fase 5) |
+| Dispositivos | Android, iPhone e PC. iPhone: Web Push só com o PWA instalado na Tela de Início (iOS ≥ 16.4) e permissão pedida por gesto; entra como teste obrigatório do Sprint 1 |
+| VM | Contabo Cloud VPS (6 vCPU, 12 GB, NVMe) **ainda não comprada**. SO sugerido: Ubuntu LTS `[VERIFICAR]` versão. **Domínio**: necessário, pois Web Push e PWA exigem HTTPS válido; a Contabo não o fornece, então comprar um (ex.: `.com.br`) e apontar DNS. Porta 25 de saída costuma ser bloqueada em VPS `[VERIFICAR]`: usar provedor de e-mail transacional por API/SMTP 587 |
+| Branch | `develop` (confirmado) |
+| Licença | **MIT para o código** (decisão confirmada). MIT permite uso, cópia, modificação e uso comercial, exigindo só manter o aviso de copyright; para um app de aprendizado sem fins lucrativos não há obstáculo `[não é aconselhamento jurídico]`. O que exige cuidado é o **conteúdo**: NGSL e Tatoeba têm exigência de atribuição, NGSL é CC BY-SA 4.0 (compartilhar adaptações na mesma licença) e cada imagem tem sua própria licença. Por isso conteúdo e imagens ficam em diretório próprio com licença e atribuição por item (tabelas `sources`/`attributions`, Fase 2) |
+| Horas para construir | A resposta foi sobre estudo do usuário, não sobre o desenvolvimento. `[PREMISSA]` ~8–10 h/semana, sem prazo; ajusto o roadmap da Fase 6 se você corrigir |
+
+## 8. Fase 0 encerrada
+
+Nada grande pendente. Pendências pequenas (não bloqueiam a Fase 1): SO/domínio da VM (após a compra); horas semanais para construir (assumi 8–10 h).

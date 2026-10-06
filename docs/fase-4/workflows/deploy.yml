@@ -1,0 +1,37 @@
+# Reutilizável (workflow_call) e manual (workflow_dispatch: serve de ROLLBACK, informando a versão anterior).
+name: deploy
+on:
+  workflow_call:
+    inputs:
+      env:     { type: string, required: true }     # tst | prd
+      api_tag: { type: string, required: false }
+      web_tag: { type: string, required: false }
+  workflow_dispatch:
+    inputs:
+      env:     { type: choice, options: [tst, prd], required: true }
+      api_tag: { type: string, required: false }
+      web_tag: { type: string, required: false }
+permissions: { contents: read }
+concurrency: { group: "deploy-${{ inputs.env }}", cancel-in-progress: false }   # um deploy por vez por ambiente
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env }}                   # prd exige aprovação (você) e só aceita tags/main; tst só develop
+    steps:
+      - name: chave SSH do usuário de deploy (secret DO AMBIENTE)
+        run: |
+          install -m 600 /dev/null key
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > key
+          printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > known_hosts
+      - name: executa o script FORÇADO na VM (authorized_keys com a opção command=)
+        run: |
+          ssh -i key -o UserKnownHostsFile=known_hosts "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "${{ inputs.env }} ${{ inputs.api_tag || '-' }} ${{ inputs.web_tag || '-' }}"   # '-' = manter a tag atual
+      - name: smoke test pós-deploy
+        run: |
+          base="https://${{ vars.PUBLIC_HOST }}"
+          curl -fsS --retry 10 --retry-delay 5 "$base/api/v1/health/ready"
+          curl -fsS "$base/api/v1/version" | tee version.json
+          curl -fsS "$base/environment.json" > /dev/null
+          curl -fsS -o /dev/null "$base/"

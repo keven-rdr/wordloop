@@ -1,0 +1,185 @@
+openapi: 3.0.3          # 3.0.x de propósito: o gerador Go escolhido (oapi-codegen) é 3.0 [VERIFICAR no spike do Sprint 0]
+info:
+  title: wordloop API
+  version: 0.1.0
+  description: "Esboço de contrato (Fase 3). Fonte da verdade; cliente TypeScript e servidor Go são gerados daqui."
+servers:
+  - url: /api/v1
+tags: [meta, identity, catalog, learning, progress, reminders]
+
+paths:
+  /version:
+    get:
+      tags: [meta]
+      operationId: getVersion
+      security: []
+      responses:
+        "200": { description: "ok", content: { application/json: { schema: { $ref: "#/components/schemas/Version" } } } }
+  /health/ready:
+    get: { tags: [meta], operationId: getReadiness, security: [], responses: { "200": { description: "ok" } } }
+
+  # ── identity (BFF: a API é o cliente OIDC; o navegador só tem cookie httpOnly) ──
+  /auth/login:
+    get:
+      tags: [identity]
+      operationId: startLogin
+      security: []
+      parameters:
+        - { name: provider, in: query, schema: { type: string, enum: [password, google, github] } }
+        - { name: return_to, in: query, schema: { type: string } }
+      responses: { "302": { description: "redireciona ao Keycloak (code + PKCE)" } }
+  /auth/callback:
+    get: { tags: [identity], operationId: finishLogin, security: [], responses: { "302": { description: "cria sessão e redireciona" } } }
+  /auth/logout:
+    post: { tags: [identity], operationId: logout, responses: { "204": { description: "sessão encerrada" } } }
+  /me:
+    get: { tags: [identity], operationId: getMe, responses: { "200": { description: "perfil", content: { application/json: { schema: { $ref: "#/components/schemas/Me" } } } } } }
+    delete: { tags: [identity], operationId: deleteAccount, description: "LGPD - exclui dados e o usuário no Keycloak", responses: { "202": { description: "aceito" } } }
+  /me/export:
+    get: { tags: [identity], operationId: exportMyData, description: "LGPD - JSON com perfil, cartões e log", responses: { "200": { description: "arquivo" } } }
+  /me/settings:
+    get: { tags: [identity], operationId: getSettings, responses: { "200": { description: "ok", content: { application/json: { schema: { $ref: "#/components/schemas/Settings" } } } } } }
+    put: { tags: [identity], operationId: updateSettings, requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Settings" } } } }, responses: { "200": { description: "ok" } } }
+
+  # ── catalog ──
+  /courses:
+    get: { tags: [catalog], operationId: listCourses, responses: { "200": { description: "ok" } } }
+  /courses/{courseId}/units:
+    get:
+      tags: [catalog]
+      operationId: listUnits
+      parameters: [ { $ref: "#/components/parameters/CourseId" }, { $ref: "#/components/parameters/Page" }, { $ref: "#/components/parameters/Size" } ]
+      responses: { "200": { description: "ok" } }
+  /items/{itemId}:
+    get:
+      tags: [catalog]
+      operationId: getItem
+      parameters: [ { name: itemId, in: path, required: true, schema: { type: string, format: uuid } } ]
+      responses: { "200": { description: "item com textos no locale e mídia", content: { application/json: { schema: { $ref: "#/components/schemas/Item" } } } } }
+  /placement/start:
+    post: { tags: [catalog], operationId: startPlacement, responses: { "200": { description: "primeira rodada do teste Sim/Não" } } }
+  /placement/answers:
+    post: { tags: [catalog], operationId: submitPlacementAnswers, responses: { "200": { description: "próxima rodada ou resultado" } } }
+
+  # ── learning ──
+  /study/plan:
+    post:
+      tags: [learning]
+      operationId: planSession
+      description: 'A pergunta "Quanto tempo hoje?" define o tamanho da sessão e o limite de novos.'
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/PlanRequest" } } } }
+      responses: { "200": { description: "pacote de cartões (conteúdo incluso: serve ao modo offline)", content: { application/json: { schema: { $ref: "#/components/schemas/StudyPack" } } } } }
+  /study/reviews:
+    post:
+      tags: [learning]
+      operationId: submitReviews
+      description: "Lote idempotente. Cada revisão traz UUID do cliente; reenvio não altera o estado."
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/ReviewBatch" } } } }
+      responses:
+        "200": { description: "resultado por revisão e estado novo dos cartões", content: { application/json: { schema: { $ref: "#/components/schemas/ReviewBatchResult" } } } }
+        "422": { $ref: "#/components/responses/Problem" }
+  /study/challenges/{notificationId}:
+    get: { tags: [learning], operationId: getChallenge, parameters: [ { name: notificationId, in: path, required: true, schema: { type: string, format: uuid } } ], responses: { "200": { description: "a pergunta (sem resposta)" } } }
+  /cards:
+    get:
+      tags: [learning]
+      operationId: listCards
+      parameters: [ { $ref: "#/components/parameters/Page" }, { $ref: "#/components/parameters/Size" }, { $ref: "#/components/parameters/Sort" }, { name: filter, in: query, schema: { type: string, enum: [due, leech, mastered, most_missed] } } ]
+      responses: { "200": { description: "ok" } }
+
+  # ── progress ──
+  /progress/dashboard:
+    get: { tags: [progress], operationId: getDashboard, description: "heatmap, acertos, streak, metas, previsão, cobertura", responses: { "200": { description: "ok", content: { application/json: { schema: { $ref: "#/components/schemas/Dashboard" } } } } } }
+  /progress/heatmap:
+    get: { tags: [progress], operationId: getHeatmap, parameters: [ { name: from, in: query, schema: { type: string, format: date } }, { name: to, in: query, schema: { type: string, format: date } } ], responses: { "200": { description: "ok" } } }
+  /goals/current:
+    get: { tags: [progress], operationId: getCurrentGoal, responses: { "200": { description: "ok" } } }
+  /goals:
+    post: { tags: [progress], operationId: startGoalCycle, description: "abre novo ciclo (o anterior é encerrado, cumprido ou não)", requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/GoalRequest" } } } }, responses: { "201": { description: "criado" } } }
+  /goals/suggestions:
+    get: { tags: [progress], operationId: getGoalSuggestions, description: "3 sugestões (leve, constante, intensa) baseadas no histórico", responses: { "200": { description: "ok" } } }
+
+  # ── reminders ──
+  /push/vapid-key:
+    get: { tags: [reminders], operationId: getVapidKey, responses: { "200": { description: "chave pública" } } }
+  /push/subscriptions:
+    post: { tags: [reminders], operationId: subscribePush, requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/PushSubscription" } } } }, responses: { "201": { description: "criada" } } }
+  /push/subscriptions/{id}:
+    delete: { tags: [reminders], operationId: unsubscribePush, parameters: [ { name: id, in: path, required: true, schema: { type: string, format: uuid } } ], responses: { "204": { description: "removida" } } }
+  /me/notification-prefs:
+    get: { tags: [reminders], operationId: getNotificationPrefs, responses: { "200": { description: "ok" } } }
+    put: { tags: [reminders], operationId: updateNotificationPrefs, responses: { "200": { description: "ok" } } }
+
+components:
+  securitySchemes:
+    cookieSession: { type: apiKey, in: cookie, name: wl_session }
+  parameters:
+    CourseId: { name: courseId, in: path, required: true, schema: { type: string, format: uuid } }
+    Page: { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 }, description: "Começa em 1" }
+    Size: { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+    Sort: { name: sort, in: query, schema: { type: string, example: "lapses,desc" }, description: "campo,asc|desc" }
+  responses:
+    Problem:
+      description: "Problem Details (RFC 9457) com código traduzível"
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status, code]
+      properties:
+        type: { type: string }
+        title: { type: string, description: "inglês, só para depuração; a UI traduz por 'code'" }
+        status: { type: integer }
+        code: { type: string, example: "review.duplicate" }
+        params: { type: object, additionalProperties: true }
+        errors: { type: array, items: { type: object, properties: { field: { type: string }, code: { type: string }, params: { type: object } } } }
+    Version:
+      type: object
+      properties: { api: { type: string }, commit: { type: string }, env: { type: string }, built_at: { type: string, format: date-time } }
+    Me: { type: object, properties: { id: { type: string, format: uuid }, display_name: { type: string }, roles: { type: array, items: { type: string } } } }
+    Settings:
+      type: object
+      properties:
+        ui_locale: { type: string, enum: [pt-BR, en-US] }
+        tz: { type: string }
+        theme: { type: string, enum: [light, dark, system] }
+        scheduler: { type: string, enum: [simple_v1, fsrs6] }
+        desired_retention: { type: number, minimum: 0.7, maximum: 0.97 }
+    Item: { type: object, properties: { id: { type: string, format: uuid }, kind: { type: string }, texts: { type: object }, media: { type: array, items: { type: object } } } }
+    PlanRequest: { type: object, required: [minutes, mode], properties: { minutes: { type: integer, enum: [5, 15, 30, 60] }, mode: { type: string, enum: [review, learn, mixed] } } }
+    StudyPack: { type: object, properties: { session_id: { type: string, format: uuid }, cards: { type: array, items: { type: object } }, new_limit: { type: integer }, expires_at: { type: string, format: date-time } } }
+    ReviewBatch:
+      type: object
+      required: [reviews]
+      properties:
+        reviews:
+          type: array
+          maxItems: 200
+          items:
+            type: object
+            required: [id, card_id, exercise_type, shown_at, answered_at, is_correct]
+            properties:
+              id: { type: string, format: uuid }
+              card_id: { type: string, format: uuid }
+              session_id: { type: string, format: uuid }
+              device_id: { type: string, format: uuid }
+              exercise_type: { type: string }
+              source: { type: string, enum: [session, notification, placement, reading] }
+              shown_at: { type: string, format: date-time }
+              answered_at: { type: string, format: date-time }
+              response_ms: { type: integer }
+              is_correct: { type: boolean }
+              answer_raw: { type: string }
+              hint_used: { type: boolean }
+              explanation_viewed: { type: boolean }
+              image_before_answer: { type: boolean }
+              difficulty_suggested: { type: string, enum: [hard, medium, easy] }
+              difficulty_chosen: { type: string, enum: [hard, medium, easy] }
+              error_kind: { type: string, enum: [no_idea, almost, slip] }
+              client_seq: { type: integer }
+    ReviewBatchResult: { type: object, properties: { results: { type: array, items: { type: object, properties: { id: { type: string, format: uuid }, status: { type: string, enum: [applied, duplicate, rejected] }, card: { type: object } } } } } }
+    Dashboard: { type: object, properties: { streak: { type: integer }, accuracy_7d: { type: number }, goal: { type: object }, forecast: { type: array, items: { type: object } }, known_lexemes: { type: integer }, coverage: { type: object }, most_missed: { type: array, items: { type: object } } } }
+    GoalRequest: { type: object, required: [daily_minutes, days_target], properties: { preset: { type: string, enum: [light, steady, intense, custom] }, daily_minutes: { type: integer }, days_target: { type: integer }, weekdays: { type: array, items: { type: integer } } } }
+    PushSubscription: { type: object, required: [endpoint, keys], properties: { endpoint: { type: string }, keys: { type: object, properties: { p256dh: { type: string }, auth: { type: string } } }, device_id: { type: string, format: uuid } } }
+security:
+  - cookieSession: []

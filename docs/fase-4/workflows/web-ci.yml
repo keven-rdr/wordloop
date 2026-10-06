@@ -1,0 +1,142 @@
+# ESQUELETO (Fase 4). Mesma forma do api-ci; só o que muda está detalhado.
+name: web-ci
+on:
+  pull_request: { branches: [develop] }
+  push:         { branches: [develop] }
+permissions: { contents: read }
+concurrency: { group: "web-ci-${{ github.ref }}", cancel-in-progress: true }
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs: { run: "${{ steps.f.outputs.web }}" }
+    steps:
+      - uses: actions/checkout@v4
+      - id: f
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            web:
+              - 'web/**'
+              - 'api/openapi/**'            # o cliente é gerado do contrato
+              - '.github/workflows/web-ci.yml'
+
+  lint:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: web/.nvmrc, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npx biome ci ./src ./e2e              # Biome: formatação + lint geral
+      - run: npx eslint ./src                      # ESLint SÓ: plugin StyleX + max-lines/complexity + imports entre features
+      - run: npx tsc -b                            # [VERIFICAR] compatibilidade com TypeScript 7
+      - run: npm run check:i18n                    # chaves iguais em pt-BR e en-US; sem string de UI fora de t()
+      - run: npm run check:structure
+      - name: cliente gerado está em dia
+        run: |
+          npm run gen:api
+          git diff --exit-code src/api/generated
+
+  test-unit:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: web/.nvmrc, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npx vitest run --coverage
+      - uses: actions/upload-artifact@v4
+        with: { name: web-coverage, path: web/coverage/lcov.info }
+
+  e2e:                                         # Playwright: Chromium, pt-BR, fuso fixo, specs por feature com mocks de API
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: web/.nvmrc, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - uses: actions/cache@v4
+        with: { path: ~/.cache/ms-playwright, key: "pw-${{ hashFiles('web/package-lock.json') }}" }
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build && npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: playwright-report, path: web/playwright-report }
+
+  lighthouse:                                  # PERFORMANCE, ACESSIBILIDADE, BOAS PRÁTICAS (a categoria PWA foi descontinuada)
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: web/.nvmrc, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci && npm run build
+      - run: npx @lhci/cli autorun             # limites em lighthouserc.json; PWA (manifest, SW, offline) é testado no Playwright
+
+  sonar:
+    needs: [test-unit]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/download-artifact@v4
+        with: { name: web-coverage, path: web/coverage }
+      - uses: SonarSource/sonarqube-scan-action@v4
+        env: { SONAR_TOKEN: "${{ secrets.SONAR_TOKEN_WEB }}" }
+        with:
+          projectBaseDir: web
+          args: >
+            -Dsonar.projectKey=OWNER_wordloop-web
+            -Dsonar.organization=OWNER
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.exclusions=src/api/generated/**,src/routeTree.gen.ts
+
+  image:
+    if: github.event_name == 'push'
+    needs: [lint, test-unit, e2e]
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write }
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: v
+        run: echo "version=$(git describe --tags --match 'web-v*' --always | sed 's/^web-v//')" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: docker/build-push-action@v6        # UMA imagem; sem build-arg de ambiente (config vem do environment.json em runtime)
+        with:
+          context: web
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/wordloop-web:sha-${{ github.sha }}
+          build-args: |
+            VERSION=${{ steps.v.outputs.version }}
+            COMMIT=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-tst:
+    needs: image
+    uses: ./.github/workflows/deploy.yml
+    with: { env: tst, web_tag: "sha-${{ github.sha }}" }
+    secrets: inherit
+
+  gate:
+    if: always()
+    needs: [changes, lint, test-unit, e2e, lighthouse, sonar]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ] || [ "${{ contains(needs.*.result, 'cancelled') }}" = "true" ]; then exit 1; fi

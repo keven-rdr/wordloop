@@ -1,0 +1,40 @@
+# Versionamento por componente: Conventional Commits -> PR de release -> tag api-vX.Y.Z / web-vX.Y.Z -> promoção a prd.
+name: release
+on:
+  push: { branches: [develop] }
+permissions: { contents: write, pull-requests: write, packages: write }
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      api_released: "${{ steps.rp.outputs['api--release_created'] }}"
+      api_tag:      "${{ steps.rp.outputs['api--tag_name'] }}"
+      web_released: "${{ steps.rp.outputs['web--release_created'] }}"
+      web_tag:      "${{ steps.rp.outputs['web--tag_name'] }}"
+    steps:
+      - id: rp
+        uses: googleapis/release-please-action@v4          # fixar SHA
+        with:
+          target-branch: develop
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          # Tags criadas com o GITHUB_TOKEN NÃO disparam outros workflows: por isso a promoção está NESTE arquivo.
+
+  promote-api:
+    needs: release-please
+    if: needs.release-please.outputs.api_released == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - name: espera a imagem do commit (construída pelo api-ci no push do mesmo commit) e RETAGUEIA, sem rebuild
+        run: |
+          src="ghcr.io/${{ github.repository_owner }}/wordloop-api"
+          ver="${{ needs.release-please.outputs.api_tag }}"; ver="${ver#api-v}"
+          for i in $(seq 1 60); do docker buildx imagetools inspect "$src:sha-${{ github.sha }}" >/dev/null 2>&1 && break; sleep 20; done
+          docker buildx imagetools create -t "$src:$ver" "$src:sha-${{ github.sha }}"
+      # Próximo job (esboço): chama ./.github/workflows/deploy.yml com env: prd e api_tag: <ver> (aprovação do Environment);
+      # ao fim, avança `main` por fast-forward até este commit, com token de GitHub App que tenha bypass na ruleset [VERIFICAR].
+  # promote-web: espelho do promote-api.
