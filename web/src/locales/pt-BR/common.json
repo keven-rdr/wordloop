@@ -1,0 +1,10 @@
+{
+  "app": {
+    "name": "wordloop",
+    "tagline": "Amplie seu vocabulário de inglês com repetição espaçada."
+  },
+  "footer": {
+    "version": "v{{web}} · API v{{api}} · {{env}} · {{commit}}",
+    "versionWebOnly": "v{{web}} · {{commit}}"
+  }
+}
