@@ -1,0 +1,44 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests", ":semanticCommits"],
+  "timezone": "America/Sao_Paulo",
+  "schedule": ["before 8am on monday"],
+  "labels": ["dependencies"],
+  "rangeStrategy": "pin",
+  "prConcurrentLimit": 5,
+  "baseBranchPatterns": ["develop"],
+  "dependencyDashboard": true,
+  "packageRules": [
+    {
+      "description": "StyleX e pre-1.0: os tres pacotes @stylexjs/* sobem juntos, em versao exata",
+      "matchPackageNames": ["/^@stylexjs//"],
+      "groupName": "stylex",
+      "rangeStrategy": "pin"
+    },
+    {
+      "description": "hey-api e pre-1.0 e muda a API entre versoes: PR separada",
+      "matchPackageNames": ["@hey-api/openapi-ts"],
+      "groupName": "hey-api"
+    },
+    {
+      "description": "TypeScript: o alias do TS 6 e o tsc 7 nativo sobem juntos (ADR 0027)",
+      "matchPackageNames": ["typescript", "@typescript/native", "@typescript-eslint/parser"],
+      "groupName": "typescript"
+    },
+    {
+      "description": "GitHub Actions: um PR so, mantendo o pino por SHA",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    },
+    {
+      "description": "Imagens do Docker: pino por digest",
+      "matchManagers": ["dockerfile"],
+      "pinDigests": true
+    },
+    {
+      "description": "Go: ferramentas fixadas em go run/go install (golangci-lint, oapi-codegen) tambem recebem PR",
+      "matchManagers": ["gomod"],
+      "groupName": "go-modules"
+    }
+  ]
+}
