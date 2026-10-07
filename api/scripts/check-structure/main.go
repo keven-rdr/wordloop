@@ -14,14 +14,30 @@ import (
 )
 
 const (
-	maxLines       = 300
-	maxPerPackage  = 12
-	maxPerModule   = 60
-	internalPrefix = "internal"
+	maxLines      = 300
+	maxPerPackage = 12
+	maxPerModule  = 60
 )
 
+var roots = []string{"internal", "cmd", "scripts"}
+
+func scanAll() (pkgs, mods map[string]int, problems []string) {
+	pkgs, mods = map[string]int{}, map[string]int{}
+	for _, root := range roots {
+		p, m, pr := scan(root)
+		for k, v := range p {
+			pkgs[k] += v
+		}
+		for k, v := range m {
+			mods[k] += v
+		}
+		problems = append(problems, pr...)
+	}
+	return pkgs, mods, problems
+}
+
 func main() {
-	pkgFiles, modFiles, problems := scan(internalPrefix)
+	pkgFiles, modFiles, problems := scanAll()
 	problems = append(problems, over(pkgFiles, maxPerPackage, "pacote")...)
 	problems = append(problems, over(modFiles, maxPerModule, "modulo")...)
 	sort.Strings(problems)
