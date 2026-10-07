@@ -1,0 +1,50 @@
+# Seguranca: CodeQL (Go e TypeScript), segredos no historico (gitleaks) e dependencias novas (so em PR).
+# Roda em PR, em push na develop e toda segunda-feira. NAO e check obrigatorio (alertas aparecem em Security).
+name: security
+on:
+  pull_request: { branches: [develop] }
+  push: { branches: [develop] }
+  schedule:
+    - cron: "17 6 * * 1"
+permissions: { contents: read }
+concurrency: { group: "security-${{ github.ref }}", cancel-in-progress: true }
+
+jobs:
+  codeql:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, security-events: write, actions: read }
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { language: go, build-mode: manual }
+          - { language: javascript-typescript, build-mode: none }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        if: matrix.language == 'go'
+        with: { go-version: "1.27.x", cache-dependency-path: api/go.mod }
+      - uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+        with: { languages: "${{ matrix.language }}", build-mode: "${{ matrix.build-mode }}" }
+      - name: build manual do Go (o codigo gerado precisa existir)
+        if: matrix.language == 'go'
+        working-directory: api
+        run: go generate ./... && go build ./...
+      - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+        with: { category: "/language:${{ matrix.language }}" }
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { fetch-depth: 0 } # varre o historico inteiro
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+
+  dependency-review: # so em PR: bloqueia dependencia nova com vulnerabilidade alta
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        with: { fail-on-severity: high }

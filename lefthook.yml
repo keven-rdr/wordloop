@@ -1,0 +1,21 @@
+# Hooks locais (lefthook). Instalados por `npm install` na raiz (script "prepare").
+# Regra: o mesmo criterio do CI, mais cedo. Nunca use --no-verify (AGENTS.md, regra 9).
+commit-msg:
+  commands:
+    commitlint:
+      run: npx --no -- commitlint --edit {1}
+
+pre-commit:
+  parallel: true
+  commands:
+    gofmt:
+      glob: "api/**/*.go"
+      run: gofmt -l {staged_files} | tee /dev/stderr | (! grep -q .)
+    biome:
+      glob: "web/**/*.{ts,tsx,js,mjs,json}"
+      run: cd web && npx biome ci ./src ./scripts ./e2e
+
+pre-push:
+  commands:
+    check:
+      run: node scripts/check.mjs

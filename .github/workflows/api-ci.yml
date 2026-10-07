@@ -1,0 +1,124 @@
+# CI da API: lint, testes, vulnerabilidades, Sonar (opcional) e imagem. O check obrigatorio e o job "api-gate".
+# Imagem: so em push na develop, multi-arquitetura (amd64 + arm64: a VM da Oracle e ARM).
+# Sonar: liga quando a variavel de repositorio SONAR_ENABLED=true e o secret SONAR_TOKEN_API existirem (ver docs/ci-cd.md).
+name: api-ci
+on:
+  pull_request: { branches: [develop] }
+  push: { branches: [develop] }
+permissions: { contents: read }
+concurrency: { group: "api-ci-${{ github.ref }}", cancel-in-progress: true }
+env: { GO_VERSION: "1.27.x" }
+
+jobs:
+  changes: # filtro de caminho DENTRO do workflow: o check obrigatorio e o gate (passa se tudo foi OK ou pulado)
+    runs-on: ubuntu-latest
+    outputs: { run: "${{ steps.f.outputs.api }}" }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - id: f
+        uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
+        with:
+          filters: |
+            api:
+              - 'api/**'
+              - '.github/workflows/api-ci.yml'
+
+  lint:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: api } }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with: { go-version: "${{ env.GO_VERSION }}", cache-dependency-path: api/go.mod }
+      - run: go generate ./...
+      - run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9 # v8
+        with:
+          version: v2.14.0 # MANTENHA IGUAL a GOLANGCI_LINT em scripts/check.mjs
+          working-directory: api
+      - run: go run ./scripts/check-structure
+      - run: go install github.com/fe3dback/go-arch-lint@v1.19.0 && go-arch-lint check
+
+  test-unit:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: api } }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with: { go-version: "${{ env.GO_VERSION }}", cache-dependency-path: api/go.mod }
+      - run: go generate ./...
+      - run: go test -race -short -coverprofile=coverage-unit.out ./...
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with: { name: api-coverage-unit, path: api/coverage-unit.out }
+
+  vuln:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: cd api && go generate ./... # o govulncheck precisa do codigo gerado presente
+      - uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1
+        with: { work-dir: api, go-version-input: "${{ env.GO_VERSION }}", check-latest: true }
+
+  sonar: # opcional: so roda com SONAR_ENABLED=true (variavel do repositorio) e SONAR_TOKEN_API (secret)
+    needs: [changes, test-unit]
+    if: vars.SONAR_ENABLED == 'true' && needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { fetch-depth: 0 } # o Sonar precisa do historico
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with: { name: api-coverage-unit, path: api }
+      - uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6
+        env: { SONAR_TOKEN: "${{ secrets.SONAR_TOKEN_API }}" } # token SO por secret, nunca em build-arg
+        with:
+          projectBaseDir: api
+          args: >
+            -Dsonar.projectKey=keven-rdr_wordloop-api
+            -Dsonar.organization=keven-rdr
+            -Dsonar.go.coverage.reportPaths=coverage-unit.out
+            -Dsonar.exclusions=**/gen/**,**/db/**,**/*_test.go
+
+  image: # so em push na develop com mudanca na API; a MESMA imagem e promovida entre ambientes (build uma vez)
+    if: github.event_name == 'push' && needs.changes.outputs.run == 'true'
+    needs: [changes, lint, test-unit, vuln]
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { fetch-depth: 0 }
+      - id: v
+        run: echo "version=$(git describe --tags --match 'api-v*' --always | sed 's/^api-v//')" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: api
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/wordloop-api:sha-${{ github.sha }}
+          build-args: |
+            VERSION=${{ steps.v.outputs.version }}
+            COMMIT=${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.v.outputs.version }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+  api-gate: # UNICO check obrigatorio da API na ruleset: passa se tudo foi OK ou pulado
+    name: api-gate
+    if: always()
+    needs: [changes, lint, test-unit, vuln, sonar]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ] || [ "${{ contains(needs.*.result, 'cancelled') }}" = "true" ]; then exit 1; fi

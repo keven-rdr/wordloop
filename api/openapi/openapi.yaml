@@ -1,0 +1,35 @@
+openapi: 3.0.3
+info:
+  title: wordloop API
+  version: 0.1.0
+  description: Fonte da verdade do contrato. O servidor Go e o cliente TypeScript sao gerados daqui.
+servers:
+  - url: /api/v1
+tags:
+  - name: meta
+paths:
+  /version:
+    get:
+      tags: [meta]
+      operationId: getVersion
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Version" }
+  /health/ready:
+    get:
+      tags: [meta]
+      operationId: getReadiness
+      responses:
+        "200": { description: ok }
+components:
+  schemas:
+    Version:
+      type: object
+      required: [api, commit, env]
+      properties:
+        api: { type: string, example: "0.1.0" }
+        commit: { type: string, example: "a1b2c3d" }
+        env: { type: string, example: "tst" }

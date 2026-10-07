@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+*.log
+*.out
+.env
+.env.*
+!.env.example
+# codigo gerado nao e versionado (ver api/AGENTS.md): o CI regenera
+api/internal/api/gen/
+web/src/api/generated/
+playwright-report/
+test-results/
+# IDE local
+.idea/workspace.xml
+*.tsbuildinfo

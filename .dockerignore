@@ -1,0 +1,16 @@
+# Contexto de build do web e a raiz do repositorio: deixe fora tudo que nao entra na imagem.
+.git
+.github
+.claude
+.idea
+docs
+scripts
+**/node_modules
+**/dist
+**/coverage
+**/playwright-report
+**/test-results
+**/*.tsbuildinfo
+web/src/api/generated
+api/**
+!api/openapi/**

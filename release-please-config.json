@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "separate-pull-requests": true,
+  "include-component-in-tag": true,
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": false,
+  "packages": {
+    "api": { "release-type": "simple", "component": "api", "changelog-path": "CHANGELOG.md" },
+    "web": { "release-type": "node", "component": "web", "changelog-path": "CHANGELOG.md" }
+  }
+}
