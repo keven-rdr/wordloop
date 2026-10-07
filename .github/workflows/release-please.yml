@@ -1,0 +1,19 @@
+# Versionamento por componente (api-vX.Y.Z / web-vX.Y.Z) a partir de Conventional Commits.
+# DESLIGADO por padrao: liga quando a variavel de repositorio RELEASE_PLEASE_ENABLED=true (ver docs/ci-cd.md).
+# Requer: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests".
+# A promocao a producao (re-etiquetar a imagem sha-<commit> e fazer deploy) entra no Sprint 0b, com a VM.
+name: release
+on:
+  push: { branches: [develop] }
+permissions: { contents: write, pull-requests: write }
+
+jobs:
+  release-please:
+    if: vars.RELEASE_PLEASE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4
+        with:
+          target-branch: develop
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

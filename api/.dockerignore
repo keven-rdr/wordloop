@@ -1,0 +1,5 @@
+internal/api/gen
+internal/**/adapters/postgres/db
+coverage*.out
+*.out
+*_test.go
