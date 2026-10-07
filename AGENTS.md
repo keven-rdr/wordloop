@@ -26,9 +26,10 @@ PWA mobile-first de vocabulário de inglês para falantes de pt-BR, com repetiç
 |---|---|
 | `npm run check` | **Definition of Done local:** lint + tipos + testes + regras nas **linhas alteradas** (contra `develop`) nos componentes tocados |
 | `npm run check:all` | tudo, nos dois componentes |
-| `npm run gen` | regenera código a partir de `openapi.yaml` e dos `.sql` (sqlc) |
-| `npm run dev:up` / `dev:down` | Compose de dev (Postgres, Mailpit, Keycloak) |
-| `npm run dev:api` / `dev:web` | API (`go run`) e web (Vite) |
+| `npm run gen` | regenera o código a partir de `openapi.yaml` (e dos `.sql`, quando o banco entrar com o `sqlc`) |
+| `npm run dev:api` / `dev:web` | API (`go run`) e web (Vite; faz proxy de `/api` para `localhost:8080`) |
+
+O Compose de dev (Postgres, Mailpit, Keycloak) ainda **não existe**: entra junto com o primeiro módulo que usa banco. Na primeira execução o `check` gera o código que falta e, sem os binários no PATH, usa `go run` com versões fixas (a 1ª vez compila e demora alguns minutos).
 
 ## Arquitetura em 8 linhas
 
