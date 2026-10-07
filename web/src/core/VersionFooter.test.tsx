@@ -35,6 +35,16 @@ describe('VersionFooter', () => {
     expect(await screen.findByText(/API v0\.1\.0 · tst/)).toBeInTheDocument();
   });
 
+  it('mostra os dois commits quando web e API vem de commits diferentes', async () => {
+    const json = JSON.stringify({ api: '0.1.0', commit: 'fffffff', env: 'tst' });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(json, { headers: { 'content-type': 'application/json' } })),
+    );
+    renderFooter();
+    expect(await screen.findByText(/\/fffffff$/)).toBeInTheDocument();
+  });
+
   it('mostra so a versao do web quando a API falha', async () => {
     vi.stubGlobal(
       'fetch',

@@ -6,11 +6,14 @@ export const locales = ['pt-BR', 'en-US'] as const;
 export type Locale = (typeof locales)[number];
 
 export function detectLocale(languages: readonly string[]): Locale {
-  const match = languages.find((l) => l.toLowerCase().startsWith('en'));
-  return match ? 'en-US' : 'pt-BR';
+  for (const lang of languages) {
+    const base = lang.toLowerCase().split('-')[0];
+    if (base === 'pt') return 'pt-BR';
+    if (base === 'en') return 'en-US';
+  }
+  return 'pt-BR';
 }
 
-// Cada namespace e um JSON em src/locales/<idioma>/<ns>.json, carregado sob demanda (ADR 0015).
 export function setupI18n(lng: Locale = detectLocale(navigator.languages)) {
   return i18n
     .use(initReactI18next)

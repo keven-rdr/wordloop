@@ -15,12 +15,13 @@ if (import.meta.env.DEV) {
   void import('virtual:stylex:runtime');
 }
 
-configureApi();
-void setupI18n();
 const queryClient = new QueryClient();
 
-const root = document.getElementById('root');
-if (root) {
+async function bootstrap() {
+  configureApi();
+  await setupI18n();
+  const root = document.getElementById('root');
+  if (!root) return;
   createRoot(root).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
@@ -29,3 +30,5 @@ if (root) {
     </StrictMode>,
   );
 }
+
+void bootstrap();
