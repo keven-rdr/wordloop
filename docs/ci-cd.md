@@ -21,8 +21,9 @@ Cada workflow filtra por caminho **dentro** dele; o job `*-gate` sempre roda e p
 | **Importar o ruleset** `.github/rulesets/develop.json` | Settings → Rules → Rulesets → New ruleset → *Import a ruleset* | Exige PR, merge por **squash**, `api-gate`, `web-gate` e `pr-title`; bloqueia exclusão e *force push* da `develop`. **Importe só depois do primeiro CI verde**, para conferir que os nomes dos checks batem: um nome errado como obrigatório trava toda PR |
 | Permitir só squash e apagar branch ao mergear | Settings → General → Pull Requests | Mesma regra do ruleset |
 | Permitir que Actions criem PRs | Settings → Actions → General → *Allow GitHub Actions to create and approve pull requests* | Necessário ao release-please |
-| Instalar o app **Renovate** no repositório | github.com/apps/renovate | Lê o `renovate.json`; abre PRs de dependências (StyleX agrupado, versões exatas, SHAs das actions) |
-| Ativar *Dependency graph* e *Code scanning* | Settings → Code security | CodeQL e a revisão de dependências usam |
+| Instalar o app **Renovate** no repositório, **depois de mergear a PR do esqueleto** | github.com/apps/renovate → Install → *Select repositories* → `wordloop` | Lê o `renovate.json` **da branch padrão (`develop`)**. Instalado antes do merge, ele não acha a configuração e abre uma PR "Configure Renovate" com a configuração padrão dele |
+| Conferir que o *Dependency graph* está ligado (em repositório público costuma vir ligado) | Settings → Code security (pode aparecer como *Advanced Security*) | A revisão de dependências do workflow `security` usa |
+| **NÃO ligar o CodeQL *Default setup*** | Settings → Code security → Code scanning | O CodeQL já roda pelo workflow `security.yml` (*advanced setup*). Ligar o *default setup* **desativa esse workflow** e bloqueia os uploads dele ([documentação](https://docs.github.com/en/code-security/code-scanning/enabling-code-scanning/configuring-default-setup-for-code-scanning)). Os alertas aparecem sozinhos em Security → Code scanning |
 
 ### Opcionais (ligam sozinhos quando existirem)
 
