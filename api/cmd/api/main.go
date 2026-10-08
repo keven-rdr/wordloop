@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,18 +20,21 @@ const shutdownTimeout = 15 * time.Second
 func main() {
 	addr := envOr("API_ADDR", ":8080")
 	env := envOr("APP_ENV", version.Env)
+	info := startupInfo{
+		Env: env, Version: version.Version, Commit: version.Commit,
+		DocsEnabled: os.Getenv("API_DOCS_ENABLED") != "false", // ligado por padrao; "false" desliga
+	}
 	srv := &http.Server{
 		Addr: addr,
 		Handler: api.Handler(api.Server{
-			Version: version.Version, Commit: version.Commit, Env: env,
-			DocsEnabled: os.Getenv("API_DOCS_ENABLED") != "false", // ligado por padrao; "false" desliga
+			Version: info.Version, Commit: info.Commit, Env: info.Env, DocsEnabled: info.DocsEnabled,
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
-	slog.Info("api iniciando", "addr", addr, "version", version.Version, "commit", version.Commit, "env", env)
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	if err := run(ctx, srv); err != nil {
+	ready := func(bound net.Addr) { announce(os.Stdout, info, bound) }
+	if err := run(ctx, srv, ready); err != nil {
 		slog.Error("servidor encerrou com erro", "err", err)
 		os.Exit(1)
 	}
@@ -38,9 +42,15 @@ func main() {
 }
 
 // run sobe o servidor e o encerra com elegancia quando ctx termina (SIGTERM/SIGINT; docker stop envia SIGTERM).
-func run(ctx context.Context, srv *http.Server) error {
+// onReady e chamado quando a porta ja esta aberta, isto e, quando a API passou a aceitar conexoes.
+func run(ctx context.Context, srv *http.Server, onReady func(net.Addr)) error {
+	ln, err := net.Listen("tcp", srv.Addr)
+	if err != nil {
+		return err
+	}
+	onReady(ln.Addr())
 	errCh := make(chan error, 1)
-	go func() { errCh <- srv.ListenAndServe() }()
+	go func() { errCh <- srv.Serve(ln) }()
 
 	select {
 	case err := <-errCh:

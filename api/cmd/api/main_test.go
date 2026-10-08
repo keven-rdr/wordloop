@@ -19,9 +19,13 @@ func TestRunShutsDownGracefullyWhenContextIsCancelled(t *testing.T) {
 	srv := &http.Server{Addr: addr, Handler: http.NewServeMux(), ReadHeaderTimeout: time.Second}
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
-	go func() { done <- run(ctx, srv) }()
+	ready := make(chan net.Addr, 1)
+	go func() { done <- run(ctx, srv, func(a net.Addr) { ready <- a }) }()
 
 	waitListening(t, addr)
+	if got := (<-ready).String(); got != addr {
+		t.Fatalf("onReady recebeu %s, esperava %s", got, addr)
+	}
 	cancel()
 
 	select {
@@ -36,7 +40,7 @@ func TestRunShutsDownGracefullyWhenContextIsCancelled(t *testing.T) {
 
 func TestRunReturnsListenError(t *testing.T) {
 	srv := &http.Server{Addr: "256.0.0.1:0", ReadHeaderTimeout: time.Second} // endereco invalido
-	if err := run(context.Background(), srv); err == nil {
+	if err := run(context.Background(), srv, func(net.Addr) {}); err == nil {
 		t.Fatal("esperava erro de listen")
 	}
 }
