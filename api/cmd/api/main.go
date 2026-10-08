@@ -20,8 +20,11 @@ func main() {
 	addr := envOr("API_ADDR", ":8080")
 	env := envOr("APP_ENV", version.Env)
 	srv := &http.Server{
-		Addr:              addr,
-		Handler:           api.Handler(api.Server{Version: version.Version, Commit: version.Commit, Env: env}),
+		Addr: addr,
+		Handler: api.Handler(api.Server{
+			Version: version.Version, Commit: version.Commit, Env: env,
+			DocsEnabled: os.Getenv("API_DOCS_ENABLED") != "false", // ligado por padrao; "false" desliga
+		}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 	slog.Info("api iniciando", "addr", addr, "version", version.Version, "commit", version.Commit, "env", env)

@@ -10,7 +10,9 @@ components:
   api:      { in: api }
   apigen:   { in: api/gen }
   platform: { in: platform/** }
+  contract: { in: ../openapi }   # openapi.yaml embutido (go:embed so alcanca a propria pasta)
 deps:
-  api:      { mayDependOn: [apigen, platform], anyVendorDeps: true }
+  api:      { mayDependOn: [apigen, platform, contract], anyVendorDeps: true }
   apigen:   { anyVendorDeps: true }
   platform: { anyVendorDeps: true }
+  contract: { anyVendorDeps: true }

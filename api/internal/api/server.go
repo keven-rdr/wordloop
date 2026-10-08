@@ -10,6 +10,8 @@ import (
 // Server implementa a interface strict gerada a partir do contrato.
 type Server struct {
 	Version, Commit, Env string
+	// DocsEnabled publica o contrato e o Swagger UI em /api/v1/openapi.yaml e /api/v1/docs/.
+	DocsEnabled bool
 }
 
 var _ gen.StrictServerInterface = Server{}
@@ -27,6 +29,10 @@ func (Server) GetReadiness(_ context.Context, _ gen.GetReadinessRequestObject) (
 
 // Handler monta a API sob /api/v1 com o ServeMux do net/http.
 func Handler(s Server) http.Handler {
+	mux := http.NewServeMux()
+	if s.DocsEnabled {
+		mountDocs(mux)
+	}
 	strict := gen.NewStrictHandler(s, nil)
-	return gen.HandlerWithOptions(strict, gen.StdHTTPServerOptions{BaseURL: "/api/v1", BaseRouter: http.NewServeMux()})
+	return gen.HandlerWithOptions(strict, gen.StdHTTPServerOptions{BaseURL: basePath, BaseRouter: mux})
 }
