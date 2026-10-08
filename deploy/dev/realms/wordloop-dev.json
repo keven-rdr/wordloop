@@ -1,0 +1,79 @@
+{
+  "realm": "wordloop-dev",
+  "displayName": "wordloop (dev)",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "verifyEmail": true,
+  "resetPasswordAllowed": true,
+  "bruteForceProtected": true,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["pt-BR", "en"],
+  "defaultLocale": "pt-BR",
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "no-reply@wordloop.local",
+    "fromDisplayName": "wordloop (dev)"
+  },
+  "clients": [
+    {
+      "clientId": "wordloop-api",
+      "name": "wordloop API (BFF)",
+      "description": "Cliente OIDC da API: faz o code + PKCE e entrega so o cookie httpOnly ao navegador.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${WORDLOOP_API_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "http://localhost:5173",
+      "redirectUris": [
+        "http://localhost:5173/api/v1/auth/callback",
+        "http://localhost:8080/api/v1/auth/callback"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*##http://localhost:8080/*"
+      }
+    },
+    {
+      "clientId": "wordloop-admin",
+      "name": "wordloop Admin API",
+      "description": "Conta de servico com escopo minimo: so apaga o usuario no Keycloak (DELETE /me, LGPD).",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${WORDLOOP_ADMIN_CLIENT_SECRET}",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-wordloop-admin",
+      "enabled": true,
+      "serviceAccountClientId": "wordloop-admin",
+      "clientRoles": { "realm-management": ["manage-users"] }
+    },
+    {
+      "username": "aluno@wordloop.local",
+      "email": "aluno@wordloop.local",
+      "firstName": "Aluno",
+      "lastName": "Teste",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "aluno", "temporary": false }]
+    }
+  ]
+}

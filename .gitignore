@@ -3,7 +3,7 @@ dist/
 coverage/
 *.log
 *.out
-.env
+api/.env
 .env.*
 !.env.example
 # codigo gerado nao e versionado (ver api/AGENTS.md): o CI regenera
@@ -12,5 +12,5 @@ web/src/api/generated/
 playwright-report/
 test-results/
 # IDE local
-.idea/workspace.xml
+.idea/
 *.tsbuildinfo
