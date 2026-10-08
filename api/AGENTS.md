@@ -21,6 +21,7 @@ Vale junto com o `AGENTS.md` da raiz (que vence em conflito).
 
 ## API
 - Handlers implementam a interface *strict* gerada; **não edite `gen/`**. Mudou o contrato → `openapi.yaml` → `npm run gen`.
+- Documentação: `GET /api/v1/docs/` (Swagger UI embutido, sem CDN) e `GET /api/v1/openapi.yaml` (o `openapi.yaml` embutido por `api/openapi/embed.go`). Ligada por padrão; `API_DOCS_ENABLED=false` desliga (404). Não é rota de negócio: não entra no contrato.
 - Erro de API: `problem.New(CodeXxx, params)` com **constante gerada**; nunca string literal.
 - Envio de revisão é **idempotente** pelo UUID do cliente; o servidor refaz a correção e a nota.
 
