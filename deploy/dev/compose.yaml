@@ -1,0 +1,46 @@
+name: wl-dev
+
+volumes:
+  pgdata: {}
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wordloop
+      POSTGRES_PASSWORD: wordloop-dev
+      POSTGRES_DB: wordloop
+    ports: ["127.0.0.1:5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wordloop -d wordloop"]
+      interval: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports: ["127.0.0.1:8025:8025"]
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.1
+    restart: unless-stopped
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak-dev
+      KC_HOSTNAME: http://localhost:8180
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin}
+      WORDLOOP_API_CLIENT_SECRET: ${WORDLOOP_API_CLIENT_SECRET:-wordloop-api-dev-secret}
+      WORDLOOP_ADMIN_CLIENT_SECRET: ${WORDLOOP_ADMIN_CLIENT_SECRET:-wordloop-admin-dev-secret}
+    ports: ["127.0.0.1:8180:8080"]
+    volumes: ["./realms:/opt/keycloak/data/import:ro"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      mailpit: { condition: service_started }
