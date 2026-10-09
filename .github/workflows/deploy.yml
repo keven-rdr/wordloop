@@ -1,0 +1,39 @@
+# Deploy MANUAL em tst (VM Oracle): escolhe as tags das imagens que o CI ja publicou no GHCR e chama o deploy.sh por SSH.
+# Environment `tst` (Settings > Environments) com os secrets DEPLOY_SSH_KEY, DEPLOY_HOST e DEPLOY_KNOWN_HOSTS.
+# Tags: 'sha-<commit>' (ou '-' para manter a atual) | rollback: use a acao "rollback" abaixo.
+name: deploy
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "deploy ou rollback"
+        type: choice
+        options: [deploy, rollback]
+        default: deploy
+      api_tag: { description: "tag da API (sha-<commit>) ou -", default: "-" }
+      web_tag: { description: "tag do web (sha-<commit>) ou -", default: "-" }
+permissions: { contents: read }
+concurrency: { group: deploy-tst, cancel-in-progress: false }
+
+jobs:
+  tst:
+    runs-on: ubuntu-latest
+    environment: tst
+    steps:
+      - name: Prepara a chave SSH (host verificado, sem StrictHostKeyChecking=no)
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts
+      - name: Executa o deploy.sh na VM (comando forcado)
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          ACTION: ${{ inputs.action }}
+          API_TAG: ${{ inputs.api_tag }}
+          WEB_TAG: ${{ inputs.web_tag }}
+        run: |
+          if [ "$ACTION" = "rollback" ]; then CMD="rollback"; else CMD="$API_TAG $WEB_TAG"; fi
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "deploy@$HOST" "$CMD"
