@@ -39,9 +39,13 @@ Cada workflow filtra por caminho **dentro** dele; o job `*-gate` sempre roda e p
 - **Build uma vez:** a imagem `sha-<commit>` é a que será promovida (re-etiquetada) para a versão; nada é reconstruído por ambiente. O web não tem `build-arg` de ambiente: a configuração entra em runtime.
 - O código gerado do contrato **não é versionado**: a API o gera dentro do `Dockerfile` e o web, também.
 
-## Ainda não existe (depende da VM e das contas: Sprint 0b)
+## Deploy de tst (VM Oracle Micro)
 
-Deploy em tst/prd (`deploy.yml`, comando forçado por SSH, Environments), promoção por re-etiqueta com release-please, `Caddy`/Compose na VM, Keycloak, backup. Os esqueletos estão em `docs/fase-4/`.
+`deploy.yml` (manual) chama por SSH, com chave de **comando forçado**, o `deploy/scripts/deploy.sh` na VM, que faz `pull` das imagens `sha-<commit>` do GHCR e `up -d` (ou `rollback`). A VM roda Caddy + API + web; o Postgres é o Neon e **não há Keycloak** em tst ([ADR 0022](adr/0022-vm-oracle-micro-neon-sem-keycloak-em-tst.md)). Preparo da VM: `deploy/scripts/bootstrap-vm.sh`. Arquivos de tst em `deploy/tst/` (`secrets.env` e `versions.env` reais ficam só na VM).
+
+## Ainda não existe
+
+Deploy em prd, promoção por re-etiqueta com release-please, Keycloak fora do dev, backup. Os esqueletos estão em `docs/fase-4/`.
 
 ## Hooks locais (lefthook + commitlint)
 

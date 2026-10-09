@@ -1,0 +1,18 @@
+# TLS automatico (Let's Encrypt) para o dominio de tst. O dominio vem de TST_DOMAIN (versions.env).
+# Mesma origem para web e API: sem CORS e com cookie httpOnly (BFF) quando o login entrar.
+{$TST_DOMAIN} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
+		-Server
+	}
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+	handle {
+		reverse_proxy web:8080
+	}
+}

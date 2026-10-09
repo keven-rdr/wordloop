@@ -14,3 +14,7 @@ test-results/
 # IDE local
 .idea/
 *.tsbuildinfo
+# deploy: arquivos reais de tst ficam so na VM (os .example vao para o Git)
+deploy/**/secrets.env
+deploy/**/versions.env
+deploy/**/versions.env.prev
