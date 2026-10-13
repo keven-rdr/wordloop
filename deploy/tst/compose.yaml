@@ -30,7 +30,7 @@ services:
     <<: *hardening
     image: ghcr.io/keven-rdr/wordloop-api:${API_TAG}
     environment: { APP_ENV: tst, API_ADDR: ":8080" }
-    env_file: [secrets.env] # DATABASE_URL, GOMEMLIMIT
+    env_file: [api.env, secrets.env] # api.env (Git) e secrets.env (DATABASE_URL, montado pelo CI)
     mem_limit: 128m
 
   web:

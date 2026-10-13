@@ -5,7 +5,9 @@ on:
   pull_request: { branches: [develop] }
   push: { branches: [develop] }
 permissions: { contents: read }
-concurrency: { group: "web-ci-${{ github.ref }}", cancel-in-progress: true }
+concurrency:
+  group: "web-ci-${{ github.ref }}"
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }} # push na develop (deploy) nunca e cancelado
 
 jobs:
   changes:
@@ -123,8 +125,8 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
-  deploy-tst: # opcional: so com DEPLOY_TST_ENABLED=true (variavel do repositorio); a VM e preparada antes (docs/ci-cd.md)
-    if: github.event_name == 'push' && vars.DEPLOY_TST_ENABLED == 'true'
+  deploy-tst: # automatico em todo push na develop com imagem nova (ver deploy.yml e docs/ci-cd.md)
+    if: github.event_name == 'push'
     needs: image
     uses: ./.github/workflows/deploy.yml
     with: { api_tag: "-", web_tag: "sha-${{ github.sha }}" }
