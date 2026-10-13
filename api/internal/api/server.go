@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/keven-rdr/wordloop/api/internal/api/gen"
+	"github.com/keven-rdr/wordloop/api/internal/platform/httpx"
 )
 
 // Pinger confirma que o banco responde (implementado por *pgxpool.Pool). Declarada aqui, pelo consumidor.
@@ -20,6 +21,8 @@ type Server struct {
 	DocsEnabled bool
 	// DB e o banco real; sem ele a API nunca fica "pronta" (readiness 503).
 	DB Pinger
+	// Identity e o modulo de login (BFF); nulo = login indisponivel.
+	Identity Identity
 }
 
 var _ gen.StrictServerInterface = Server{}
@@ -47,6 +50,16 @@ func Handler(s Server) http.Handler {
 	if s.DocsEnabled {
 		mountDocs(mux)
 	}
-	strict := gen.NewStrictHandler(s, nil)
-	return gen.HandlerWithOptions(strict, gen.StdHTTPServerOptions{BaseURL: basePath, BaseRouter: mux})
+	strict := gen.NewStrictHandlerWithOptions(s, nil, gen.StrictHTTPServerOptions{
+		RequestErrorHandlerFunc:  func(w http.ResponseWriter, _ *http.Request, _ error) { w.WriteHeader(http.StatusBadRequest) },
+		ResponseErrorHandlerFunc: internalError,
+	})
+	api := gen.HandlerWithOptions(strict, gen.StdHTTPServerOptions{BaseURL: basePath, BaseRouter: mux})
+	return httpx.WithRequest(api)
+}
+
+// internalError registra o erro e responde 500 sem corpo: o texto do erro nunca vai ao cliente.
+func internalError(w http.ResponseWriter, r *http.Request, err error) {
+	slog.Error("erro interno", "method", r.Method, "path", r.URL.Path, "err", err)
+	w.WriteHeader(http.StatusInternalServerError)
 }

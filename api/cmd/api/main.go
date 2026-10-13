@@ -44,6 +44,10 @@ func serve(ctx context.Context) error {
 		return err
 	}
 	defer pool.Close()
+	ident, err := buildIdentity(pool)
+	if err != nil {
+		return err
+	}
 	info := startupInfo{
 		Env: envOr("APP_ENV", version.Env), Version: version.Version, Commit: version.Commit,
 		DocsEnabled: os.Getenv("API_DOCS_ENABLED") != "false", // ligado por padrao; "false" desliga
@@ -51,7 +55,7 @@ func serve(ctx context.Context) error {
 	srv := &http.Server{
 		Addr: envOr("API_ADDR", ":8080"),
 		Handler: api.Handler(api.Server{
-			Version: info.Version, Commit: info.Commit, Env: info.Env, DocsEnabled: info.DocsEnabled, DB: pool,
+			Version: info.Version, Commit: info.Commit, Env: info.Env, DocsEnabled: info.DocsEnabled, DB: pool, Identity: ident,
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}

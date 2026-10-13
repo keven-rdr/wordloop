@@ -18,3 +18,4 @@ test-results/
 deploy/**/secrets.env
 deploy/**/versions.env
 deploy/**/versions.env.prev
+api/internal/**/postgres/db/

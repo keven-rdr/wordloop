@@ -104,7 +104,7 @@ jobs:
             -Dsonar.projectKey=keven-rdr_wordloop-api
             -Dsonar.organization=keven-rdr
             -Dsonar.go.coverage.reportPaths=coverage-unit.out,coverage-int.out
-            -Dsonar.exclusions=**/gen/**,**/adapters/postgres/db/**,**/dbtest/**,**/*_test.go
+            -Dsonar.exclusions=**/gen/**,**/adapters/postgres/db/**,**/dbtest/**,**/identitytest/**,**/*_test.go
 
   image: # so em push na develop com mudanca na API; a MESMA imagem e promovida entre ambientes (build uma vez)
     if: github.event_name == 'push' && needs.changes.outputs.run == 'true'

@@ -6,13 +6,24 @@ workdir: internal
 excludeFiles:
   - "^.*_test\\.go$"       # testes externos (package x_test) importam o proprio pacote
   - "^.*/gen/.*$"
+  - "^.*/postgres/db/.*$"  # codigo gerado pelo sqlc
 components:
   api:      { in: api }
   apigen:   { in: api/gen }
-  platform: { in: platform/** }
+  platform: { in: [platform/httpx, platform/seal, platform/db, platform/db/dbtest, platform/version] }
   contract: { in: ../openapi }   # openapi.yaml embutido (go:embed so alcanca a propria pasta)
+  id-domain:   { in: identity/domain }
+  id-app:      { in: identity/app }
+  id-adapters: { in: [identity/adapters/http, identity/adapters/oidc, identity/adapters/postgres] }
+  id-sqlc:     { in: identity/adapters/postgres/db }   # gerado pelo sqlc
+  id-test:     { in: identity/identitytest }           # fakes em memoria, so para testes
 deps:
   api:      { mayDependOn: [apigen, platform, contract], anyVendorDeps: true }
   apigen:   { anyVendorDeps: true }
   platform: { anyVendorDeps: true }
   contract: { anyVendorDeps: true }
+  id-domain:   { anyVendorDeps: true }
+  id-app:      { mayDependOn: [id-domain, platform], anyVendorDeps: true }
+  id-adapters: { mayDependOn: [id-domain, id-app, id-sqlc, apigen, platform], anyVendorDeps: true }
+  id-sqlc:     { anyVendorDeps: true }
+  id-test:     { mayDependOn: [id-domain, id-app], anyVendorDeps: true }

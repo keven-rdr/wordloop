@@ -9,6 +9,8 @@ ARG COMMIT=unknown
 WORKDIR /src
 COPY go.mod go.sum* ./
 RUN go mod download
+# Ferramentas de geracao compiladas numa camada propria (cache): o sqlc leva minutos para compilar na primeira vez.
+RUN go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1 version  && go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.8.0 --version
 COPY . .
 # O codigo gerado do contrato nao e versionado: gera dentro da imagem, a partir do commit (hermetico).
 RUN go generate ./... \
