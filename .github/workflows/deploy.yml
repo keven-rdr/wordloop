@@ -54,13 +54,15 @@ jobs:
           WEB_TAG: ${{ inputs.web_tag }}
         run: |
           HOST="$(printf '%s' "$HOST" | tr -d '[:space:]')" # secret colado com espaco ou quebra de linha sobrando
-          if [ "$ACTION" = "rollback" ]; then CMD="rollback"; else CMD="$API_TAG $WEB_TAG"; fi
+          # Espaco na frente: um comando que comeca com "-" (tag "-" = manter) o ssh leria como opcao ("unknown option --").
+          if [ "$ACTION" = "rollback" ]; then CMD="rollback"; else CMD=" $API_TAG $WEB_TAG"; fi
           set +e
           # 255 = falha do proprio ssh (conexao derrubada pelo sshd sob varredura de bots): o deploy.sh nem rodou, repetir e seguro.
           for tentativa in 1 2 3 4; do
             saida="$(ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o ConnectTimeout=20 "deploy@$HOST" "$CMD" < "$RUNNER_TEMP/pacote.tar" 2>&1)"
             codigo=$?
             [ "$codigo" -ne 255 ] && break
+            case "$saida" in *usage:*) break ;; esac # erro de uso do ssh nao melhora ao repetir
             echo "ssh falhou (255) na tentativa $tentativa: $(printf '%s' "$saida" | tail -n 1)"
             sleep $((tentativa * 10))
           done
