@@ -41,7 +41,7 @@ Cada workflow filtra por caminho **dentro** dele; o job `*-gate` sempre roda e p
 
 ## Deploy de tst (VM Oracle Micro)
 
-`deploy.yml` (manual) chama por SSH, com chave de **comando forçado**, o `deploy/scripts/deploy.sh` na VM, que faz `pull` das imagens `sha-<commit>` do GHCR e `up -d` (ou `rollback`). A VM roda Caddy + API + web; o Postgres é o Neon e **não há Keycloak** em tst ([ADR 0022](adr/0022-vm-oracle-micro-neon-sem-keycloak-em-tst.md)). Preparo da VM: `deploy/scripts/bootstrap-vm.sh`. Arquivos de tst em `deploy/tst/` (`secrets.env` e `versions.env` reais ficam só na VM).
+`deploy.yml` chama por SSH, com chave de **comando forçado**, o `deploy/scripts/deploy.sh` na VM, que faz `pull` das imagens `sha-<commit>` do GHCR e `up -d` (ou `rollback`). A VM roda Caddy + API + web; o Postgres é o Neon e **não há Keycloak** em tst ([ADR 0022](adr/0022-vm-oracle-micro-neon-sem-keycloak-em-tst.md)). Dois usos: **manual** (*Actions → deploy → Run workflow*, inclusive `rollback`) e **automático**: os jobs `deploy-tst` do `api-ci` e do `web-ci` chamam o `deploy.yml` depois do job `image`, num push na `develop`, **só** com a variável de repositório `DEPLOY_TST_ENABLED=true` (desligado por padrão: ligue depois que a VM estiver pronta). Um push novo cancela o run anterior do CI, inclusive um deploy em andamento. Preparo da VM: `deploy/scripts/bootstrap-vm.sh`. Arquivos de tst em `deploy/tst/` (`secrets.env` e `versions.env` reais ficam só na VM).
 
 ## Ainda não existe
 
