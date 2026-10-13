@@ -65,3 +65,10 @@ func TestExecuteFailsWithoutDatabaseURL(t *testing.T) {
 		}
 	}
 }
+
+func TestRealMainReturnsOneWhenStartupFails(t *testing.T) {
+	t.Setenv("DATABASE_URL", "")
+	if got := realMain(nil); got != 1 {
+		t.Fatalf("esperava codigo de saida 1, veio %d", got)
+	}
+}

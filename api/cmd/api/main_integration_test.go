@@ -21,6 +21,9 @@ func TestExecuteMigrateAppliesMigrations(t *testing.T) {
 	if err := execute(ctx, []string{"migrate"}); err != nil {
 		t.Fatal(err)
 	}
+	if got := realMain([]string{"migrate"}); got != 0 { // idempotente: a segunda execucao tambem sai com 0
+		t.Fatalf("realMain migrate: esperava 0, veio %d", got)
+	}
 	pool, err := db.Open(ctx, url)
 	if err != nil {
 		t.Fatal(err)
@@ -65,5 +68,20 @@ func TestExecuteServesReadyAndStopsCleanly(t *testing.T) {
 		}
 	case <-time.After(10 * time.Second):
 		t.Fatal("a API nao encerrou")
+	}
+}
+
+// Porta ocupada: o servidor nao sobe e o erro chega a quem chamou (e ao codigo de saida).
+func TestServeFailsWhenPortIsTaken(t *testing.T) {
+	url, _ := dbtest.Postgres(t)
+	busy, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = busy.Close() }()
+	t.Setenv("DATABASE_URL", url)
+	t.Setenv("API_ADDR", busy.Addr().String())
+	if err := execute(context.Background(), nil); err == nil {
+		t.Fatal("esperava erro com a porta ocupada")
 	}
 }

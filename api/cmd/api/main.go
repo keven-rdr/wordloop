@@ -17,14 +17,17 @@ import (
 
 const shutdownTimeout = 15 * time.Second
 
-func main() {
+func main() { os.Exit(realMain(os.Args[1:])) }
+
+// realMain devolve o codigo de saida do processo: 0 em sucesso e 1 em erro.
+func realMain(args []string) int {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	err := execute(ctx, os.Args[1:])
-	stop()
-	if err != nil {
+	defer stop()
+	if err := execute(ctx, args); err != nil {
 		slog.Error("api encerrou com erro", "err", err)
-		os.Exit(1)
+		return 1
 	}
+	return 0
 }
 
 // execute escolhe o modo: `api migrate` aplica as migracoes e sai; sem argumento, serve a API.
