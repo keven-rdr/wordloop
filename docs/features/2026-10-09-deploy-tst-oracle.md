@@ -16,9 +16,9 @@ O primeiro ambiente publicado (tst) roda numa VM Oracle de 1 GB. Ver [ADR 0022](
 
 ## Checklist de progresso
 - [x] `deploy/tst/` (compose, Caddyfile, exemplos), `deploy/scripts/` (deploy, bootstrap), `deploy.yml`
-- [x] VM (Ubuntu 20.04, sem capacidade para recriar): swap, Docker, usuário `deploy`
-- [x] DNS `tst.wordloop.com.br` → `146.235.63.55`; Security List 80/443
-- [x] Secrets `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_KNOWN_HOSTS` no GitHub
+- [ ] VM com Ubuntu 22.04/24.04, swap, Docker, usuário `deploy`
+- [ ] DNS `tst.<dominio>` → `146.235.63.55`; Security List 80/443
+- [ ] Environment `tst` no GitHub (`DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_KNOWN_HOSTS`)
 - [ ] Primeiro deploy e rollback testados
 - [ ] `npm run check` verde
 

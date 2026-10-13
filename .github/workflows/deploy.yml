@@ -1,8 +1,6 @@
-# Deploy em tst (VM Oracle): chama o deploy.sh por SSH com as tags das imagens que o CI ja publicou no GHCR.
-# Dois usos: MANUAL (workflow_dispatch, inclusive rollback) e AUTOMATICO (workflow_call, chamado por api-ci e web-ci
-# depois do job `image`, so quando a variavel de repositorio DEPLOY_TST_ENABLED=true).
-# Secrets DEPLOY_SSH_KEY, DEPLOY_HOST e DEPLOY_KNOWN_HOSTS (repositorio ou Environment `tst`).
-# Tags: 'sha-<commit>' (ou '-' para manter a atual).
+# Deploy MANUAL em tst (VM Oracle): escolhe as tags das imagens que o CI ja publicou no GHCR e chama o deploy.sh por SSH.
+# Environment `tst` (Settings > Environments) com os secrets DEPLOY_SSH_KEY, DEPLOY_HOST e DEPLOY_KNOWN_HOSTS.
+# Tags: 'sha-<commit>' (ou '-' para manter a atual) | rollback: use a acao "rollback" abaixo.
 name: deploy
 on:
   workflow_dispatch:
@@ -14,11 +12,6 @@ on:
         default: deploy
       api_tag: { description: "tag da API (sha-<commit>) ou -", default: "-" }
       web_tag: { description: "tag do web (sha-<commit>) ou -", default: "-" }
-  workflow_call:
-    inputs:
-      action: { type: string, default: deploy }
-      api_tag: { type: string, default: "-" }
-      web_tag: { type: string, default: "-" }
 permissions: { contents: read }
 concurrency: { group: deploy-tst, cancel-in-progress: false }
 
