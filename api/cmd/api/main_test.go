@@ -56,3 +56,19 @@ func waitListening(t *testing.T, addr string) {
 	}
 	t.Fatal("servidor nao subiu")
 }
+
+func TestExecuteFailsWithoutDatabaseURL(t *testing.T) {
+	t.Setenv("DATABASE_URL", "")
+	for _, args := range [][]string{nil, {"migrate"}} {
+		if err := execute(context.Background(), args); err == nil {
+			t.Fatalf("args %v: esperava erro por falta de DATABASE_URL", args)
+		}
+	}
+}
+
+func TestRealMainReturnsOneWhenStartupFails(t *testing.T) {
+	t.Setenv("DATABASE_URL", "")
+	if got := realMain(nil); got != 1 {
+		t.Fatalf("esperava codigo de saida 1, veio %d", got)
+	}
+}

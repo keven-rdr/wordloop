@@ -22,6 +22,11 @@ else
 fi
 
 compose pull
+if [[ "${API_TAG:-}" != "rollback" ]]; then
+  # Migracoes ANTES de subir a versao nova (expand/contract). Nunca no rollback: migracao nao se desfaz.
+  # timeout: uma imagem antiga, sem o subcomando `migrate`, subiria o servidor e ficaria presa.
+  timeout 120 docker compose --env-file versions.env run --rm api migrate
+fi
 compose up -d --remove-orphans
 docker image prune -f >/dev/null # disco pequeno: apaga imagens antigas sem uso
 compose ps

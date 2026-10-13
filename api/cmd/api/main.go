@@ -17,28 +17,49 @@ import (
 
 const shutdownTimeout = 15 * time.Second
 
-func main() {
-	addr := envOr("API_ADDR", ":8080")
-	env := envOr("APP_ENV", version.Env)
+func main() { os.Exit(realMain(os.Args[1:])) }
+
+// realMain devolve o codigo de saida do processo: 0 em sucesso e 1 em erro.
+func realMain(args []string) int {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	if err := execute(ctx, args); err != nil {
+		slog.Error("api encerrou com erro", "err", err)
+		return 1
+	}
+	return 0
+}
+
+// execute escolhe o modo: `api migrate` aplica as migracoes e sai; sem argumento, serve a API.
+func execute(ctx context.Context, args []string) error {
+	if len(args) > 0 && args[0] == "migrate" {
+		return migrateUp(ctx)
+	}
+	return serve(ctx)
+}
+
+func serve(ctx context.Context) error {
+	pool, err := openDatabase(ctx)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
 	info := startupInfo{
-		Env: env, Version: version.Version, Commit: version.Commit,
+		Env: envOr("APP_ENV", version.Env), Version: version.Version, Commit: version.Commit,
 		DocsEnabled: os.Getenv("API_DOCS_ENABLED") != "false", // ligado por padrao; "false" desliga
 	}
 	srv := &http.Server{
-		Addr: addr,
+		Addr: envOr("API_ADDR", ":8080"),
 		Handler: api.Handler(api.Server{
-			Version: info.Version, Commit: info.Commit, Env: info.Env, DocsEnabled: info.DocsEnabled,
+			Version: info.Version, Commit: info.Commit, Env: info.Env, DocsEnabled: info.DocsEnabled, DB: pool,
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-	ready := func(bound net.Addr) { announce(os.Stdout, info, bound) }
-	if err := run(ctx, srv, ready); err != nil {
-		slog.Error("servidor encerrou com erro", "err", err)
-		os.Exit(1)
+	if err := run(ctx, srv, func(bound net.Addr) { announce(os.Stdout, info, bound) }); err != nil {
+		return err
 	}
 	slog.Info("api encerrada")
+	return nil
 }
 
 // run sobe o servidor e o encerra com elegancia quando ctx termina (SIGTERM/SIGINT; docker stop envia SIGTERM).

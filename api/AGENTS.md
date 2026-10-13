@@ -16,6 +16,7 @@ Vale junto com o `AGENTS.md` da raiz (que vence em conflito).
 - Logs com `slog`, estruturados; nunca logar token, cookie, e-mail nem `answer_raw`.
 
 ## Banco
+- **Obrigatorio em todos os ambientes:** a API exige `DATABASE_URL` e nao inicia sem ela; nada de banco simulado. Migracoes: `api migrate` (goose, embutido em `api/migrations/`); o deploy as roda antes de subir a versao nova.
 - SQL em `adapters/postgres/queries/*.sql` → `sqlc generate`. Migração nova = arquivo novo em `migrations/` (goose), **expand/contract**.
 - Transação por Unit of Work (`platform/db`). `review_log` é **append-only**: nunca `UPDATE`/`DELETE`; correção é evento `review_void`.
 
