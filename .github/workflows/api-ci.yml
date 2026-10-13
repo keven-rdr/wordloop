@@ -117,6 +117,13 @@ jobs:
           cache-from: type=gha,scope=api
           cache-to: type=gha,mode=max,scope=api
 
+  deploy-tst: # opcional: so com DEPLOY_TST_ENABLED=true (variavel do repositorio); a VM e preparada antes (docs/ci-cd.md)
+    if: github.event_name == 'push' && vars.DEPLOY_TST_ENABLED == 'true'
+    needs: image
+    uses: ./.github/workflows/deploy.yml
+    with: { api_tag: "sha-${{ github.sha }}", web_tag: "-" }
+    secrets: inherit
+
   api-gate: # UNICO check obrigatorio da API na ruleset: passa se tudo foi OK ou pulado
     name: api-gate
     if: always()
