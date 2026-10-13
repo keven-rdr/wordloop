@@ -24,6 +24,7 @@ paths:
       operationId: getReadiness
       responses:
         "200": { description: ok }
+        "503": { description: banco de dados indisponivel }
 components:
   schemas:
     Version:
