@@ -1,18 +1,32 @@
 # TLS automatico (Let's Encrypt) para o dominio de tst. O dominio vem de TST_DOMAIN (versions.env).
 # Mesma origem para web e API: sem CORS e com cookie httpOnly (BFF) quando o login entrar.
+
+# CSP estrita do app e da API: sem script nem estilo inline.
+(csp_estrita) {
+	header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
+}
+
 {$TST_DOMAIN} {
 	encode zstd gzip
 	header {
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
-		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
 		-Server
 	}
+
+	# O Swagger UI embutido na API gera <script> e <style> inline no HTML: so aqui a CSP admite 'unsafe-inline'
+	# (ferramenta de desenvolvimento, mesma origem, sem conteudo de usuario).
+	handle /api/v1/docs/* {
+		header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
+		reverse_proxy api:8080
+	}
 	handle /api/* {
+		import csp_estrita
 		reverse_proxy api:8080
 	}
 	handle {
+		import csp_estrita
 		reverse_proxy web:8080
 	}
 }

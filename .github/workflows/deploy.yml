@@ -1,13 +1,17 @@
 # Deploy em tst (VM Oracle), 100% automatico: monta o pacote de configuracao (compose, Caddyfile, api.env e o
 # secrets.env com a DATABASE_URL do secret do GitHub) e o envia pela entrada padrao do SSH ao deploy.sh da VM,
 # que migra o banco, atualiza as imagens e sobe a versao. Nada e gravado a mao na VM.
-# Usos: AUTOMATICO (workflow_call: api-ci e web-ci chamam depois do job `image`, num push na develop) e
+# Usos: AUTOMATICO (workflow_call: api-ci e web-ci chamam depois do job `image`, num push na develop; e push em
+# deploy/tst ou deploy/scripts, que so atualiza a configuracao) e
 # MANUAL (workflow_dispatch: escolher tags ou fazer rollback).
 # Secrets (repositorio ou Environment `tst`): DEPLOY_SSH_KEY, DEPLOY_HOST, DEPLOY_KNOWN_HOSTS e DATABASE_URL;
 # opcionais do login (tudo ou nada): OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET e SESSION_KEY.
 # Tags: 'sha-<commit>' (ou '-' para manter a atual).
 name: deploy
 on:
+  push: # configuracao do ambiente (Caddyfile, compose, scripts) vai sozinha para a VM, mantendo as versoes atuais
+    branches: [develop]
+    paths: ["deploy/tst/**", "deploy/scripts/**", ".github/workflows/deploy.yml"]
   workflow_dispatch:
     inputs:
       action:
@@ -65,9 +69,9 @@ jobs:
       - name: Executa o deploy.sh na VM (comando forcado)
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
-          ACTION: ${{ inputs.action }}
-          API_TAG: ${{ inputs.api_tag }}
-          WEB_TAG: ${{ inputs.web_tag }}
+          ACTION: ${{ inputs.action || 'deploy' }}
+          API_TAG: ${{ inputs.api_tag || '-' }}
+          WEB_TAG: ${{ inputs.web_tag || '-' }}
         run: |
           HOST="$(printf '%s' "$HOST" | tr -d '[:space:]')" # secret colado com espaco ou quebra de linha sobrando
           # Espaco na frente: um comando que comeca com "-" (tag "-" = manter) o ssh leria como opcao ("unknown option --").
