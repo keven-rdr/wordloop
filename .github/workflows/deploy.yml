@@ -41,7 +41,7 @@ jobs:
           done
           install -m 700 -d ~/.ssh
           printf '%s\n' "$KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
-          printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts
+          printf '%s\n' "$KNOWN" | tr -d '\r' > ~/.ssh/known_hosts
           install -d "$RUNNER_TEMP/pacote"
           cp deploy/tst/compose.yaml deploy/tst/Caddyfile deploy/tst/api.env deploy/scripts/deploy.sh "$RUNNER_TEMP/pacote/"
           printf 'DATABASE_URL=%s\n' "$(printf '%s' "$DATABASE_URL" | tr -d '\r\n')" > "$RUNNER_TEMP/pacote/secrets.env"
@@ -53,5 +53,19 @@ jobs:
           API_TAG: ${{ inputs.api_tag }}
           WEB_TAG: ${{ inputs.web_tag }}
         run: |
+          HOST="$(printf '%s' "$HOST" | tr -d '[:space:]')" # secret colado com espaco ou quebra de linha sobrando
           if [ "$ACTION" = "rollback" ]; then CMD="rollback"; else CMD="$API_TAG $WEB_TAG"; fi
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "deploy@$HOST" "$CMD" < "$RUNNER_TEMP/pacote.tar"
+          set +e
+          # 255 = falha do proprio ssh (conexao derrubada pelo sshd sob varredura de bots): o deploy.sh nem rodou, repetir e seguro.
+          for tentativa in 1 2 3 4; do
+            saida="$(ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o ConnectTimeout=20 "deploy@$HOST" "$CMD" < "$RUNNER_TEMP/pacote.tar" 2>&1)"
+            codigo=$?
+            [ "$codigo" -ne 255 ] && break
+            echo "ssh falhou (255) na tentativa $tentativa: $(printf '%s' "$saida" | tail -n 1)"
+            sleep $((tentativa * 10))
+          done
+          printf '%s\n' "$saida"
+          if [ "$codigo" -ne 0 ]; then
+            echo "::error title=deploy falhou (codigo $codigo)::$(printf '%s' "$saida" | tail -n 8 | tr '\n' ' ')"
+          fi
+          exit "$codigo"
