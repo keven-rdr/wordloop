@@ -41,7 +41,12 @@ Cada workflow filtra por caminho **dentro** dele; o job `*-gate` sempre roda e p
 
 ## Deploy de tst (VM Oracle Micro)
 
-`deploy.yml` chama por SSH, com chave de **comando forçado**, o `deploy/scripts/deploy.sh` na VM, que faz `pull` das imagens `sha-<commit>` do GHCR e `up -d` (ou `rollback`). A VM roda Caddy + API + web; o Postgres é o Neon e **não há Keycloak** em tst ([ADR 0022](adr/0022-vm-oracle-micro-neon-sem-keycloak-em-tst.md)). Dois usos: **manual** (*Actions → deploy → Run workflow*, inclusive `rollback`) e **automático**: os jobs `deploy-tst` do `api-ci` e do `web-ci` chamam o `deploy.yml` depois do job `image`, num push na `develop`, **só** com a variável de repositório `DEPLOY_TST_ENABLED=true` (desligado por padrão: ligue depois que a VM estiver pronta). Um push novo cancela o run anterior do CI, inclusive um deploy em andamento. Preparo da VM: `deploy/scripts/bootstrap-vm.sh`. Arquivos de tst em `deploy/tst/` (`secrets.env` e `versions.env` reais ficam só na VM).
+**Deploy 100% automático.** Todo push na `develop` que gera imagem nova faz o `api-ci`/`web-ci` chamar o `deploy.yml` (job `deploy-tst`). Ele monta um pacote com `compose.yaml`, `Caddyfile`, `api.env` e o `secrets.env` (com a `DATABASE_URL` do **secret** do GitHub) e o envia pela entrada padrão do SSH, com chave de **comando forçado**, ao `deploy/scripts/deploy.sh` da VM. O script grava os arquivos, faz `pull` das imagens `sha-<commit>` do GHCR, **migra o banco quando a API muda** (`api migrate`, nunca no rollback) e sobe com `up -d`. A VM roda Caddy + API + web; o Postgres é o Neon e **não há Keycloak** em tst ([ADR 0022](adr/0022-vm-oracle-micro-neon-sem-keycloak-em-tst.md)). Nada é gravado à mão na VM.
+
+- **Secrets exigidos** (*Settings → Secrets and variables → Actions → Secrets*): `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_KNOWN_HOSTS` e `DATABASE_URL` (connection string do Neon). Se faltar algum, o job falha dizendo qual. `DATABASE_URL` precisa ser **secret**, não *variable* (variável aparece em texto aberto).
+- **Manual:** *Actions → deploy → Run workflow* escolhe as tags ou faz `rollback`.
+- **Concorrência:** os dois CIs podem chamar o deploy ao mesmo tempo; o `deploy.yml` os serializa. Um push na `develop` nunca cancela o CI (e o deploy) em andamento; só PR cancela execução antiga.
+- Preparo único da VM: `deploy/scripts/bootstrap-vm.sh`. Arquivos de tst em `deploy/tst/` (`versions.env` real fica só na VM).
 
 ## Ainda não existe
 

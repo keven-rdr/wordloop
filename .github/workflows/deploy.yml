@@ -1,7 +1,9 @@
-# Deploy em tst (VM Oracle): chama o deploy.sh por SSH com as tags das imagens que o CI ja publicou no GHCR.
-# Dois usos: MANUAL (workflow_dispatch, inclusive rollback) e AUTOMATICO (workflow_call, chamado por api-ci e web-ci
-# depois do job `image`, so quando a variavel de repositorio DEPLOY_TST_ENABLED=true).
-# Secrets DEPLOY_SSH_KEY, DEPLOY_HOST e DEPLOY_KNOWN_HOSTS (repositorio ou Environment `tst`).
+# Deploy em tst (VM Oracle), 100% automatico: monta o pacote de configuracao (compose, Caddyfile, api.env e o
+# secrets.env com a DATABASE_URL do secret do GitHub) e o envia pela entrada padrao do SSH ao deploy.sh da VM,
+# que migra o banco, atualiza as imagens e sobe a versao. Nada e gravado a mao na VM.
+# Usos: AUTOMATICO (workflow_call: api-ci e web-ci chamam depois do job `image`, num push na develop) e
+# MANUAL (workflow_dispatch: escolher tags ou fazer rollback).
+# Secrets (repositorio ou Environment `tst`): DEPLOY_SSH_KEY, DEPLOY_HOST, DEPLOY_KNOWN_HOSTS e DATABASE_URL.
 # Tags: 'sha-<commit>' (ou '-' para manter a atual).
 name: deploy
 on:
@@ -27,14 +29,23 @@ jobs:
     runs-on: ubuntu-latest
     environment: tst
     steps:
-      - name: Prepara a chave SSH (host verificado, sem StrictHostKeyChecking=no)
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Prepara a chave SSH e o pacote de configuracao
         env:
           KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
+          for v in KEY KNOWN DATABASE_URL; do
+            [ -n "${!v}" ] || { echo "::error::secret ausente ou vazio: $v (Settings > Secrets and variables > Actions > Secrets)"; exit 1; }
+          done
           install -m 700 -d ~/.ssh
           printf '%s\n' "$KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
           printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts
+          install -d "$RUNNER_TEMP/pacote"
+          cp deploy/tst/compose.yaml deploy/tst/Caddyfile deploy/tst/api.env deploy/scripts/deploy.sh "$RUNNER_TEMP/pacote/"
+          printf 'DATABASE_URL=%s\n' "$(printf '%s' "$DATABASE_URL" | tr -d '\r\n')" > "$RUNNER_TEMP/pacote/secrets.env"
+          tar -C "$RUNNER_TEMP/pacote" -cf "$RUNNER_TEMP/pacote.tar" compose.yaml Caddyfile api.env secrets.env deploy.sh
       - name: Executa o deploy.sh na VM (comando forcado)
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
@@ -43,4 +54,4 @@ jobs:
           WEB_TAG: ${{ inputs.web_tag }}
         run: |
           if [ "$ACTION" = "rollback" ]; then CMD="rollback"; else CMD="$API_TAG $WEB_TAG"; fi
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "deploy@$HOST" "$CMD"
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "deploy@$HOST" "$CMD" < "$RUNNER_TEMP/pacote.tar"

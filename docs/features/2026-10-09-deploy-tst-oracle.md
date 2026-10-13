@@ -7,7 +7,7 @@ O primeiro ambiente publicado (tst) roda numa VM Oracle de 1 GB. Ver [ADR 0022](
 
 ## Definições confirmadas
 - Banco: Neon gerenciado. Keycloak: fora da VM por enquanto. Domínio próprio. IP público reservado `wordloop-tst`.
-- Deploy manual (`workflow_dispatch`) com tags `sha-<commit>`; rollback pela tag anterior.
+- Deploy **automático** em todo push na `develop` (pacote de configuração + `DATABASE_URL` do secret enviados por SSH; migração antes de subir a API); manual e rollback pelo `workflow_dispatch`.
 
 ## Decisões
 - Sem `ufw`: o Docker publica portas por fora dele; o firewall é a Security List da Oracle (22 só do dono, 80 e 443 abertos).
