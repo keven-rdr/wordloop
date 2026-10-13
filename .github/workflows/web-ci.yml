@@ -1,5 +1,5 @@
 # CI do web: lint, testes, E2E, Sonar (opcional) e imagem. O check obrigatorio e o job "web-gate".
-# Lighthouse e deploy entram depois (Sprint 0b/1 final). Sonar: variavel SONAR_ENABLED=true + secret SONAR_TOKEN_WEB.
+# Lighthouse entra depois. Sonar: variavel SONAR_ENABLED=true + secret SONAR_TOKEN_WEB. Deploy em tst: job deploy-tst (deploy.yml), automatico a cada push na develop.
 name: web-ci
 on:
   pull_request: { branches: [develop] }
