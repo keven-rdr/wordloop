@@ -17,7 +17,9 @@ if [[ ! -t 0 ]]; then
   cat >"$tmp/pacote.tar"
   if [[ -s "$tmp/pacote.tar" ]]; then
     tar -xf "$tmp/pacote.tar" -C "$tmp" compose.yaml Caddyfile api.env secrets.env deploy.sh
-    install -m 644 "$tmp/compose.yaml" "$tmp/Caddyfile" "$tmp/api.env" "$DIR/"
+    install -m 644 "$tmp/compose.yaml" "$tmp/api.env" "$DIR/"
+    # Caddyfile e montado como ARQUIVO no contêiner: gravar no lugar (mesmo inode) para o contêiner enxergar a troca.
+    cat "$tmp/Caddyfile" >"$DIR/Caddyfile"
     install -m 600 "$tmp/secrets.env" "$DIR/secrets.env"
     install -m 755 "$tmp/deploy.sh" "$DIR/deploy.sh.new" # vira o deploy.sh no fim: nao troca o script em execucao
   fi
@@ -43,6 +45,8 @@ if [[ "${API_TAG:-}" != "rollback" && "${API_TAG:-}" != "-" ]]; then
   timeout 120 docker compose --env-file versions.env run --rm api migrate
 fi
 compose up -d --remove-orphans
+# Recarrega a configuracao do Caddy sem derrubar conexoes (valida antes de aplicar); aviso, nao erro, se ele ainda subia.
+compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile || echo "aviso: nao foi possivel recarregar o Caddy" >&2
 docker image prune -f >/dev/null # disco pequeno: apaga imagens antigas sem uso
 compose ps
 [[ -f deploy.sh.new ]] && mv -f deploy.sh.new deploy.sh

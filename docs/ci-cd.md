@@ -46,6 +46,8 @@ Cada workflow filtra por caminho **dentro** dele; o job `*-gate` sempre roda e p
 - **Secrets exigidos** (*Settings → Secrets and variables → Actions → Secrets*): `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_KNOWN_HOSTS` e `DATABASE_URL` (connection string do Neon). Se faltar algum, o job falha dizendo qual. `DATABASE_URL` precisa ser **secret**, não *variable* (variável aparece em texto aberto).
 - **Login (opcional, tudo ou nada):** `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` e `SESSION_KEY` (32 bytes em base64, `openssl rand -base64 32`). Sem eles a API sobe com o login desligado (`/auth/*` responde 503); com só alguns, o deploy falha dizendo o que falta. O callback de tst, `https://tst.wordloop.com.br/api/v1/auth/callback`, vem do `deploy/tst/api.env`.
 - **Manual:** *Actions → deploy → Run workflow* escolhe as tags ou faz `rollback`.
+- **Só configuração:** um push na `develop` que altere `deploy/tst/**` ou `deploy/scripts/**` (Caddyfile, compose, scripts) roda o `deploy.yml` sozinho, mantendo as versões atuais; o `deploy.sh` grava o `Caddyfile` no lugar e recarrega o Caddy sem derrubar conexões.
+- **CSP:** o Caddy aplica uma política estrita ao app e à API. Só `/api/v1/docs/*` admite `unsafe-inline`, porque o Swagger UI embutido gera `<script>` e `<style>` inline; sem isso a página fica em branco.
 - **Concorrência:** os dois CIs podem chamar o deploy ao mesmo tempo; o `deploy.yml` os serializa. Um push na `develop` nunca cancela o CI (e o deploy) em andamento; só PR cancela execução antiga.
 - Preparo único da VM: `deploy/scripts/bootstrap-vm.sh`. Arquivos de tst em `deploy/tst/` (`versions.env` real fica só na VM).
 
