@@ -17,6 +17,8 @@ linters:
     paths: ["internal/api/gen"]
     rules:
       - path: _test\.go
-        linters: [funlen, cyclop]
+        linters: [funlen, cyclop, gosec] # cookies de teste sao valores ficticios
       - path: ^scripts/
         linters: [gosec] # ferramenta de dev, le so o proprio repositorio
+      - path: internal/identity/adapters/http/cookies\.go
+        linters: [gosec] # G124: Secure vale quando a URL publica e https; em http local o navegador descartaria o cookie (HttpOnly e SameSite=Lax sao fixos)

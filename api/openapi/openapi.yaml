@@ -5,13 +5,17 @@ info:
   description: Fonte da verdade do contrato. O servidor Go e o cliente TypeScript sao gerados daqui.
 servers:
   - url: /api/v1
+security:
+  - sessionCookie: []
 tags:
   - name: meta
+  - name: identity
 paths:
   /version:
     get:
       tags: [meta]
       operationId: getVersion
+      security: []
       responses:
         "200":
           description: ok
@@ -22,11 +26,67 @@ paths:
     get:
       tags: [meta]
       operationId: getReadiness
+      security: []
       responses:
         "200": { description: ok }
         "503": { description: banco de dados indisponivel }
+  /auth/login:
+    get:
+      tags: [identity]
+      operationId: startLogin
+      description: Inicia o login (OIDC code + PKCE) e redireciona ao provedor de identidade.
+      security: []
+      parameters:
+        - { name: return_to, in: query, required: false, description: caminho relativo para voltar depois de entrar, schema: { type: string, maxLength: 512 } }
+      responses:
+        "302": { description: redireciona ao provedor de identidade }
+        "503": { description: login nao configurado neste ambiente }
+  /auth/callback:
+    get:
+      tags: [identity]
+      operationId: finishLogin
+      description: Conclui o login, cria a sessao (cookie httpOnly) e redireciona de volta ao app.
+      security: []
+      parameters:
+        - { name: code, in: query, required: false, schema: { type: string } }
+        - { name: state, in: query, required: false, schema: { type: string } }
+        - { name: error, in: query, required: false, schema: { type: string } }
+      responses:
+        "302": { description: sessao criada, redireciona ao app }
+        "400": { description: login invalido ou expirado }
+        "503": { description: login nao configurado neste ambiente }
+  /auth/logout:
+    post:
+      tags: [identity]
+      operationId: logout
+      description: Encerra a sessao atual e limpa o cookie.
+      parameters:
+        - { name: X-Requested-With, in: header, required: true, description: protecao contra CSRF, schema: { type: string, enum: [XMLHttpRequest] } }
+      responses:
+        "204": { description: sessao encerrada }
+        "400": { description: cabecalho de protecao ausente }
+  /me:
+    get:
+      tags: [identity]
+      operationId: getMe
+      description: Perfil de quem esta logado.
+      responses:
+        "200":
+          description: perfil
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Me" }
+        "401": { description: sem sessao valida }
 components:
+  securitySchemes:
+    sessionCookie: { type: apiKey, in: cookie, name: wl_session }
   schemas:
+    Me:
+      type: object
+      required: [id, display_name]
+      properties:
+        id: { type: string, format: uuid }
+        display_name: { type: string }
     Version:
       type: object
       required: [api, commit, env]

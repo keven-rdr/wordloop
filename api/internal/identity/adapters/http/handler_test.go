@@ -1,0 +1,157 @@
+package httpapi_test
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strings"
+	"testing"
+
+	"github.com/keven-rdr/wordloop/api/internal/api"
+	httpapi "github.com/keven-rdr/wordloop/api/internal/identity/adapters/http"
+	"github.com/keven-rdr/wordloop/api/internal/identity/app"
+	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
+	"github.com/keven-rdr/wordloop/api/internal/identity/identitytest"
+	"github.com/keven-rdr/wordloop/api/internal/platform/seal"
+)
+
+func newHandler(t *testing.T, enabled bool) http.Handler {
+	t.Helper()
+	sealer, err := seal.New(bytes.Repeat([]byte{5}, seal.KeySize))
+	if err != nil {
+		t.Fatal(err)
+	}
+	provider := &identitytest.Provider{Identity: domain.Identity{Issuer: "https://idp.test", Subject: "abc", DisplayName: "Aluno"}, Refresh: "r"}
+	users, sessions := &identitytest.Users{}, &identitytest.Sessions{}
+	h := httpapi.Handler{Me: app.GetMe{Sessions: sessions, Users: users}, Out: app.Logout{Sessions: sessions}, Secure: true}
+	if enabled {
+		h.Start = &app.StartLogin{Provider: provider, Sealer: sealer}
+		h.Finish = &app.FinishLogin{Provider: provider, Users: users, Sessions: sessions, Sealer: sealer}
+	}
+	return api.Handler(api.Server{Identity: h})
+}
+
+func do(h http.Handler, method, target string, headers map[string]string, cookies ...*http.Cookie) *http.Response {
+	req := httptest.NewRequest(method, target, nil)
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	for _, c := range cookies {
+		req.AddCookie(c)
+	}
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	return rec.Result()
+}
+
+func cookie(t *testing.T, res *http.Response, name string) *http.Cookie {
+	t.Helper()
+	for _, c := range res.Cookies() {
+		if c.Name == name {
+			return c
+		}
+	}
+	t.Fatalf("cookie %s ausente; veio %v", name, res.Cookies())
+	return nil
+}
+
+// loginFlow faz login ate o callback e devolve o cookie da sessao.
+func loginFlow(t *testing.T, h http.Handler) *http.Cookie {
+	t.Helper()
+	res := do(h, http.MethodGet, "/api/v1/auth/login?return_to=/estudo", nil)
+	if res.StatusCode != http.StatusFound {
+		t.Fatalf("login: esperava 302, veio %d", res.StatusCode)
+	}
+	loc, err := url.Parse(res.Header.Get("Location"))
+	if err != nil || loc.Host != "idp.test" {
+		t.Fatalf("Location inesperado: %q", res.Header.Get("Location"))
+	}
+	flow := cookie(t, res, httpapi.FlowCookie)
+	if !flow.HttpOnly || !flow.Secure || flow.SameSite != http.SameSiteLaxMode || flow.Path != "/api/v1/auth" || flow.MaxAge <= 0 {
+		t.Fatalf("cookie de estado sem os atributos de seguranca: %+v", flow)
+	}
+	cb := do(h, http.MethodGet, "/api/v1/auth/callback?code="+identitytest.GoodCode+"&state="+loc.Query().Get("state"), nil, flow)
+	if cb.StatusCode != http.StatusFound || cb.Header.Get("Location") != "/estudo" {
+		t.Fatalf("callback: %d Location=%q", cb.StatusCode, cb.Header.Get("Location"))
+	}
+	if cleared := cookie(t, cb, httpapi.FlowCookie); cleared.MaxAge >= 0 {
+		t.Fatalf("o cookie de estado deveria ser apagado: %+v", cleared)
+	}
+	return cookie(t, cb, httpapi.SessionCookie)
+}
+
+func TestFullLoginMeLogoutFlow(t *testing.T) {
+	h := newHandler(t, true)
+	session := loginFlow(t, h)
+	if !session.HttpOnly || !session.Secure || session.SameSite != http.SameSiteLaxMode || session.Path != "/" || session.MaxAge <= 0 {
+		t.Fatalf("cookie da sessao sem os atributos de seguranca: %+v", session)
+	}
+
+	me := do(h, http.MethodGet, "/api/v1/me", nil, session)
+	var body map[string]string
+	if err := json.NewDecoder(me.Body).Decode(&body); err != nil || me.StatusCode != http.StatusOK || body["display_name"] != "Aluno" || body["id"] == "" {
+		t.Fatalf("/me: %d %v %v", me.StatusCode, body, err)
+	}
+
+	if res := do(h, http.MethodPost, "/api/v1/auth/logout", nil, session); res.StatusCode != http.StatusBadRequest {
+		t.Fatalf("logout sem o cabecalho anti-CSRF: esperava 400, veio %d", res.StatusCode)
+	}
+	out := do(h, http.MethodPost, "/api/v1/auth/logout", map[string]string{"X-Requested-With": "XMLHttpRequest"}, session)
+	if out.StatusCode != http.StatusNoContent || cookie(t, out, httpapi.SessionCookie).MaxAge >= 0 {
+		t.Fatalf("logout: %d", out.StatusCode)
+	}
+	if res := do(h, http.MethodGet, "/api/v1/me", nil, session); res.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("/me depois do logout: esperava 401, veio %d", res.StatusCode)
+	}
+}
+
+func TestMeWithoutOrWithBogusSessionIs401(t *testing.T) {
+	h := newHandler(t, true)
+	for name, cs := range map[string][]*http.Cookie{"sem cookie": nil, "cookie falso": {{Name: httpapi.SessionCookie, Value: "falso"}}} {
+		if res := do(h, http.MethodGet, "/api/v1/me", nil, cs...); res.StatusCode != http.StatusUnauthorized {
+			t.Errorf("%s: esperava 401, veio %d", name, res.StatusCode)
+		}
+	}
+}
+
+func TestCallbackRejectsInvalidLoginAndClearsStateCookie(t *testing.T) {
+	h := newHandler(t, true)
+	res := do(h, http.MethodGet, "/api/v1/auth/callback?code=x&state=y", nil, &http.Cookie{Name: httpapi.FlowCookie, Value: "lixo"})
+	if res.StatusCode != http.StatusBadRequest || cookie(t, res, httpapi.FlowCookie).MaxAge >= 0 {
+		t.Fatalf("callback invalido: %d", res.StatusCode)
+	}
+	if res := do(h, http.MethodGet, "/api/v1/auth/callback?error=access_denied", nil); res.StatusCode != http.StatusBadRequest {
+		t.Fatalf("callback com erro do provedor: esperava 400, veio %d", res.StatusCode)
+	}
+}
+
+func TestLoginIsUnavailableWhenNotConfigured(t *testing.T) {
+	h := newHandler(t, false)
+	for _, path := range []string{"/api/v1/auth/login", "/api/v1/auth/callback?code=x&state=y"} {
+		if res := do(h, http.MethodGet, path, nil); res.StatusCode != http.StatusServiceUnavailable {
+			t.Errorf("%s: esperava 503, veio %d", path, res.StatusCode)
+		}
+	}
+	if res := do(h, http.MethodGet, "/api/v1/me", nil); res.StatusCode != http.StatusUnauthorized {
+		t.Errorf("/me: esperava 401, veio %d", res.StatusCode)
+	}
+}
+
+func TestSessionCookieIsNotSecureOverPlainHTTP(t *testing.T) {
+	sealer, _ := seal.New(bytes.Repeat([]byte{5}, seal.KeySize))
+	provider := &identitytest.Provider{}
+	h := api.Handler(api.Server{Identity: httpapi.Handler{
+		Start:  &app.StartLogin{Provider: provider, Sealer: sealer},
+		Finish: &app.FinishLogin{Provider: provider, Sealer: sealer},
+		Secure: false,
+	}})
+	res := do(h, http.MethodGet, "/api/v1/auth/login", nil)
+	if c := cookie(t, res, httpapi.FlowCookie); c.Secure || !c.HttpOnly {
+		t.Fatalf("em http local o cookie nao pode ser Secure (o navegador o descartaria): %+v", c)
+	}
+	if !strings.HasPrefix(res.Header.Get("Location"), "https://idp.test/") {
+		t.Fatalf("Location = %q", res.Header.Get("Location"))
+	}
+}

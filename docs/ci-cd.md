@@ -44,6 +44,7 @@ Cada workflow filtra por caminho **dentro** dele; o job `*-gate` sempre roda e p
 **Deploy 100% automático.** Todo push na `develop` que gera imagem nova faz o `api-ci`/`web-ci` chamar o `deploy.yml` (job `deploy-tst`). Ele monta um pacote com `compose.yaml`, `Caddyfile`, `api.env` e o `secrets.env` (com a `DATABASE_URL` do **secret** do GitHub) e o envia pela entrada padrão do SSH, com chave de **comando forçado**, ao `deploy/scripts/deploy.sh` da VM. O script grava os arquivos, faz `pull` das imagens `sha-<commit>` do GHCR, **migra o banco quando a API muda** (`api migrate`, nunca no rollback) e sobe com `up -d`. A VM roda Caddy + API + web; o Postgres é o Neon e **não há Keycloak** em tst ([ADR 0022](adr/0022-vm-oracle-micro-neon-sem-keycloak-em-tst.md)). Nada é gravado à mão na VM.
 
 - **Secrets exigidos** (*Settings → Secrets and variables → Actions → Secrets*): `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_KNOWN_HOSTS` e `DATABASE_URL` (connection string do Neon). Se faltar algum, o job falha dizendo qual. `DATABASE_URL` precisa ser **secret**, não *variable* (variável aparece em texto aberto).
+- **Login (opcional, tudo ou nada):** `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` e `SESSION_KEY` (32 bytes em base64, `openssl rand -base64 32`). Sem eles a API sobe com o login desligado (`/auth/*` responde 503); com só alguns, o deploy falha dizendo o que falta. O callback de tst, `https://tst.wordloop.com.br/api/v1/auth/callback`, vem do `deploy/tst/api.env`.
 - **Manual:** *Actions → deploy → Run workflow* escolhe as tags ou faz `rollback`.
 - **Concorrência:** os dois CIs podem chamar o deploy ao mesmo tempo; o `deploy.yml` os serializa. Um push na `develop` nunca cancela o CI (e o deploy) em andamento; só PR cancela execução antiga.
 - Preparo único da VM: `deploy/scripts/bootstrap-vm.sh`. Arquivos de tst em `deploy/tst/` (`versions.env` real fica só na VM).
@@ -55,3 +56,15 @@ Deploy em prd, promoção por re-etiqueta com release-please, Keycloak fora do d
 ## Hooks locais (lefthook + commitlint)
 
 Instalados por `npm install` na raiz (script `prepare`). `commit-msg`: Conventional Commits. `pre-commit`: `gofmt` nos `.go` e `biome ci` no web. `pre-push`: `npm run check` (só os componentes alterados). **Não use `--no-verify`.**
+
+## Login em tst (IdP OIDC externo)
+
+A VM de tst não comporta o Keycloak, então tst usa um provedor OIDC hospedado (qualquer um que siga o padrão; a API só precisa do *issuer*). Passo a passo, uma vez:
+
+1. No provedor, crie uma aplicação **Web (confidencial)** com *Authorization Code* + PKCE.
+2. Cadastre o *redirect URI* `https://tst.wordloop.com.br/api/v1/auth/callback` e o *logout/web origin* `https://tst.wordloop.com.br`.
+3. Copie o *issuer* (a URL base que serve `/.well-known/openid-configuration`), o *client id* e o *client secret*.
+4. No GitHub, em *Settings → Secrets and variables → Actions → Secrets*, crie `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` e `SESSION_KEY`.
+5. O próximo push na `develop` envia tudo à VM; confira `https://tst.wordloop.com.br/api/v1/auth/login` (deve redirecionar ao provedor).
+
+Em dev o login usa o Keycloak do Compose (`deploy/dev`, realm `wordloop-dev`): defina `SESSION_KEY` no `api/.env` e entre com `aluno@wordloop.local` / `aluno`.
