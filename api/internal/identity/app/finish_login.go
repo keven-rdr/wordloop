@@ -7,20 +7,19 @@ import (
 	"fmt"
 	"io"
 	"time"
-)
 
-// DefaultSessionTTL e a duracao da sessao.
-const DefaultSessionTTL = 30 * 24 * time.Hour
+	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
+)
 
 // FinishLogin conclui o login: valida o estado, troca o code, cria/atualiza o perfil e abre a sessao.
 type FinishLogin struct {
-	Provider   Provider
-	Users      Users
-	Sessions   Sessions
-	Sealer     Sealer
-	Rand       io.Reader        // nil = crypto/rand
-	Now        func() time.Time // injetado nos testes
-	SessionTTL time.Duration    // 0 = DefaultSessionTTL
+	Provider Provider
+	Users    Users
+	Sessions Sessions
+	Sealer   Sealer
+	Rand     io.Reader            // nil = crypto/rand
+	Now      func() time.Time     // injetado nos testes
+	Policy   domain.SessionPolicy // campo zero = padrao (OrDefault)
 }
 
 // FinishInput vem da query do callback e do cookie de estado.
@@ -37,7 +36,7 @@ type LoggedIn struct {
 	ExpiresAt time.Time
 }
 
-// Run valida e abre a sessao; qualquer problema com o pedido vira ErrInvalidLogin.
+// Run valida e abre a sessao; qualquer problema com o pedido vira ErrInvalidLogin e admin sem 2 fatores vira ErrMFARequired.
 func (u FinishLogin) Run(ctx context.Context, in FinishInput) (LoggedIn, error) {
 	flow, err := u.readFlow(in)
 	if err != nil {
@@ -51,7 +50,11 @@ func (u FinishLogin) Run(ctx context.Context, in FinishInput) (LoggedIn, error) 
 	if err != nil {
 		return LoggedIn{}, fmt.Errorf("gravar o perfil: %w", err)
 	}
-	return u.openSession(ctx, user.ID, tokens.RefreshToken, in.UserAgent, flow.ReturnTo)
+	// Admin so entra com 2 fatores comprovados pelo provedor; sem isso nenhuma sessao e criada (falha fechada).
+	if user.Role == domain.RoleAdmin && !tokens.Identity.MFA {
+		return LoggedIn{}, ErrMFARequired
+	}
+	return u.openSession(ctx, user, tokens, in.UserAgent, flow.ReturnTo)
 }
 
 func (u FinishLogin) readFlow(in FinishInput) (Flow, error) {

@@ -32,7 +32,7 @@ func (r *Users) Upsert(ctx context.Context, id domain.Identity) (domain.User, er
 	if err != nil {
 		return domain.User{}, fmt.Errorf("upsert do perfil: %w", err)
 	}
-	return domain.User{ID: row.ID, DisplayName: row.DisplayName.String}, nil
+	return domain.User{ID: row.ID, DisplayName: row.DisplayName.String, Role: domain.ParseRole(row.Role)}, nil
 }
 
 // Get le o perfil; app.ErrNotFound se nao existe ou foi removido.
@@ -44,5 +44,5 @@ func (r *Users) Get(ctx context.Context, id uuid.UUID) (domain.User, error) {
 	if err != nil {
 		return domain.User{}, fmt.Errorf("ler o perfil: %w", err)
 	}
-	return domain.User{ID: row.ID, DisplayName: row.DisplayName.String}, nil
+	return domain.User{ID: row.ID, DisplayName: row.DisplayName.String, Role: domain.ParseRole(row.Role)}, nil
 }

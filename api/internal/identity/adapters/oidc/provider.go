@@ -14,7 +14,6 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/keven-rdr/wordloop/api/internal/identity/app"
-	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
 )
 
 // Config vem do ambiente (OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET, OIDC_REDIRECT_URL).
@@ -89,19 +88,12 @@ func (p *Provider) Exchange(ctx context.Context, code, verifier, nonce string) (
 	if idt.Nonce != nonce {
 		return app.Tokens{}, errors.New("nonce do id_token diferente do esperado")
 	}
-	var claims struct {
-		Name              string `json:"name"`
-		PreferredUsername string `json:"preferred_username"`
-	}
-	if err := idt.Claims(&claims); err != nil {
-		return app.Tokens{}, fmt.Errorf("ler as claims: %w", err)
-	}
-	name := claims.Name
-	if name == "" {
-		name = claims.PreferredUsername
+	ident, err := identityFrom(idt)
+	if err != nil {
+		return app.Tokens{}, err
 	}
 	return app.Tokens{
-		Identity:     domain.Identity{Issuer: idt.Issuer, Subject: idt.Subject, DisplayName: name},
+		Identity:     ident,
 		RefreshToken: tok.RefreshToken,
 	}, nil
 }

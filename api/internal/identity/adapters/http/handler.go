@@ -13,14 +13,22 @@ import (
 
 // Handler implementa as operacoes de identidade do contrato. Start e Finish nulos = login nao configurado (503).
 type Handler struct {
-	Start  *app.StartLogin
-	Finish *app.FinishLogin
-	Me     app.GetMe
-	Out    app.Logout
-	Secure bool // cookies Secure (URL publica em https)
+	Start     *app.StartLogin
+	Finish    *app.FinishLogin
+	Auth      app.Authenticate
+	Out       app.Logout
+	List      app.ListSessions
+	Revoke    app.RevokeSession
+	RevokeAll app.RevokeAllSessions
+	Secure    bool // cookies Secure e com prefixo (URL publica em https)
 }
 
 func (h Handler) cookies() cookies { return cookies{secure: h.Secure} }
+
+// sessionID le o cookie da sessao do pedido em andamento (o nome muda com o prefixo em HTTPS).
+func (h Handler) sessionID(ctx context.Context) string {
+	return httpx.Cookie(ctx, h.cookies().sessionName())
+}
 
 func (h Handler) enabled() bool { return h.Start != nil && h.Finish != nil }
 
@@ -49,12 +57,16 @@ func (h Handler) FinishLogin(ctx context.Context, req gen.FinishLoginRequestObje
 	c := h.cookies()
 	in := app.FinishInput{
 		Code: deref(req.Params.Code), State: deref(req.Params.State), ProviderError: deref(req.Params.Error),
-		FlowCookie: httpx.Cookie(ctx, FlowCookie), UserAgent: httpx.UserAgent(ctx),
+		FlowCookie: httpx.Cookie(ctx, c.flowName()), UserAgent: httpx.UserAgent(ctx),
 	}
 	done, err := h.Finish.Run(ctx, in)
 	if errors.Is(err, app.ErrInvalidLogin) {
 		slog.Info("login recusado", "err", err)
 		return badLogin{cookies: []*http.Cookie{c.clearFlow()}}, nil
+	}
+	if errors.Is(err, app.ErrMFARequired) {
+		slog.Warn("login de administrador recusado: sem 2 fatores comprovados pelo provedor")
+		return mfaRequired{cookies: []*http.Cookie{c.clearFlow()}}, nil
 	}
 	if err != nil {
 		return nil, err
@@ -64,7 +76,7 @@ func (h Handler) FinishLogin(ctx context.Context, req gen.FinishLoginRequestObje
 
 // Logout encerra a sessao.
 func (h Handler) Logout(ctx context.Context, _ gen.LogoutRequestObject) (gen.LogoutResponseObject, error) {
-	if err := h.Out.Run(ctx, httpx.Cookie(ctx, SessionCookie)); err != nil {
+	if err := h.Out.Run(ctx, h.sessionID(ctx)); err != nil {
 		return nil, err
 	}
 	return loggedOut{cookies: []*http.Cookie{h.cookies().clearSession()}}, nil
@@ -72,14 +84,14 @@ func (h Handler) Logout(ctx context.Context, _ gen.LogoutRequestObject) (gen.Log
 
 // GetMe devolve o perfil de quem esta logado.
 func (h Handler) GetMe(ctx context.Context, _ gen.GetMeRequestObject) (gen.GetMeResponseObject, error) {
-	user, err := h.Me.Run(ctx, httpx.Cookie(ctx, SessionCookie))
+	who, err := h.Auth.Run(ctx, h.sessionID(ctx))
 	if errors.Is(err, app.ErrNoSession) {
 		return gen.GetMe401Response{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return gen.GetMe200JSONResponse{Id: user.ID, DisplayName: user.DisplayName}, nil
+	return gen.GetMe200JSONResponse{Id: who.User.ID, DisplayName: who.User.DisplayName, Role: gen.MeRole(who.User.Role)}, nil
 }
 
 func deref(s *string) string {

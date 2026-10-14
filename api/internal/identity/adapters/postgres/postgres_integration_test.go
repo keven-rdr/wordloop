@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/keven-rdr/wordloop/api/internal/identity/adapters/postgres"
 	"github.com/keven-rdr/wordloop/api/internal/identity/app"
@@ -20,6 +21,12 @@ import (
 
 func setup(t *testing.T) (*postgres.Users, *postgres.Sessions) {
 	t.Helper()
+	pool := setupPool(t)
+	return postgres.NewUsers(pool), postgres.NewSessions(pool)
+}
+
+func setupPool(t *testing.T) *pgxpool.Pool {
+	t.Helper()
 	ctx := context.Background()
 	url, _ := dbtest.Postgres(t)
 	pool, err := db.Open(ctx, url)
@@ -30,7 +37,7 @@ func setup(t *testing.T) (*postgres.Users, *postgres.Sessions) {
 	if err := db.Migrate(ctx, pool, migrations.FS); err != nil {
 		t.Fatal(err)
 	}
-	return postgres.NewUsers(pool), postgres.NewSessions(pool)
+	return pool
 }
 
 func TestUpsertCreatesOnceAndKeepsIdentityStable(t *testing.T) {
@@ -73,20 +80,27 @@ func TestSessionLifecycle(t *testing.T) {
 	ctx := context.Background()
 	user, _ := users.Upsert(ctx, domain.Identity{Issuer: "i", Subject: "s"})
 	hash := []byte("0123456789abcdef0123456789abcdef")
-	expires := time.Now().Add(time.Hour).Truncate(time.Millisecond)
+	created := time.Now().Truncate(time.Millisecond)
+	expires := created.Add(time.Hour)
 
 	if _, err := sessions.Get(ctx, hash); !errors.Is(err, app.ErrNotFound) {
 		t.Fatalf("sessao inexistente: esperava ErrNotFound, veio %v", err)
 	}
-	if err := sessions.Create(ctx, app.NewSession{IDHash: hash, UserID: user.ID, RefreshTokenEnc: "sel", ExpiresAt: expires, UserAgent: "ua"}); err != nil {
+	if err := sessions.Create(ctx, app.NewSession{
+		IDHash: hash, UserID: user.ID, RefreshTokenEnc: "sel", CreatedAt: created, ExpiresAt: expires, AuthenticatedAt: created, MFA: true, UserAgent: "ua",
+	}); err != nil {
 		t.Fatal(err)
 	}
 	rec, err := sessions.Get(ctx, hash)
-	if err != nil || rec.UserID != user.ID || !rec.ExpiresAt.Equal(expires) {
+	if err != nil || rec.UserID != user.ID || !rec.ExpiresAt.Equal(expires) || !rec.CreatedAt.Equal(created) || !rec.LastUsedAt.Equal(created) || !rec.MFA || rec.PublicID == uuid.Nil {
 		t.Fatalf("Get: %+v %v (esperava expiracao %v)", rec, err, expires)
 	}
-	if err := sessions.Touch(ctx, hash); err != nil {
+	later := created.Add(10 * time.Minute)
+	if err := sessions.Touch(ctx, hash, later); err != nil {
 		t.Fatal(err)
+	}
+	if touched, _ := sessions.Get(ctx, hash); !touched.LastUsedAt.Equal(later) || !touched.CreatedAt.Equal(created) {
+		t.Fatalf("Touch deve mudar so o ultimo uso: %+v", touched)
 	}
 	if err := sessions.Delete(ctx, hash); err != nil {
 		t.Fatal(err)
@@ -97,7 +111,7 @@ func TestSessionLifecycle(t *testing.T) {
 	if err := sessions.Delete(ctx, hash); err != nil {
 		t.Fatalf("apagar duas vezes nao pode falhar: %v", err)
 	}
-	orphan := app.NewSession{IDHash: []byte("x"), UserID: uuid.New(), RefreshTokenEnc: "sel", ExpiresAt: expires}
+	orphan := app.NewSession{IDHash: []byte("x"), UserID: uuid.New(), RefreshTokenEnc: "sel", CreatedAt: created, ExpiresAt: expires, AuthenticatedAt: created}
 	if err := sessions.Create(ctx, orphan); err == nil {
 		t.Fatal("sessao de perfil inexistente deve violar a chave estrangeira")
 	}

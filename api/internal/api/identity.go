@@ -12,6 +12,9 @@ type Identity interface {
 	FinishLogin(ctx context.Context, req gen.FinishLoginRequestObject) (gen.FinishLoginResponseObject, error)
 	Logout(ctx context.Context, req gen.LogoutRequestObject) (gen.LogoutResponseObject, error)
 	GetMe(ctx context.Context, req gen.GetMeRequestObject) (gen.GetMeResponseObject, error)
+	ListSessions(ctx context.Context, req gen.ListSessionsRequestObject) (gen.ListSessionsResponseObject, error)
+	RevokeSession(ctx context.Context, req gen.RevokeSessionRequestObject) (gen.RevokeSessionResponseObject, error)
+	RevokeAllSessions(ctx context.Context, req gen.RevokeAllSessionsRequestObject) (gen.RevokeAllSessionsResponseObject, error)
 }
 
 // Sem modulo de identidade ligado (testes de outras rotas): login indisponivel e ninguem logado.
@@ -46,4 +49,28 @@ func (s Server) GetMe(ctx context.Context, req gen.GetMeRequestObject) (gen.GetM
 		return gen.GetMe401Response{}, nil
 	}
 	return s.Identity.GetMe(ctx, req)
+}
+
+// ListSessions delega ao modulo de identidade.
+func (s Server) ListSessions(ctx context.Context, req gen.ListSessionsRequestObject) (gen.ListSessionsResponseObject, error) {
+	if s.Identity == nil {
+		return gen.ListSessions401Response{}, nil
+	}
+	return s.Identity.ListSessions(ctx, req)
+}
+
+// RevokeSession delega ao modulo de identidade.
+func (s Server) RevokeSession(ctx context.Context, req gen.RevokeSessionRequestObject) (gen.RevokeSessionResponseObject, error) {
+	if s.Identity == nil {
+		return gen.RevokeSession401Response{}, nil
+	}
+	return s.Identity.RevokeSession(ctx, req)
+}
+
+// RevokeAllSessions delega ao modulo de identidade.
+func (s Server) RevokeAllSessions(ctx context.Context, req gen.RevokeAllSessionsRequestObject) (gen.RevokeAllSessionsResponseObject, error) {
+	if s.Identity == nil {
+		return gen.RevokeAllSessions401Response{}, nil
+	}
+	return s.Identity.RevokeAllSessions(ctx, req)
 }

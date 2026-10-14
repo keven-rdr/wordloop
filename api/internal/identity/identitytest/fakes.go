@@ -70,9 +70,21 @@ func (u *Users) Upsert(_ context.Context, id domain.Identity) (domain.User, erro
 		uid = uuid.New()
 		u.ids[key] = uid
 	}
-	user := domain.User{ID: uid, DisplayName: id.DisplayName}
+	user := domain.User{ID: uid, DisplayName: id.DisplayName, Role: domain.RoleUser}
+	if old, ok := u.byID[uid]; ok {
+		user.Role = old.Role // o papel nunca muda por login
+	}
 	u.byID[uid] = user
 	return user, nil
+}
+
+// SetRole muda o papel direto no "banco" (como o dono faria por SQL).
+func (u *Users) SetRole(id uuid.UUID, role domain.Role) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	user := u.byID[id]
+	user.Role = role
+	u.byID[id] = user
 }
 
 // Get devolve app.ErrNotFound se o perfil nao existe.
@@ -92,10 +104,24 @@ func (u *Users) Remove(id uuid.UUID) {
 	delete(u.byID, id)
 }
 
+// row e uma sessao guardada: o que foi gravado mais o que o banco geraria sozinho.
+type row struct {
+	app.NewSession
+	PublicID   uuid.UUID
+	LastUsedAt time.Time
+}
+
+func (r row) record() app.SessionRecord {
+	return app.SessionRecord{
+		PublicID: r.PublicID, UserID: r.UserID, CreatedAt: r.CreatedAt, LastUsedAt: r.LastUsedAt, ExpiresAt: r.ExpiresAt,
+		AuthenticatedAt: r.AuthenticatedAt, MFA: r.MFA, UserAgent: r.UserAgent,
+	}
+}
+
 // Sessions e um repositorio de sessoes em memoria, indexado pelo hash do id.
 type Sessions struct {
 	mu      sync.Mutex
-	items   map[string]app.NewSession
+	items   map[string]row
 	Touched int
 }
 
@@ -106,9 +132,9 @@ func (s *Sessions) Create(_ context.Context, n app.NewSession) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.items == nil {
-		s.items = map[string]app.NewSession{}
+		s.items = map[string]row{}
 	}
-	s.items[string(n.IDHash)] = n
+	s.items[string(n.IDHash)] = row{NewSession: n, PublicID: uuid.New(), LastUsedAt: n.CreatedAt}
 	return nil
 }
 
@@ -116,18 +142,22 @@ func (s *Sessions) Create(_ context.Context, n app.NewSession) error {
 func (s *Sessions) Get(_ context.Context, hash []byte) (app.SessionRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	n, ok := s.items[string(hash)]
+	r, ok := s.items[string(hash)]
 	if !ok {
 		return app.SessionRecord{}, app.ErrNotFound
 	}
-	return app.SessionRecord{UserID: n.UserID, ExpiresAt: n.ExpiresAt}, nil
+	return r.record(), nil
 }
 
-// Touch conta os usos.
-func (s *Sessions) Touch(context.Context, []byte) error {
+// Touch conta os usos e guarda o instante.
+func (s *Sessions) Touch(_ context.Context, hash []byte, at time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.Touched++
+	if r, ok := s.items[string(hash)]; ok {
+		r.LastUsedAt = at
+		s.items[string(hash)] = r
+	}
 	return nil
 }
 
@@ -136,6 +166,44 @@ func (s *Sessions) Delete(_ context.Context, hash []byte) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.items, string(hash))
+	return nil
+}
+
+// ListByUser devolve as sessoes do usuario (sem ordem garantida).
+func (s *Sessions) ListByUser(_ context.Context, userID uuid.UUID) ([]app.SessionRecord, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var out []app.SessionRecord
+	for _, r := range s.items {
+		if r.UserID == userID {
+			out = append(out, r.record())
+		}
+	}
+	return out, nil
+}
+
+// DeleteByPublicID so apaga sessao do proprio usuario; senao app.ErrNotFound.
+func (s *Sessions) DeleteByPublicID(_ context.Context, userID, publicID uuid.UUID) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for k, r := range s.items {
+		if r.PublicID == publicID && r.UserID == userID {
+			delete(s.items, k)
+			return nil
+		}
+	}
+	return app.ErrNotFound
+}
+
+// DeleteAllByUser apaga todas as sessoes do usuario.
+func (s *Sessions) DeleteAllByUser(_ context.Context, userID uuid.UUID) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for k, r := range s.items {
+		if r.UserID == userID {
+			delete(s.items, k)
+		}
+	}
 	return nil
 }
 
@@ -150,8 +218,8 @@ func (s *Sessions) Len() int {
 func (s *Sessions) Last() (app.NewSession, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	for _, n := range s.items {
-		return n, true
+	for _, r := range s.items {
+		return r.NewSession, true
 	}
 	return app.NewSession{}, false
 }

@@ -59,10 +59,13 @@ func startAPI(t *testing.T) (base string, query func(sql string, dest ...any)) {
 	}
 	provider := oidc.New(oidc.Config{Issuer: kc.Issuer(), ClientID: identitytest.ClientID, ClientSecret: identitytest.ClientSecret, RedirectURL: redirect})
 	users, sessions := postgres.NewUsers(pool), postgres.NewSessions(pool)
+	auth := app.Authenticate{Sessions: sessions, Users: users}
 	h := httpapi.Handler{
 		Start:  &app.StartLogin{Provider: provider, Sealer: sealer},
 		Finish: &app.FinishLogin{Provider: provider, Users: users, Sessions: sessions, Sealer: sealer},
-		Me:     app.GetMe{Sessions: sessions, Users: users}, Out: app.Logout{Sessions: sessions},
+		Auth:   auth, Out: app.Logout{Sessions: sessions},
+		List:   app.ListSessions{Auth: auth, Sessions: sessions},
+		Revoke: app.RevokeSession{Auth: auth, Sessions: sessions}, RevokeAll: app.RevokeAllSessions{Auth: auth, Sessions: sessions},
 	}
 	go func() { _ = http.Serve(ln, api.Handler(api.Server{Identity: h, DB: pool})) }()
 	return base, func(sql string, dest ...any) {
