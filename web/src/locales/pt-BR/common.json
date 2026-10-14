@@ -6,5 +6,9 @@
   "footer": {
     "version": "v{{web}} · API v{{api}} · {{env}} · {{commit}}",
     "versionWebOnly": "v{{web}} · {{commit}}"
+  },
+  "notFound": {
+    "title": "Página não encontrada",
+    "back": "Voltar ao início"
   }
 }

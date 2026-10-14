@@ -46,6 +46,7 @@ O gate é o padrão "Sonar way" do plano gratuito, aplicado ao **código novo** 
 - **Multi-arquitetura sem emulação:** a API cross-compila no runner (`TARGETARCH`) e o web só copia arquivos estáticos para a imagem final, então o mesmo build serve a VM ARM da Oracle e máquinas amd64.
 - **Build uma vez:** a imagem `sha-<commit>` é a que será promovida (re-etiquetada) para a versão; nada é reconstruído por ambiente. O web não tem `build-arg` de ambiente: a configuração entra em runtime.
 - O código gerado do contrato **não é versionado**: a API o gera dentro do `Dockerfile` e o web, também.
+- A árvore de rotas do web (`routeTree.gen.ts`) também **não é versionada**: `npm run gen` a gera, o `web-ci` e o `Dockerfile` rodam esse passo antes do `tsc`/build, e o plugin do Vite a mantém em dev. Em dev, a API pode estar em outra porta: `API_PROXY_TARGET=http://localhost:18088 npm run dev:web` (padrão `http://localhost:8080`).
 
 ## Deploy de tst (VM Oracle Micro)
 

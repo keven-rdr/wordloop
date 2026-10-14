@@ -8,7 +8,7 @@
     "check:all": "node scripts/check.mjs --all",
     "gen": "npm run gen:api && npm run gen:web",
     "gen:api": "cd api && go generate ./...",
-    "gen:web": "npm --prefix web run gen:api",
+    "gen:web": "npm --prefix web run gen",
     "dev:api": "cd api && go run ./cmd/api",
     "dev:web": "npm --prefix web run dev"
   },

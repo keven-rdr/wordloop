@@ -1,91 +1,136 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { configureApi } from '../../../core/api';
-import { setupI18n } from '../../../core/i18n';
-import { AuthPanel } from './AuthPanel';
+import {
+  json,
+  me,
+  renderApp,
+  setupTestApp,
+  status,
+  stubApi,
+  stubWebAuthn,
+  version,
+  withoutWebAuthn,
+} from '../../../test-support';
 
-beforeAll(async () => {
-  configureApi('http://localhost');
-  await setupI18n('pt-BR');
-});
+beforeAll(setupTestApp);
 
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
 });
 
-const me = { id: '3f0c4f4e-8d1e-4a3b-9a55-1d2c3b4a5e6f', display_name: 'Maria', role: 'user' };
+const options = { options: { challenge: 'abc', rpId: 'localhost' } };
 
-function renderPanel() {
-  render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-      <AuthPanel />
-    </QueryClientProvider>,
-  );
+function loginApi(extra: Record<string, () => Response> = {}) {
+  let signedIn = false;
+  return stubApi({
+    'GET /version': () => json(version),
+    'GET /me': () => (signedIn ? json(me) : status(401)),
+    'POST /auth/passkeys/login/begin': () => json(options),
+    'POST /auth/passkeys/login/finish': () => {
+      signedIn = true;
+      return status(204);
+    },
+    'POST /auth/logout': () => {
+      signedIn = false;
+      return status(204);
+    },
+    ...extra,
+  });
 }
 
-type Handler = (req: Request) => Response;
-
-function stubApi(handler: Handler) {
-  const calls: Request[] = [];
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async (input: Request | string, init?: RequestInit) => {
-      const req = input instanceof Request ? input : new Request(input, init);
-      calls.push(req);
-      return handler(req);
-    }),
-  );
-  return calls;
-}
-
-describe('AuthPanel', () => {
-  it('sem sessão mostra o botão Entrar apontando para o login da API', async () => {
-    stubApi(() => new Response(null, { status: 401 }));
-    renderPanel();
-    const link = await screen.findByRole('link', { name: 'Entrar' });
-    expect(link).toHaveAttribute('href', '/api/v1/auth/login?return_to=/');
-    expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument();
+describe('AuthPanel: entrar', () => {
+  it('sem sessão mostra o botão Entrar com passkey (nada de link para provedor externo)', async () => {
+    loginApi();
+    stubWebAuthn();
+    renderApp('/');
+    expect(await screen.findByRole('button', { name: 'Entrar com passkey' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /entrar/i })).not.toBeInTheDocument();
   });
 
-  it('com sessão mostra Olá com o nome e o botão Sair', async () => {
-    stubApi(() => Response.json(me));
-    renderPanel();
+  it('entrar: pede o desafio, usa a passkey do aparelho, conclui e mostra Olá', async () => {
+    const calls = loginApi();
+    const credentials = stubWebAuthn();
+    renderApp('/');
+    fireEvent.click(await screen.findByRole('button', { name: 'Entrar com passkey' }));
     expect(await screen.findByText('Olá, Maria!')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Entrar' })).not.toBeInTheDocument();
+    expect(credentials.get).toHaveBeenCalledTimes(1);
+    const begin = calls.find((c) => c.path === '/auth/passkeys/login/begin');
+    const finish = calls.find((c) => c.path === '/auth/passkeys/login/finish');
+    expect(begin?.headers.get('X-Requested-With')).toBe('XMLHttpRequest');
+    expect(finish?.headers.get('X-Requested-With')).toBe('XMLHttpRequest');
+    expect(finish?.body).toEqual({ credential: { id: 'cred', type: 'public-key' } });
   });
 
-  it('Sair envia o cabeçalho anti-CSRF e volta para Entrar', async () => {
-    let loggedIn = true;
-    const calls = stubApi((req) => {
-      if (req.url.endsWith('/auth/logout')) {
-        loggedIn = false;
-        return new Response(null, { status: 204 });
-      }
-      return loggedIn ? Response.json(me) : new Response(null, { status: 401 });
-    });
-    renderPanel();
+  it('cancelar o pedido do aparelho mostra um aviso calmo e mantém o botão', async () => {
+    loginApi();
+    stubWebAuthn({ get: async () => Promise.reject(new DOMException('cancelado', 'NotAllowedError')) });
+    renderApp('/');
+    fireEvent.click(await screen.findByRole('button', { name: 'Entrar com passkey' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Pedido cancelado');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Entrar com passkey' })).toBeEnabled();
+  });
+
+  it('navegador sem passkeys mostra o aviso e não chama a API de conclusão', async () => {
+    const calls = loginApi();
+    withoutWebAuthn();
+    renderApp('/');
+    fireEvent.click(await screen.findByRole('button', { name: 'Entrar com passkey' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('não suporta passkeys');
+    expect(calls.some((c) => c.path.endsWith('/finish'))).toBe(false);
+  });
+
+  it('passkey não reconhecida (401) e excesso de tentativas (429) têm mensagens próprias', async () => {
+    let answer = 401;
+    loginApi({ 'POST /auth/passkeys/login/finish': () => status(answer) });
+    stubWebAuthn();
+    renderApp('/');
+    fireEvent.click(await screen.findByRole('button', { name: 'Entrar com passkey' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('não reconhecido');
+    answer = 429;
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar com passkey' }));
+    expect(await screen.findByText(/Muitas tentativas/)).toBeInTheDocument();
+  });
+});
+
+describe('AuthPanel: com sessão', () => {
+  it('com sessão mostra Olá, o atalho para as passkeys e Sair', async () => {
+    loginApi({ 'GET /me': () => json(me) });
+    stubWebAuthn();
+    renderApp('/');
+    expect(await screen.findByText('Olá, Maria!')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Minhas passkeys' })).toHaveAttribute('href', '/passkeys');
+    expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Entrar com passkey' })).not.toBeInTheDocument();
+  });
+
+  it('Sair envia o cabeçalho anti-CSRF e volta para Entrar com passkey', async () => {
+    const calls = loginApi();
+    stubWebAuthn();
+    renderApp('/');
+    fireEvent.click(await screen.findByRole('button', { name: 'Entrar com passkey' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Sair' }));
-    expect(await screen.findByRole('link', { name: 'Entrar' })).toBeInTheDocument();
-    const logout = calls.find((c) => c.url.endsWith('/auth/logout'));
+    expect(await screen.findByRole('button', { name: 'Entrar com passkey' })).toBeInTheDocument();
+    const logout = calls.find((c) => c.path === '/auth/logout');
     expect(logout?.method).toBe('POST');
     expect(logout?.headers.get('X-Requested-With')).toBe('XMLHttpRequest');
   });
 
   it('falha ao sair mostra aviso e mantém a pessoa logada', async () => {
-    stubApi((req) => (req.url.endsWith('/auth/logout') ? new Response(null, { status: 500 }) : Response.json(me)));
-    renderPanel();
+    loginApi({ 'GET /me': () => json(me), 'POST /auth/logout': () => status(500) });
+    stubWebAuthn();
+    renderApp('/');
     fireEvent.click(await screen.findByRole('button', { name: 'Sair' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível sair');
     expect(screen.getByText('Olá, Maria!')).toBeInTheDocument();
   });
 
   it('enquanto carrega não mostra nenhum botão', () => {
-    stubApi(() => new Response(null, { status: 401 }));
-    renderPanel();
-    expect(screen.queryByRole('link', { name: 'Entrar' })).not.toBeInTheDocument();
+    loginApi();
+    stubWebAuthn();
+    renderApp('/');
+    expect(screen.queryByRole('button', { name: 'Entrar com passkey' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument();
   });
 });

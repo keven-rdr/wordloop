@@ -13,13 +13,15 @@
     "check": "npm run lint && npm run typecheck && npm run check:i18n && npm run check:structure && npm run test",
     "check:i18n": "node scripts/check-i18n.mjs",
     "check:structure": "node scripts/check-structure.mjs",
-    "gen": "npm run gen:api",
-    "gen:api": "openapi-ts"
+    "gen": "npm run gen:api && npm run gen:routes",
+    "gen:api": "openapi-ts",
+    "gen:routes": "tsr generate"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",
     "@stylexjs/stylex": "0.19.1",
     "@tanstack/react-query": "5.104.1",
+    "@tanstack/react-router": "1.170.44",
     "i18next": "26.4.2",
     "i18next-resources-to-backend": "1.2.3",
     "react": "19.3.0",
@@ -35,6 +37,8 @@
     "@rolldown/plugin-babel": "0.2.4",
     "@stylexjs/eslint-plugin": "0.19.1",
     "@stylexjs/unplugin": "0.19.1",
+    "@tanstack/router-cli": "1.167.44",
+    "@tanstack/router-plugin": "1.168.46",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
