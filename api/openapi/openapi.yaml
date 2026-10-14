@@ -54,7 +54,7 @@ paths:
       responses:
         "302": { description: sessao criada, redireciona ao app }
         "400": { description: login invalido ou expirado }
-        "403": { description: conta de administrador sem verificacao em duas etapas; nenhuma sessao e criada }
+        "403": { description: a conta exige 2 fatores e o provedor nao os comprovou; nenhuma sessao e criada }
         "503": { description: login nao configurado neste ambiente }
   /auth/logout:
     post:
@@ -78,6 +78,27 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Me" }
         "401": { description: sem sessao valida }
+  /me/two-factor:
+    put:
+      tags: [identity]
+      operationId: setTwoFactor
+      description: >
+        Liga ou desliga a exigencia de 2 fatores no login da propria conta. Vem desligada. Por enquanto so
+        administradores podem mudar (os demais recebem 403). Ligar exige uma sessao que ja comprovou os 2 fatores
+        (entrar com passkey vale), senao 409.
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SetTwoFactorRequest" }
+      responses:
+        "204": { description: opcao gravada }
+        "400": { description: cabecalho de protecao ausente ou corpo invalido }
+        "401": { description: sem sessao valida }
+        "403": { description: a conta nao e de administrador }
+        "409": { description: a sessao atual nao comprovou 2 fatores; entre com passkey e tente de novo }
   /me/sessions:
     get:
       tags: [identity]
@@ -248,11 +269,17 @@ components:
   schemas:
     Me:
       type: object
-      required: [id, display_name, role]
+      required: [id, display_name, role, two_factor_enabled]
       properties:
         id: { type: string, format: uuid }
         display_name: { type: string }
+        two_factor_enabled: { type: boolean, description: "se a conta exige 2 fatores para entrar (desligado por padrao)" }
         role: { type: string, enum: [user, admin], description: "so informativo para a interface; a API confere o papel no banco a cada pedido" }
+    SetTwoFactorRequest:
+      type: object
+      required: [enabled]
+      properties:
+        enabled: { type: boolean }
     BeginPasskeyRegistrationRequest:
       type: object
       properties:

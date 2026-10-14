@@ -64,7 +64,7 @@ func (u *Users) Upsert(_ context.Context, id domain.Identity) (domain.User, erro
 	}
 	user := domain.User{ID: uid, DisplayName: id.DisplayName, Role: domain.RoleUser}
 	if old, ok := u.byID[uid]; ok {
-		user.Role = old.Role
+		user.Role, user.MFARequired = old.Role, old.MFARequired
 	}
 	u.byID[uid] = user
 	return user, nil
@@ -76,6 +76,18 @@ func (u *Users) SetRole(id uuid.UUID, role domain.Role) {
 	user := u.byID[id]
 	user.Role = role
 	u.byID[id] = user
+}
+
+func (u *Users) SetMFARequired(_ context.Context, id uuid.UUID, required bool) error {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	user, ok := u.byID[id]
+	if !ok {
+		return app.ErrNotFound
+	}
+	user.MFARequired = required
+	u.byID[id] = user
+	return nil
 }
 
 func (u *Users) Get(_ context.Context, id uuid.UUID) (domain.User, error) {

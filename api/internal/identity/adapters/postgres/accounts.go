@@ -42,6 +42,17 @@ func (r *Accounts) CreateAdmin(ctx context.Context, email, name string, verified
 	return id, nil
 }
 
+func (r *Accounts) SetMFARequired(ctx context.Context, userID uuid.UUID, required bool) error {
+	n, err := r.q.SetMFARequired(ctx, db.SetMFARequiredParams{ID: userID, MfaRequired: required})
+	if err != nil {
+		return fmt.Errorf("gravar a opcao de 2 fatores: %w", err)
+	}
+	if n == 0 {
+		return accounts.ErrNotFound
+	}
+	return nil
+}
+
 func (r *Accounts) ReplaceInvite(ctx context.Context, userID uuid.UUID, idHash []byte, createdAt, expiresAt time.Time) error {
 	err := r.q.ReplaceInvite(ctx, db.ReplaceInviteParams{UserID: userID, IDHash: idHash, CreatedAt: ts(createdAt), ExpiresAt: ts(expiresAt)})
 	if err != nil {

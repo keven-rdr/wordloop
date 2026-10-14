@@ -55,6 +55,8 @@ func (s *fakeStore) CreateAdmin(_ context.Context, email, name string, _ time.Ti
 	return id, nil
 }
 
+func (s *fakeStore) SetMFARequired(context.Context, uuid.UUID, bool) error { return nil }
+
 func (s *fakeStore) ReplaceInvite(_ context.Context, userID uuid.UUID, hash []byte, _, expiresAt time.Time) error {
 	if s.failInvite != nil {
 		return s.failInvite

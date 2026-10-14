@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/keven-rdr/wordloop/api/internal/api"
+	"github.com/keven-rdr/wordloop/api/internal/identity/accounts"
 	httpapi "github.com/keven-rdr/wordloop/api/internal/identity/adapters/http"
 	"github.com/keven-rdr/wordloop/api/internal/identity/app"
 	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
@@ -37,6 +38,7 @@ func newFixture(t *testing.T, enabled bool) fixture {
 		Auth: auth, Out: app.Logout{Sessions: sessions}, Secure: true,
 		List:   app.ListSessions{Auth: auth, Sessions: sessions},
 		Revoke: app.RevokeSession{Auth: auth, Sessions: sessions}, RevokeAll: app.RevokeAllSessions{Auth: auth, Sessions: sessions},
+		TwoFactor: accounts.TwoFactor{Store: users},
 	}
 	if enabled {
 		h.Start = &app.StartLogin{Provider: provider, Sealer: sealer}
@@ -104,7 +106,7 @@ func TestFullLoginMeLogoutFlow(t *testing.T) {
 	}
 
 	me := do(h, http.MethodGet, "/api/v1/me", nil, session)
-	var body map[string]string
+	var body map[string]any
 	if err := json.NewDecoder(me.Body).Decode(&body); err != nil || me.StatusCode != http.StatusOK || body["display_name"] != "Aluno" || body["id"] == "" || body["role"] != "user" {
 		t.Fatalf("/me: %d %v %v", me.StatusCode, body, err)
 	}

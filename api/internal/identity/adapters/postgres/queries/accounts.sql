@@ -16,3 +16,6 @@ WITH revoked AS (
 )
 INSERT INTO auth_token (id_hash, user_id, purpose, created_at, expires_at)
 VALUES ($2, $1, 'invite', $3, $4);
+
+-- name: SetMFARequired :execrows
+UPDATE app_user SET mfa_required = $2 WHERE id = $1 AND deleted_at IS NULL;

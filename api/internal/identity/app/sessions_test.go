@@ -91,7 +91,7 @@ func TestPromotingToAdminShortensTheExistingSessionAtOnce(t *testing.T) {
 	}
 }
 
-func TestAdminLoginRequiresProvenSecondFactor(t *testing.T) {
+func TestLoginRequiresProvenSecondFactorOnlyWhenTheAccountTurnedItOn(t *testing.T) {
 	e := newEnv(t)
 	login(t, e, "/")
 	stored, _ := e.sessions.Last()
@@ -99,6 +99,14 @@ func TestAdminLoginRequiresProvenSecondFactor(t *testing.T) {
 	_ = e.sessions.DeleteAllByUser(bg, stored.UserID)
 
 	started, _ := e.start().Run(bg, "/")
+	off := app.FinishInput{Code: identitytest.GoodCode, State: e.flow(t, started.FlowCookie).State, FlowCookie: started.FlowCookie}
+	if _, err := e.finish().Run(bg, off); err != nil {
+		t.Fatalf("com o 2FA desligado o admin entra: %v", err)
+	}
+	_ = e.sessions.DeleteAllByUser(bg, stored.UserID)
+	_ = e.users.SetMFARequired(bg, stored.UserID, true)
+
+	started, _ = e.start().Run(bg, "/")
 	in := app.FinishInput{Code: identitytest.GoodCode, State: e.flow(t, started.FlowCookie).State, FlowCookie: started.FlowCookie}
 	if _, err := e.finish().Run(bg, in); !errors.Is(err, app.ErrMFARequired) {
 		t.Fatalf("admin sem 2 fatores: esperava ErrMFARequired, veio %v", err)

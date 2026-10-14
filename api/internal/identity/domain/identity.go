@@ -18,6 +18,7 @@ type User struct {
 	ID          uuid.UUID
 	DisplayName string
 	Role        Role
+	MFARequired bool
 }
 
 type Principal struct {

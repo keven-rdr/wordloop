@@ -168,7 +168,7 @@ func TestLoginWithRealKeycloakAndPostgres(t *testing.T) {
 	}
 
 	me := b.do(http.MethodGet, base+"/api/v1/me", nil, nil)
-	var body map[string]string
+	var body map[string]any
 	if err := json.NewDecoder(me.Body).Decode(&body); err != nil || me.StatusCode != http.StatusOK {
 		t.Fatalf("/me: %d %v", me.StatusCode, err)
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/keven-rdr/wordloop/api/internal/api"
+	"github.com/keven-rdr/wordloop/api/internal/identity/accounts"
 	httpapi "github.com/keven-rdr/wordloop/api/internal/identity/adapters/http"
 	"github.com/keven-rdr/wordloop/api/internal/identity/adapters/oidc"
 	"github.com/keven-rdr/wordloop/api/internal/identity/adapters/postgres"
@@ -26,6 +27,7 @@ func buildIdentity(pool *pgxpool.Pool) (api.Identity, error) {
 		Auth: auth, Out: app.Logout{Sessions: sessions},
 		List:   app.ListSessions{Auth: auth, Sessions: sessions},
 		Revoke: app.RevokeSession{Auth: auth, Sessions: sessions}, RevokeAll: app.RevokeAllSessions{Auth: auth, Sessions: sessions},
+		TwoFactor: accounts.TwoFactor{Store: postgres.NewAccounts(pool)},
 	}
 
 	if err := buildPasskeys(&h, pool, users, sessions); err != nil {

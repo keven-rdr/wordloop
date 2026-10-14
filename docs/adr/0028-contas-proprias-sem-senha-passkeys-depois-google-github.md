@@ -7,14 +7,14 @@ O dono não quer que o app conheça a senha de ninguém, nem ficar preso a um pr
 
 ## Decisão
 - O **`app_user.id` é nosso**. Provedores são vínculos em `auth_identity (provider, subject)`; o e-mail (único, sem diferenciar maiúsculas) é do perfil.
-- **Nenhuma senha, em lugar nenhum.** Entrar é por **passkey** (WebAuthn: o app guarda só a chave pública), com `userVerification` obrigatório; isso também é o 2FA do admin. Google e GitHub entram **depois**, vinculados pelo e-mail verificado, nunca obrigatórios.
+- **Nenhuma senha, em lugar nenhum.** Entrar é por **passkey** (WebAuthn: o app guarda só a chave pública), com `userVerification` obrigatório, o que já vale como 2 fatores (posse do aparelho + biometria ou PIN). Google e GitHub entram **depois**, vinculados pelo e-mail verificado, nunca obrigatórios.
 - O admin é criado **pelo dono**, no servidor (`api create-admin`), que emite um **convite de uso único** (256 bits, só o hash no banco, 15 minutos). Não existe rota HTTP para criar admin.
 - Recuperação: alunos por e-mail (Brevo); **admin só por comando no servidor**.
 - Entrega em 4 PRs: contas e convite (esta), passkeys, cadastro por e-mail e recuperação, provedores sociais. Migrações só aditivas (expand/contract); as colunas `idp_issuer/idp_subject` ficam até o `contract`.
 
 ## Consequências
 - Menos infraestrutura e nenhuma credencial secreta de usuário para vazar; em troca, o app passa a implementar os fluxos de passkey, convite e recuperação (superfície de ataque própria, coberta por testes de ataque e limite de tentativas).
-- O 2FA do admin não depende do provedor: o Google não informa `amr`, então o admin sempre entra por passkey.
+- O 2FA **não é obrigatório**: vem desligado e o administrador o liga na própria conta (`PUT /me/two-factor`; por ora só admin). Ligado, o login só abre sessão com 2 fatores comprovados: passkey com verificação vale; o Google não informa `amr`, então não vale.
 - Perdeu a passkey: aluno recupera por e-mail; admin pelo servidor (exige acesso do dono).
 - O Keycloak do `deploy/dev` fica só como dublê de provedor OIDC nos testes do adaptador (vale também para o Google).
 
