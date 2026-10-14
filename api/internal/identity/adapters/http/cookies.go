@@ -1,4 +1,3 @@
-// Package httpapi liga os casos de uso do modulo identity a interface HTTP gerada do contrato (cookies e redirecionamentos).
 package httpapi
 
 import (
@@ -7,10 +6,8 @@ import (
 )
 
 const (
-	// SessionCookie guarda o id da sessao do BFF (httpOnly: o JavaScript nunca o ve).
 	SessionCookie = "wl_session"
-	// FlowCookie guarda o estado do login em andamento, selado, por poucos minutos.
-	FlowCookie = "wl_oidc"
+	FlowCookie    = "wl_oidc"
 
 	SessionCookieSecure = "__Host-" + SessionCookie
 	FlowCookieSecure    = "__Secure-" + FlowCookie
@@ -19,7 +16,6 @@ const (
 	flowTTL  = 10 * time.Minute
 )
 
-// cookies monta os cookies com os mesmos atributos de seguranca; Secure vale quando a URL publica e https.
 type cookies struct{ secure bool }
 
 func (c cookies) sessionName() string {

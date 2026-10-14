@@ -11,7 +11,6 @@ import (
 	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
 )
 
-// FinishLogin conclui o login: valida o estado, troca o code, cria/atualiza o perfil e abre a sessao.
 type FinishLogin struct {
 	Provider Provider
 	Users    Users
@@ -22,21 +21,18 @@ type FinishLogin struct {
 	Policy   domain.SessionPolicy
 }
 
-// FinishInput vem da query do callback e do cookie de estado.
 type FinishInput struct {
 	Code, State, ProviderError string
 	FlowCookie                 string
 	UserAgent                  string
 }
 
-// LoggedIn e a sessao aberta: o id vai ao cookie; ReturnTo e para onde voltar.
 type LoggedIn struct {
 	SessionID string
 	ReturnTo  string
 	ExpiresAt time.Time
 }
 
-// Run valida e abre a sessao; qualquer problema com o pedido vira ErrInvalidLogin.
 func (u FinishLogin) Run(ctx context.Context, in FinishInput) (LoggedIn, error) {
 	flow, err := u.readFlow(in)
 	if err != nil {

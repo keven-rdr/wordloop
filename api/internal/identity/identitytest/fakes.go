@@ -86,7 +86,6 @@ func (u *Users) SetRole(id uuid.UUID, role domain.Role) {
 	u.byID[id] = user
 }
 
-// Get devolve app.ErrNotFound se o perfil nao existe.
 func (u *Users) Get(_ context.Context, id uuid.UUID) (domain.User, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
@@ -96,7 +95,6 @@ func (u *Users) Get(_ context.Context, id uuid.UUID) (domain.User, error) {
 	return domain.User{}, app.ErrNotFound
 }
 
-// Remove apaga o perfil (simula usuario excluido).
 func (u *Users) Remove(id uuid.UUID) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
@@ -116,7 +114,6 @@ func (r row) record() app.SessionRecord {
 	}
 }
 
-// Sessions e um repositorio de sessoes em memoria, indexado pelo hash do id.
 type Sessions struct {
 	mu      sync.Mutex
 	items   map[string]row
@@ -125,7 +122,6 @@ type Sessions struct {
 
 var _ app.Sessions = (*Sessions)(nil)
 
-// Create guarda a sessao.
 func (s *Sessions) Create(_ context.Context, n app.NewSession) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -136,7 +132,6 @@ func (s *Sessions) Create(_ context.Context, n app.NewSession) error {
 	return nil
 }
 
-// Get devolve app.ErrNotFound se nao existe.
 func (s *Sessions) Get(_ context.Context, hash []byte) (app.SessionRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -158,7 +153,6 @@ func (s *Sessions) Touch(_ context.Context, hash []byte, at time.Time) error {
 	return nil
 }
 
-// Delete apaga a sessao.
 func (s *Sessions) Delete(_ context.Context, hash []byte) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -201,14 +195,12 @@ func (s *Sessions) DeleteAllByUser(_ context.Context, userID uuid.UUID) error {
 	return nil
 }
 
-// Len diz quantas sessoes existem.
 func (s *Sessions) Len() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return len(s.items)
 }
 
-// Last devolve a unica sessao guardada (para conferir o que foi gravado).
 func (s *Sessions) Last() (app.NewSession, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -218,5 +210,4 @@ func (s *Sessions) Last() (app.NewSession, bool) {
 	return app.NewSession{}, false
 }
 
-// Clock devolve um relogio fixo para os testes.
 func Clock(t time.Time) func() time.Time { return func() time.Time { return t } }

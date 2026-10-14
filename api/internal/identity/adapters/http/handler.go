@@ -11,7 +11,6 @@ import (
 	"github.com/keven-rdr/wordloop/api/internal/platform/httpx"
 )
 
-// Handler implementa as operacoes de identidade do contrato. Start e Finish nulos = login nao configurado (503).
 type Handler struct {
 	Start     *app.StartLogin
 	Finish    *app.FinishLogin
@@ -31,7 +30,6 @@ func (h Handler) sessionID(ctx context.Context) string {
 
 func (h Handler) enabled() bool { return h.Start != nil && h.Finish != nil }
 
-// StartLogin redireciona ao provedor de identidade.
 func (h Handler) StartLogin(ctx context.Context, req gen.StartLoginRequestObject) (gen.StartLoginResponseObject, error) {
 	if !h.enabled() {
 		return gen.StartLogin503Response{}, nil
@@ -48,7 +46,6 @@ func (h Handler) StartLogin(ctx context.Context, req gen.StartLoginRequestObject
 	return redirect{location: login.URL, cookies: []*http.Cookie{h.cookies().flow(login.FlowCookie)}}, nil
 }
 
-// FinishLogin conclui o login e abre a sessao.
 func (h Handler) FinishLogin(ctx context.Context, req gen.FinishLoginRequestObject) (gen.FinishLoginResponseObject, error) {
 	if !h.enabled() {
 		return gen.FinishLogin503Response{}, nil
@@ -73,7 +70,6 @@ func (h Handler) FinishLogin(ctx context.Context, req gen.FinishLoginRequestObje
 	return redirect{location: done.ReturnTo, cookies: []*http.Cookie{c.session(done.SessionID, done.ExpiresAt), c.clearFlow()}}, nil
 }
 
-// Logout encerra a sessao.
 func (h Handler) Logout(ctx context.Context, _ gen.LogoutRequestObject) (gen.LogoutResponseObject, error) {
 	if err := h.Out.Run(ctx, h.sessionID(ctx)); err != nil {
 		return nil, err
@@ -81,7 +77,6 @@ func (h Handler) Logout(ctx context.Context, _ gen.LogoutRequestObject) (gen.Log
 	return loggedOut{cookies: []*http.Cookie{h.cookies().clearSession()}}, nil
 }
 
-// GetMe devolve o perfil de quem esta logado.
 func (h Handler) GetMe(ctx context.Context, _ gen.GetMeRequestObject) (gen.GetMeResponseObject, error) {
 	who, err := h.Auth.Run(ctx, h.sessionID(ctx))
 	if errors.Is(err, app.ErrNoSession) {

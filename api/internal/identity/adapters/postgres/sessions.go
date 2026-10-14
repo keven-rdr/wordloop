@@ -14,17 +14,14 @@ import (
 	"github.com/keven-rdr/wordloop/api/internal/identity/app"
 )
 
-// Sessions implementa app.Sessions sobre o Postgres.
 type Sessions struct{ q *db.Queries }
 
 var _ app.Sessions = (*Sessions)(nil)
 
-// NewSessions recebe o pool (ou uma transacao).
 func NewSessions(conn db.DBTX) *Sessions { return &Sessions{q: db.New(conn)} }
 
 func ts(t time.Time) pgtype.Timestamptz { return pgtype.Timestamptz{Time: t, Valid: true} }
 
-// Create grava a sessao (so o hash do id).
 func (r *Sessions) Create(ctx context.Context, s app.NewSession) error {
 	err := r.q.CreateSession(ctx, db.CreateSessionParams{
 		IDHash: s.IDHash, UserID: s.UserID, RefreshTokenEnc: s.RefreshTokenEnc, CreatedAt: ts(s.CreatedAt),
@@ -36,7 +33,6 @@ func (r *Sessions) Create(ctx context.Context, s app.NewSession) error {
 	return nil
 }
 
-// Get le a sessao pelo hash do id; app.ErrNotFound se nao existe.
 func (r *Sessions) Get(ctx context.Context, idHash []byte) (app.SessionRecord, error) {
 	row, err := r.q.GetSession(ctx, idHash)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -60,7 +56,6 @@ func (r *Sessions) ListByUser(ctx context.Context, userID uuid.UUID) ([]app.Sess
 	return out, nil
 }
 
-// Touch marca o ultimo uso da sessao.
 func (r *Sessions) Touch(ctx context.Context, idHash []byte, at time.Time) error {
 	if err := r.q.TouchSession(ctx, db.TouchSessionParams{IDHash: idHash, LastUsedAt: ts(at)}); err != nil {
 		return fmt.Errorf("atualizar a sessao: %w", err)
@@ -68,7 +63,6 @@ func (r *Sessions) Touch(ctx context.Context, idHash []byte, at time.Time) error
 	return nil
 }
 
-// Delete apaga a sessao.
 func (r *Sessions) Delete(ctx context.Context, idHash []byte) error {
 	if err := r.q.DeleteSession(ctx, idHash); err != nil {
 		return fmt.Errorf("apagar a sessao: %w", err)
