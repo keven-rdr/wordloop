@@ -1,5 +1,3 @@
-// Package identitytest tem implementacoes em memoria das interfaces do modulo identity, SO para testes de unidade.
-// O banco e o provedor reais sao cobertos pelos testes de integracao.
 package identitytest
 
 import (
@@ -14,10 +12,8 @@ import (
 	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
 )
 
-// GoodCode e o unico code que Provider aceita.
 const GoodCode = "code-ok"
 
-// Provider simula o provedor OIDC: aceita GoodCode e devolve Identity.
 type Provider struct {
 	Identity domain.Identity
 	Refresh  string
@@ -30,7 +26,6 @@ type Provider struct {
 
 var _ app.Provider = (*Provider)(nil)
 
-// AuthURL registra o que recebeu e devolve uma URL fixa.
 func (p *Provider) AuthURL(_ context.Context, state, nonce, verifier string) (string, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -38,7 +33,6 @@ func (p *Provider) AuthURL(_ context.Context, state, nonce, verifier string) (st
 	return "https://idp.test/auth?state=" + state, nil
 }
 
-// Exchange aceita so GoodCode, com o verifier e o nonce do AuthURL.
 func (p *Provider) Exchange(_ context.Context, code, verifier, nonce string) (app.Tokens, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -48,7 +42,6 @@ func (p *Provider) Exchange(_ context.Context, code, verifier, nonce string) (ap
 	return app.Tokens{Identity: p.Identity, RefreshToken: p.Refresh}, nil
 }
 
-// Users e um repositorio de perfis em memoria.
 type Users struct {
 	mu   sync.Mutex
 	byID map[uuid.UUID]domain.User
@@ -57,7 +50,6 @@ type Users struct {
 
 var _ app.Users = (*Users)(nil)
 
-// Upsert cria o perfil na primeira vez e reaproveita o id nas seguintes.
 func (u *Users) Upsert(_ context.Context, id domain.Identity) (domain.User, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
