@@ -25,6 +25,14 @@ Cada workflow filtra por caminho **dentro** dele; o job `*-gate` sempre roda e p
 | Conferir que o *Dependency graph* está ligado (em repositório público costuma vir ligado) | Settings → Code security (pode aparecer como *Advanced Security*) | A revisão de dependências do workflow `security` usa |
 | **NÃO ligar o CodeQL *Default setup*** | Settings → Code security → Code scanning | O CodeQL já roda pelo workflow `security.yml` (*advanced setup*). Ligar o *default setup* **desativa esse workflow** e bloqueia os uploads dele ([documentação](https://docs.github.com/en/code-security/code-scanning/enabling-code-scanning/configuring-default-setup-for-code-scanning)). Os alertas aparecem sozinhos em Security → Code scanning |
 
+### Sonar como condição de merge
+
+O job `sonar` roda o scanner com `sonar.qualitygate.wait=true`: se o *quality gate* reprovar, o job falha e o `api-gate`/`web-gate` (checks obrigatórios do ruleset) falham junto. Com a variável **`SONAR_REQUIRED=true`**, o gate também falha se o Sonar **não rodou** (variável `SONAR_ENABLED` ou token ausentes). Sem `SONAR_REQUIRED`, o Sonar roda e avisa, mas um job pulado não bloqueia.
+
+O gate é o padrão "Sonar way" do plano gratuito, aplicado ao **código novo** da PR: cobertura ≥ 80%, duplicação ≤ 3%, notas A em confiabilidade, segurança e manutenibilidade, e *security hotspots* revisados. PR só de documentação não tem código novo e passa.
+
+**Ordem para ligar (importa):** 1) mergear a PR que adiciona a espera pelo gate; 2) abrir uma PR de teste e conferir que o job `sonar` fica verde; 3) só então criar a variável `SONAR_REQUIRED=true` (*Settings → Secrets and variables → Actions → Variables*). Ligada antes, toda PR falharia.
+
 ### Opcionais (ligam sozinhos quando existirem)
 
 | Recurso | Como ligar |

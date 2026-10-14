@@ -1,6 +1,6 @@
 # CI da API: lint, testes, vulnerabilidades, Sonar (opcional) e imagem. O check obrigatorio e o job "api-gate".
 # Imagem: so em push na develop, multi-arquitetura (amd64 + arm64: a VM da Oracle e ARM).
-# Sonar: liga quando a variavel de repositorio SONAR_ENABLED=true e o secret SONAR_TOKEN_API existirem (ver docs/ci-cd.md).
+# Sonar: liga quando a variavel de repositorio SONAR_ENABLED=true e o secret SONAR_TOKEN_API existirem; SONAR_REQUIRED=true faz o api-gate FALHAR sem o quality gate aprovado (ver docs/ci-cd.md).
 name: api-ci
 on:
   pull_request: { branches: [develop] }
@@ -105,6 +105,8 @@ jobs:
             -Dsonar.organization=keven-rdr
             -Dsonar.go.coverage.reportPaths=coverage-unit.out,coverage-int.out
             -Dsonar.exclusions=**/gen/**,**/adapters/postgres/db/**,**/dbtest/**,**/identitytest/**,**/*_test.go
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=300
 
   image: # so em push na develop com mudanca na API; a MESMA imagem e promovida entre ambientes (build uma vez)
     if: github.event_name == 'push' && needs.changes.outputs.run == 'true'
@@ -150,3 +152,8 @@ jobs:
     steps:
       - run: |
           if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ] || [ "${{ contains(needs.*.result, 'cancelled') }}" = "true" ]; then exit 1; fi
+      - name: Sonar obrigatorio (quality gate aprovado)
+        if: needs.changes.outputs.run == 'true' && vars.SONAR_REQUIRED == 'true' && needs.sonar.result != 'success'
+        run: |
+          echo "::error title=Sonar nao aprovou::SONAR_REQUIRED=true exige o job sonar verde (SONAR_ENABLED=true, token e quality gate aprovado). Resultado do job: ${{ needs.sonar.result }}"
+          exit 1
