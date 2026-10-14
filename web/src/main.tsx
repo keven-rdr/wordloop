@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { configureApi } from './core/api';
 import { setupI18n } from './core/i18n';
+import { createAppRouter } from './core/router';
 import './global.css';
 
 if (import.meta.env.DEV) {
@@ -16,6 +17,7 @@ if (import.meta.env.DEV) {
 }
 
 const queryClient = new QueryClient();
+const router = createAppRouter();
 
 async function bootstrap() {
   configureApi();
@@ -25,7 +27,7 @@ async function bootstrap() {
   createRoot(root).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <App />
+        <App router={router} />
       </QueryClientProvider>
     </StrictMode>,
   );

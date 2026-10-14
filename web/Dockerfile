@@ -10,7 +10,7 @@ COPY web/package.json web/package-lock.json web/
 RUN cd web && npm ci
 COPY api/openapi api/openapi
 COPY web web
-RUN cd web && npm run gen:api && VERSION=$VERSION COMMIT=$COMMIT npm run build
+RUN cd web && npm run gen && VERSION=$VERSION COMMIT=$COMMIT npm run build
 
 # O estagio final so COPIA arquivos estaticos: o mesmo build serve amd64 e arm64.
 FROM nginxinc/nginx-unprivileged:1.28-alpine

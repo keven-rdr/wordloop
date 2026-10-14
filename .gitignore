@@ -9,6 +9,7 @@ api/.env
 # codigo gerado nao e versionado (ver api/AGENTS.md): o CI regenera
 api/internal/api/gen/
 web/src/api/generated/
+web/src/routeTree.gen.ts
 playwright-report/
 test-results/
 # IDE local

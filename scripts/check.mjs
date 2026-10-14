@@ -63,6 +63,7 @@ const steps = {
     ["api", "go", ["test", "-short", "./..."]],
   ],
   web: [
+    ["web", "npm", ["run", "gen:routes"]],
     ["web", "npx", ["biome", "ci", "./src", "./scripts", "./e2e"]],
     ["web", "npx", ["eslint", "./src"]],
     ["web", "npx", ["tsc", "-b"]],
