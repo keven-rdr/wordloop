@@ -2,16 +2,6 @@ package httpapi
 
 import "net/http"
 
-func setSecureCookies(w http.ResponseWriter, cookies []*http.Cookie) {
-	for _, c := range cookies {
-		if c == nil {
-			continue
-		}
-		c.Secure = true
-		http.SetCookie(w, c)
-	}
-}
-
 // Respostas com Set-Cookie: o servidor gerado so declara um cabecalho por resposta, entao estas implementam
 // diretamente os metodos Visit...Response da interface strict.
 
@@ -22,7 +12,9 @@ type redirect struct {
 }
 
 func (r redirect) write(w http.ResponseWriter) error {
-	setSecureCookies(w, r.cookies)
+	for _, c := range r.cookies {
+		http.SetCookie(w, c)
+	}
 	w.Header().Set("Location", r.location)
 	w.WriteHeader(http.StatusFound)
 	return nil
@@ -35,7 +27,9 @@ func (r redirect) VisitFinishLoginResponse(w http.ResponseWriter) error { return
 type badLogin struct{ cookies []*http.Cookie }
 
 func (r badLogin) VisitFinishLoginResponse(w http.ResponseWriter) error {
-	setSecureCookies(w, r.cookies)
+	for _, c := range r.cookies {
+		http.SetCookie(w, c)
+	}
 	w.WriteHeader(http.StatusBadRequest)
 	return nil
 }
@@ -44,7 +38,9 @@ func (r badLogin) VisitFinishLoginResponse(w http.ResponseWriter) error {
 type loggedOut struct{ cookies []*http.Cookie }
 
 func (r loggedOut) VisitLogoutResponse(w http.ResponseWriter) error {
-	setSecureCookies(w, r.cookies)
+	for _, c := range r.cookies {
+		http.SetCookie(w, c)
+	}
 	w.WriteHeader(http.StatusNoContent)
 	return nil
 }
@@ -52,7 +48,9 @@ func (r loggedOut) VisitLogoutResponse(w http.ResponseWriter) error {
 type mfaRequired struct{ cookies []*http.Cookie }
 
 func (r mfaRequired) VisitFinishLoginResponse(w http.ResponseWriter) error {
-	setSecureCookies(w, r.cookies)
+	for _, c := range r.cookies {
+		http.SetCookie(w, c)
+	}
 	w.WriteHeader(http.StatusForbidden)
 	return nil
 }
@@ -60,7 +58,9 @@ func (r mfaRequired) VisitFinishLoginResponse(w http.ResponseWriter) error {
 type sessionEnded struct{ cookies []*http.Cookie }
 
 func (r sessionEnded) write(w http.ResponseWriter) error {
-	setSecureCookies(w, r.cookies)
+	for _, c := range r.cookies {
+		http.SetCookie(w, c)
+	}
 	w.WriteHeader(http.StatusNoContent)
 	return nil
 }
