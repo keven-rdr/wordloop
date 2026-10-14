@@ -1,5 +1,5 @@
 # CI do web: lint, testes, E2E, Sonar (opcional) e imagem. O check obrigatorio e o job "web-gate".
-# Lighthouse entra depois. Sonar: variavel SONAR_ENABLED=true + secret SONAR_TOKEN_WEB. Deploy em tst: job deploy-tst (deploy.yml), automatico a cada push na develop.
+# Lighthouse entra depois. Sonar: variavel SONAR_ENABLED=true + secret SONAR_TOKEN_WEB; SONAR_REQUIRED=true faz o web-gate FALHAR sem o quality gate aprovado. Deploy em tst: job deploy-tst (deploy.yml), automatico a cada push na develop.
 name: web-ci
 on:
   pull_request: { branches: [develop] }
@@ -94,6 +94,8 @@ jobs:
             -Dsonar.sources=src
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.exclusions=src/api/generated/**,src/routeTree.gen.ts,src/**/*.test.ts,src/**/*.test.tsx
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=300
 
   image: # so em push na develop com mudanca no web; UMA imagem, sem build-arg de ambiente
     if: github.event_name == 'push' && needs.changes.outputs.run == 'true'
@@ -140,3 +142,8 @@ jobs:
     steps:
       - run: |
           if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ] || [ "${{ contains(needs.*.result, 'cancelled') }}" = "true" ]; then exit 1; fi
+      - name: Sonar obrigatorio (quality gate aprovado)
+        if: needs.changes.outputs.run == 'true' && vars.SONAR_REQUIRED == 'true' && needs.sonar.result != 'success'
+        run: |
+          echo "::error title=Sonar nao aprovou::SONAR_REQUIRED=true exige o job sonar verde (SONAR_ENABLED=true, token e quality gate aprovado). Resultado do job: ${{ needs.sonar.result }}"
+          exit 1
