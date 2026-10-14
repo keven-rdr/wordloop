@@ -46,9 +46,6 @@ func (u FinishLogin) Run(ctx context.Context, in FinishInput) (LoggedIn, error) 
 	if err != nil {
 		return LoggedIn{}, fmt.Errorf("gravar o perfil: %w", err)
 	}
-	if user.Role == domain.RoleAdmin && !tokens.Identity.MFA {
-		return LoggedIn{}, ErrMFARequired
-	}
 	return u.openSession(ctx, user, tokens, in.UserAgent, flow.ReturnTo)
 }
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/keven-rdr/wordloop/api/internal/api/gen"
 	"github.com/keven-rdr/wordloop/api/internal/platform/httpx"
+	"github.com/keven-rdr/wordloop/api/internal/platform/ratelimit"
 )
 
 // Pinger confirma que o banco responde (implementado por *pgxpool.Pool). Declarada aqui, pelo consumidor.
@@ -22,8 +23,11 @@ type Server struct {
 	// DB e o banco real; sem ele a API nunca fica "pronta" (readiness 503).
 	DB Pinger
 	// Identity e o modulo de login (BFF); nulo = login indisponivel.
-	Identity Identity
+	Identity    Identity
+	AuthLimiter *ratelimit.Limiter
 }
+
+const maxBodyBytes = 64 << 10
 
 var _ gen.StrictServerInterface = Server{}
 
@@ -55,7 +59,18 @@ func Handler(s Server) http.Handler {
 		ResponseErrorHandlerFunc: internalError,
 	})
 	api := gen.HandlerWithOptions(strict, gen.StdHTTPServerOptions{BaseURL: basePath, BaseRouter: mux})
-	return httpx.WithRequest(api)
+	h := limitBody(httpx.WithRequest(api))
+	if s.AuthLimiter != nil {
+		h = s.AuthLimiter.Middleware(basePath+"/auth/", h)
+	}
+	return h
+}
+
+func limitBody(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
+		next.ServeHTTP(w, r)
+	})
 }
 
 // internalError registra o erro e responde 500 sem corpo: o texto do erro nunca vai ao cliente.

@@ -28,6 +28,10 @@ func buildIdentity(pool *pgxpool.Pool) (api.Identity, error) {
 		Revoke: app.RevokeSession{Auth: auth, Sessions: sessions}, RevokeAll: app.RevokeAllSessions{Auth: auth, Sessions: sessions},
 	}
 
+	if err := buildPasskeys(&h, pool, users, sessions); err != nil {
+		return nil, err
+	}
+
 	cfg := oidc.Config{
 		Issuer: os.Getenv("OIDC_ISSUER"), ClientID: os.Getenv("OIDC_CLIENT_ID"),
 		ClientSecret: os.Getenv("OIDC_CLIENT_SECRET"), RedirectURL: os.Getenv("OIDC_REDIRECT_URL"),
@@ -50,6 +54,6 @@ func buildIdentity(pool *pgxpool.Pool) (api.Identity, error) {
 	provider := oidc.New(cfg)
 	h.Start = &app.StartLogin{Provider: provider, Sealer: sealer}
 	h.Finish = &app.FinishLogin{Provider: provider, Users: users, Sessions: sessions, Sealer: sealer}
-	h.Secure = strings.HasPrefix(cfg.RedirectURL, "https://")
+	h.Secure = h.Secure || strings.HasPrefix(cfg.RedirectURL, "https://")
 	return h, nil
 }

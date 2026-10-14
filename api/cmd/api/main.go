@@ -12,10 +12,15 @@ import (
 	"time"
 
 	"github.com/keven-rdr/wordloop/api/internal/api"
+	"github.com/keven-rdr/wordloop/api/internal/platform/ratelimit"
 	"github.com/keven-rdr/wordloop/api/internal/platform/version"
 )
 
-const shutdownTimeout = 15 * time.Second
+const (
+	shutdownTimeout       = 15 * time.Second
+	authRequestsPerMinute = 30
+	authBurst             = 15
+)
 
 func main() { os.Exit(realMain(os.Args[1:])) }
 
@@ -61,6 +66,7 @@ func serve(ctx context.Context) error {
 		Addr: envOr("API_ADDR", ":8080"),
 		Handler: api.Handler(api.Server{
 			Version: info.Version, Commit: info.Commit, Env: info.Env, DocsEnabled: info.DocsEnabled, DB: pool, Identity: ident,
+			AuthLimiter: authLimiter(),
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
@@ -101,4 +107,10 @@ func envOr(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func authLimiter() *ratelimit.Limiter {
+	l := ratelimit.New(authRequestsPerMinute, authBurst)
+	l.TrustProxy = os.Getenv("API_TRUST_PROXY") == "true"
+	return l
 }

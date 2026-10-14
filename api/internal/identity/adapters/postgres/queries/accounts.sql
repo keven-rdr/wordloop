@@ -1,6 +1,7 @@
 -- name: FindAccountByEmail :one
 SELECT u.id, u.role,
-       EXISTS (SELECT 1 FROM auth_identity i WHERE i.user_id = u.id)::boolean AS has_credentials
+       (EXISTS (SELECT 1 FROM auth_identity i WHERE i.user_id = u.id)
+        OR EXISTS (SELECT 1 FROM passkey_credential p WHERE p.user_id = u.id))::boolean AS has_credentials
 FROM app_user u
 WHERE lower(u.email) = lower(sqlc.arg(email)::text) AND u.deleted_at IS NULL;
 

@@ -113,7 +113,129 @@ paths:
         "400": { description: cabecalho de protecao ausente ou id invalido }
         "401": { description: sem sessao valida }
         "404": { description: sessao nao encontrada }
+  /auth/passkeys/register/begin:
+    post:
+      tags: [identity]
+      operationId: beginPasskeyRegistration
+      description: >
+        Inicia o registro de uma passkey. Sem sessao, exige o convite emitido por `api create-admin` (campo `invite`);
+        com sessao, adiciona outra passkey a propria conta. Devolve as opcoes para `navigator.credentials.create` e
+        guarda o desafio (uso unico, 5 minutos) em cookie httpOnly.
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BeginPasskeyRegistrationRequest" }
+      responses:
+        "200":
+          description: opcoes do registro
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PasskeyOptions" }
+        "400": { description: cabecalho de protecao ausente ou corpo invalido }
+        "401": { description: sem convite valido nem sessao }
+        "409": { description: limite de passkeys por conta atingido }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { description: passkeys nao configuradas neste ambiente }
+  /auth/passkeys/register/finish:
+    post:
+      tags: [identity]
+      operationId: finishPasskeyRegistration
+      description: >
+        Conclui o registro: valida a resposta do aparelho (com verificacao do usuario), grava a chave publica e, se o
+        registro veio de um convite, consome o convite e ja abre a sessao (cookie httpOnly).
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FinishPasskeyRegistrationRequest" }
+      responses:
+        "201":
+          description: passkey registrada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Passkey" }
+        "400": { description: cabecalho ausente, corpo invalido, desafio expirado ou resposta do aparelho recusada }
+        "401": { description: o convite nao vale mais }
+        "409": { description: passkey ja cadastrada ou limite atingido }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { description: passkeys nao configuradas neste ambiente }
+  /auth/passkeys/login/begin:
+    post:
+      tags: [identity]
+      operationId: beginPasskeyLogin
+      description: Inicia o login por passkey, sem digitar usuario (o aparelho mostra as passkeys deste site).
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      responses:
+        "200":
+          description: opcoes do login
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PasskeyOptions" }
+        "400": { description: cabecalho de protecao ausente }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { description: passkeys nao configuradas neste ambiente }
+  /auth/passkeys/login/finish:
+    post:
+      tags: [identity]
+      operationId: finishPasskeyLogin
+      description: "Conclui o login: valida a assinatura e a verificacao do usuario e abre a sessao (cookie httpOnly)."
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FinishPasskeyLoginRequest" }
+      responses:
+        "204": { description: sessao criada }
+        "400": { description: cabecalho ausente ou corpo invalido }
+        "401": { description: passkey nao reconhecida, desafio expirado ou resposta recusada }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { description: passkeys nao configuradas neste ambiente }
+  /me/passkeys:
+    get:
+      tags: [identity]
+      operationId: listPasskeys
+      description: Passkeys de quem esta logado.
+      responses:
+        "200":
+          description: passkeys
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Passkey" } }
+        "401": { description: sem sessao valida }
+  /me/passkeys/{id}:
+    delete:
+      tags: [identity]
+      operationId: deletePasskey
+      description: >
+        Apaga uma passkey de quem esta logado. Nunca deixa a conta sem forma de entrar, e o admin nunca fica sem
+        passkey. Id de outra pessoa responde 404, como se nao existisse.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      responses:
+        "204": { description: passkey apagada }
+        "400": { description: cabecalho de protecao ausente ou id invalido }
+        "401": { description: sem sessao valida }
+        "404": { description: passkey nao encontrada }
+        "409": { description: a conta ficaria sem forma de entrar }
 components:
+  responses:
+    TooManyRequests:
+      description: muitas tentativas; tente de novo depois do tempo de Retry-After
+      headers:
+        Retry-After: { schema: { type: integer }, description: segundos }
   parameters:
     CsrfHeader:
       name: X-Requested-With
@@ -131,6 +253,47 @@ components:
         id: { type: string, format: uuid }
         display_name: { type: string }
         role: { type: string, enum: [user, admin], description: "so informativo para a interface; a API confere o papel no banco a cada pedido" }
+    BeginPasskeyRegistrationRequest:
+      type: object
+      properties:
+        invite: { type: string, maxLength: 256, description: "segredo do convite (o que vem depois do # do link)" }
+    PasskeyOptions:
+      type: object
+      required: [options]
+      properties:
+        options:
+          type: object
+          additionalProperties: true
+          description: opcoes WebAuthn em JSON, no formato aceito por PublicKeyCredential.parse...OptionsFromJSON
+          x-go-type: json.RawMessage
+    FinishPasskeyRegistrationRequest:
+      type: object
+      required: [credential]
+      properties:
+        credential:
+          type: object
+          additionalProperties: true
+          description: resposta do aparelho (PublicKeyCredential.toJSON())
+          x-go-type: json.RawMessage
+        name: { type: string, maxLength: 200, description: "nome amigavel da passkey (ex.: Meu celular)" }
+    FinishPasskeyLoginRequest:
+      type: object
+      required: [credential]
+      properties:
+        credential:
+          type: object
+          additionalProperties: true
+          description: resposta do aparelho (PublicKeyCredential.toJSON())
+          x-go-type: json.RawMessage
+    Passkey:
+      type: object
+      required: [id, name, created_at, backup_eligible]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        created_at: { type: string, format: date-time }
+        last_used_at: { type: string, format: date-time }
+        backup_eligible: { type: boolean, description: "passkey que o provedor do aparelho pode sincronizar" }
     Session:
       type: object
       required: [id, created_at, last_used_at, current]
