@@ -20,6 +20,7 @@ type Identity interface {
 	FinishPasskeyLogin(ctx context.Context, req gen.FinishPasskeyLoginRequestObject) (gen.FinishPasskeyLoginResponseObject, error)
 	ListPasskeys(ctx context.Context, req gen.ListPasskeysRequestObject) (gen.ListPasskeysResponseObject, error)
 	DeletePasskey(ctx context.Context, req gen.DeletePasskeyRequestObject) (gen.DeletePasskeyResponseObject, error)
+	SetTwoFactor(ctx context.Context, req gen.SetTwoFactorRequestObject) (gen.SetTwoFactorResponseObject, error)
 }
 
 func (s Server) StartLogin(ctx context.Context, req gen.StartLoginRequestObject) (gen.StartLoginResponseObject, error) {
@@ -111,4 +112,11 @@ func (s Server) DeletePasskey(ctx context.Context, req gen.DeletePasskeyRequestO
 		return gen.DeletePasskey401Response{}, nil
 	}
 	return s.Identity.DeletePasskey(ctx, req)
+}
+
+func (s Server) SetTwoFactor(ctx context.Context, req gen.SetTwoFactorRequestObject) (gen.SetTwoFactorResponseObject, error) {
+	if s.Identity == nil {
+		return gen.SetTwoFactor401Response{}, nil
+	}
+	return s.Identity.SetTwoFactor(ctx, req)
 }

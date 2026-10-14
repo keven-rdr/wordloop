@@ -31,7 +31,7 @@ type Opened struct {
 }
 
 func (o SessionOpener) Open(ctx context.Context, a Authentication) (Opened, error) {
-	if a.User.Role == domain.RoleAdmin && !a.MFA {
+	if a.User.MFARequired && !a.MFA {
 		return Opened{}, ErrMFARequired
 	}
 	id, err := randomToken(o.Rand, 32)

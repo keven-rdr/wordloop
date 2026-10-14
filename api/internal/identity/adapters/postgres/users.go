@@ -33,7 +33,7 @@ func (r *Users) Upsert(ctx context.Context, id domain.Identity) (domain.User, er
 	if err != nil {
 		return domain.User{}, fmt.Errorf("atualizar o perfil: %w", err)
 	}
-	return domain.User{ID: row.ID, DisplayName: row.DisplayName.String, Role: domain.ParseRole(row.Role)}, nil
+	return toUser(row.ID, row.DisplayName.String, row.Role, row.MfaRequired), nil
 }
 
 func (r *Users) resolve(ctx context.Context, id domain.Identity) (uuid.UUID, error) {
@@ -79,5 +79,9 @@ func (r *Users) Get(ctx context.Context, id uuid.UUID) (domain.User, error) {
 	if err != nil {
 		return domain.User{}, fmt.Errorf("ler o perfil: %w", err)
 	}
-	return domain.User{ID: row.ID, DisplayName: row.DisplayName.String, Role: domain.ParseRole(row.Role)}, nil
+	return toUser(row.ID, row.DisplayName.String, row.Role, row.MfaRequired), nil
+}
+
+func toUser(id uuid.UUID, name, role string, mfaRequired bool) domain.User {
+	return domain.User{ID: id, DisplayName: name, Role: domain.ParseRole(role), MFARequired: mfaRequired}
 }

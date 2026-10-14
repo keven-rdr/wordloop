@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/keven-rdr/wordloop/api/internal/api/gen"
+	"github.com/keven-rdr/wordloop/api/internal/identity/accounts"
 	"github.com/keven-rdr/wordloop/api/internal/identity/app"
 	"github.com/keven-rdr/wordloop/api/internal/platform/httpx"
 )
@@ -20,6 +21,7 @@ type Handler struct {
 	Revoke    app.RevokeSession
 	RevokeAll app.RevokeAllSessions
 	Passkeys  *Passkeys
+	TwoFactor accounts.TwoFactor
 	Secure    bool
 }
 
@@ -62,7 +64,7 @@ func (h Handler) FinishLogin(ctx context.Context, req gen.FinishLoginRequestObje
 		return badLogin{cookies: []*http.Cookie{c.clearFlow()}}, nil
 	}
 	if errors.Is(err, app.ErrMFARequired) {
-		slog.Warn("login de administrador recusado: sem 2 fatores comprovados pelo provedor")
+		slog.Warn("login recusado: a conta exige 2 fatores e o provedor nao os comprovou")
 		return mfaRequired{cookies: []*http.Cookie{c.clearFlow()}}, nil
 	}
 	if err != nil {
@@ -86,7 +88,9 @@ func (h Handler) GetMe(ctx context.Context, _ gen.GetMeRequestObject) (gen.GetMe
 	if err != nil {
 		return nil, err
 	}
-	return gen.GetMe200JSONResponse{Id: who.User.ID, DisplayName: who.User.DisplayName, Role: gen.MeRole(who.User.Role)}, nil
+	return gen.GetMe200JSONResponse{
+		Id: who.User.ID, DisplayName: who.User.DisplayName, Role: gen.MeRole(who.User.Role), TwoFactorEnabled: who.User.MFARequired,
+	}, nil
 }
 
 func deref(s *string) string {

@@ -1,6 +1,7 @@
 package httpapi_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -19,6 +20,8 @@ type meBody struct {
 	ID          string `json:"id"`
 	DisplayName string `json:"display_name"`
 	Role        string `json:"role"`
+
+	TwoFactorEnabled bool `json:"two_factor_enabled"`
 }
 
 func getMe(t *testing.T, h http.Handler, cs ...*http.Cookie) (int, meBody) {
@@ -123,11 +126,24 @@ func TestRoleOnlyChangesInTheDatabaseAndShowsInMe(t *testing.T) {
 	}
 }
 
-func TestAdminWithoutSecondFactorIsRefusedWith403AndNoSession(t *testing.T) {
+func TestAdminWithTwoFactorOffEntersWithoutProofOfIt(t *testing.T) {
 	fx := newFixture(t, true)
 	first := loginFlow(t, fx.h)
 	_, me := getMe(t, fx.h, first)
 	fx.users.SetRole(uuidOf(t, me.ID), domain.RoleAdmin)
+	do(fx.h, http.MethodDelete, "/api/v1/me/sessions", csrf, first)
+	second := loginFlow(t, fx.h)
+	if code, admin := getMe(t, fx.h, second); code != http.StatusOK || admin.Role != "admin" || admin.TwoFactorEnabled {
+		t.Fatalf("o 2FA vem desligado: admin entra sem provar, veio %d %+v", code, admin)
+	}
+}
+
+func TestAccountThatTurnedTwoFactorOnIsRefusedWith403AndNoSessionWithoutProof(t *testing.T) {
+	fx := newFixture(t, true)
+	first := loginFlow(t, fx.h)
+	_, me := getMe(t, fx.h, first)
+	fx.users.SetRole(uuidOf(t, me.ID), domain.RoleAdmin)
+	_ = fx.users.SetMFARequired(context.Background(), uuidOf(t, me.ID), true)
 	do(fx.h, http.MethodDelete, "/api/v1/me/sessions", csrf, first)
 
 	res := do(fx.h, http.MethodGet, "/api/v1/auth/login", nil)
