@@ -2,6 +2,7 @@ import * as stylex from '@stylexjs/stylex';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import type { Passkey } from '../../../api/generated/types.gen';
+import { AppPage } from '../../../shared/ui/AppPage';
 import { type DeleteResult, useDeletePasskey, usePasskeys } from '../hooks/usePasskeys';
 import { useRegisterPasskey } from '../hooks/useRegisterPasskey';
 import { useSession } from '../hooks/useSession';
@@ -14,12 +15,14 @@ export function PasskeysPage() {
   if (!ready || session.status === 'loading') return <div aria-busy="true" />;
   if (session.status === 'anonymous') {
     return (
-      <div {...stylex.props(ui.panel)}>
-        <p>{t('passkeys.signInFirst')}</p>
-        <Link to="/" {...stylex.props(ui.button)}>
-          {t('passkeys.home')}
-        </Link>
-      </div>
+      <AppPage>
+        <div {...stylex.props(ui.panel)}>
+          <p>{t('passkeys.signInFirst')}</p>
+          <Link to="/" {...stylex.props(ui.button)}>
+            {t('passkeys.home')}
+          </Link>
+        </div>
+      </AppPage>
     );
   }
   return <PasskeysList />;
@@ -30,32 +33,34 @@ function PasskeysList() {
   const list = usePasskeys();
   const add = useRegisterPasskey();
   return (
-    <div {...stylex.props(ui.panel)}>
-      <h1>{t('passkeys.title')}</h1>
-      <p {...stylex.props(ui.muted)}>{t('passkeys.intro')}</p>
-      {list.isError && (
-        <p role="alert" {...stylex.props(ui.error)}>
-          {t('passkeys.loadFailed')}
-        </p>
-      )}
-      {list.data?.length === 0 && <p>{t('passkeys.empty')}</p>}
-      <ul {...stylex.props(ui.list)}>
-        {list.data?.map((passkey) => (
-          <PasskeyItem key={passkey.id} passkey={passkey} />
-        ))}
-      </ul>
-      <button type="button" onClick={() => add.mutate({})} disabled={add.isPending} {...stylex.props(ui.button)}>
-        {add.isPending ? t('passkeys.adding') : t('passkeys.add')}
-      </button>
-      {add.isError && (
-        <p role="alert" {...stylex.props(ui.error)}>
-          {t(passkeyMessageKey(add.error))}
-        </p>
-      )}
-      <Link to="/" {...stylex.props(ui.button, ui.secondary)}>
-        {t('passkeys.home')}
-      </Link>
-    </div>
+    <AppPage>
+      <div {...stylex.props(ui.panel)}>
+        <h1>{t('passkeys.title')}</h1>
+        <p {...stylex.props(ui.muted)}>{t('passkeys.intro')}</p>
+        {list.isError && (
+          <p role="alert" {...stylex.props(ui.error)}>
+            {t('passkeys.loadFailed')}
+          </p>
+        )}
+        {list.data?.length === 0 && <p>{t('passkeys.empty')}</p>}
+        <ul {...stylex.props(ui.list)}>
+          {list.data?.map((passkey) => (
+            <PasskeyItem key={passkey.id} passkey={passkey} />
+          ))}
+        </ul>
+        <button type="button" onClick={() => add.mutate({})} disabled={add.isPending} {...stylex.props(ui.button)}>
+          {add.isPending ? t('passkeys.adding') : t('passkeys.add')}
+        </button>
+        {add.isError && (
+          <p role="alert" {...stylex.props(ui.error)}>
+            {t(passkeyMessageKey(add.error))}
+          </p>
+        )}
+        <Link to="/" {...stylex.props(ui.button, ui.secondary)}>
+          {t('passkeys.home')}
+        </Link>
+      </div>
+    </AppPage>
   );
 }
 

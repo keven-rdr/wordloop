@@ -13,9 +13,9 @@ describe('App', () => {
   it('mostra texto traduzido, nunca a chave crua, quando as traduções já carregaram', async () => {
     stubApi({ 'GET /version': () => status(500), 'GET /me': () => status(401) });
     renderApp('/');
-    expect(await screen.findByRole('heading', { name: 'wordloop' })).toBeInTheDocument();
-    expect(screen.queryByText(/^app\./)).not.toBeInTheDocument();
-    expect(screen.getByText(/vocabulário de inglês/)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument();
+    expect(screen.queryByText(/^(app|brand|login|auth)\./)).not.toBeInTheDocument();
+    expect(screen.getByText(/uma palavra de cada vez/)).toBeInTheDocument();
   });
 
   it('rota desconhecida mostra "não encontrada" com o caminho de volta', async () => {

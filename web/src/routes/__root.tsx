@@ -1,8 +1,10 @@
 import * as stylex from '@stylexjs/stylex';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { NotFound } from '../core/NotFound';
+import { useThemeChoice } from '../core/theme/useTheme';
 import { VersionFooter } from '../core/VersionFooter';
-import { color, space } from '../shared/ui/tokens/color.stylex';
+import { color } from '../shared/ui/tokens/color.stylex';
+import { darkTheme, lightTheme } from '../shared/ui/tokens/themes.stylex';
 
 const styles = stylex.create({
   page: {
@@ -12,14 +14,17 @@ const styles = stylex.create({
     backgroundColor: color.bg,
     color: color.text,
   },
-  main: { flexGrow: 1, padding: space.md },
+  main: { flexGrow: 1, display: 'flex', flexDirection: 'column' },
 });
 
 export const Route = createRootRoute({ component: RootLayout, notFoundComponent: NotFound });
 
+const themes = { system: undefined, light: lightTheme, dark: darkTheme };
+
 function RootLayout() {
+  const theme = themes[useThemeChoice()];
   return (
-    <div {...stylex.props(styles.page)}>
+    <div {...stylex.props(styles.page, theme)}>
       <main {...stylex.props(styles.main)}>
         <Outlet />
       </main>

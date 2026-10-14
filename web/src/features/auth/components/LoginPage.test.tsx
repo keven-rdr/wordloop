@@ -39,7 +39,7 @@ function loginApi(extra: Record<string, () => Response> = {}) {
   });
 }
 
-describe('AuthPanel: entrar', () => {
+describe('LoginPage: entrar', () => {
   it('sem sessão mostra o botão Entrar com passkey (nada de link para provedor externo)', async () => {
     loginApi();
     stubWebAuthn();
@@ -94,7 +94,7 @@ describe('AuthPanel: entrar', () => {
   });
 });
 
-describe('AuthPanel: com sessão', () => {
+describe('Início: com sessão', () => {
   it('com sessão mostra Olá, o atalho para as passkeys e Sair', async () => {
     loginApi({ 'GET /me': () => json(me) });
     stubWebAuthn();
