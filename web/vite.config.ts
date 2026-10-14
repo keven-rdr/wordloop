@@ -7,13 +7,14 @@ import { defineConfig } from 'vitest/config';
 const version = process.env.VERSION ?? 'dev';
 const commit = (process.env.COMMIT ?? 'local').slice(0, 7);
 const apiTarget = process.env.API_PROXY_TARGET || 'http://localhost:8080';
+const compiler = process.env.VITEST ? [] : [babel({ presets: [reactCompilerPreset()] })]; // React Compiler 1.0 (validado com StyleX no Sprint 0a); fora dos testes, para a cobertura medir o nosso código e não o cache de memoização gerado
 
 export default defineConfig({
   plugins: [
     tanstackRouter({ target: 'react' }), // ANTES do plugin do React: gera src/routeTree.gen.ts a partir de src/routes
     stylex.vite({ useCSSLayers: true, devMode: process.env.VITEST ? 'css-only' : 'full' }), // StyleX ANTES do plugin do React
     react(),
-    babel({ presets: [reactCompilerPreset()] }), // React Compiler 1.0 (validado com StyleX no Sprint 0a)
+    ...compiler,
   ],
   define: {
     __APP_VERSION__: JSON.stringify(version),

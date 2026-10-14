@@ -54,3 +54,28 @@ describe('ThemeToggle', () => {
     vi.restoreAllMocks();
   });
 });
+
+describe('useTheme: escolha guardada', () => {
+  it('lê a escolha guardada ao abrir e ignora valores estranhos', async () => {
+    window.localStorage.setItem('wl-theme', 'dark');
+    vi.resetModules();
+    const fresh = await import('./useTheme');
+    const { renderHook } = await import('@testing-library/react');
+    expect(renderHook(() => fresh.useThemeChoice()).result.current).toBe('dark');
+    window.localStorage.setItem('wl-theme', 'azul');
+    vi.resetModules();
+    const again = await import('./useTheme');
+    expect(renderHook(() => again.useThemeChoice()).result.current).toBe('system');
+  });
+
+  it('se ler o armazenamento falhar, usa o tema do sistema', async () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('bloqueado');
+    });
+    vi.resetModules();
+    const fresh = await import('./useTheme');
+    const { renderHook } = await import('@testing-library/react');
+    expect(renderHook(() => fresh.useThemeChoice()).result.current).toBe('system');
+    vi.restoreAllMocks();
+  });
+});

@@ -134,3 +134,28 @@ describe('Início: com sessão', () => {
     expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument();
   });
 });
+
+describe('LoginPage: estados', () => {
+  it('enquanto a passkey é verificada mostra "Verificando…" e desabilita o botão', async () => {
+    let release: (value: Response) => void = () => undefined;
+    stubApi({
+      'GET /version': () => json(version),
+      'GET /me': () => status(401),
+      'POST /auth/passkeys/login/begin': () =>
+        new Promise<Response>((resolve) => {
+          release = resolve;
+        }),
+    });
+    stubWebAuthn();
+    renderApp('/login');
+    fireEvent.click(await screen.findByRole('button', { name: 'Entrar com passkey' }));
+    expect(await screen.findByRole('button', { name: 'Verificando…' })).toBeDisabled();
+    release(status(500));
+  });
+
+  it('sem nome no perfil o início cumprimenta só com "Olá!"', async () => {
+    loginApi({ 'GET /me': () => json({ ...me, display_name: '' }) });
+    renderApp('/');
+    expect(await screen.findByText('Olá!')).toBeInTheDocument();
+  });
+});
