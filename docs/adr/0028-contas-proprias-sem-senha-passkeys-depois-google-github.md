@@ -1,6 +1,6 @@
 # ADR 0028 — Contas próprias sem senha: passkeys, depois Google e GitHub vinculados
 
-**Status:** aceita (2026-10-14). **Substitui o [ADR 0010](0010-um-keycloak-com-dois-realms-tst-e-prd.md)** (Keycloak) e revisa o [ADR 0011](0011-api-como-bff-oidc-com-cookie-httponly.md) apenas no que diz respeito a *quem emite a identidade*: a API continua sendo o BFF com cookie `httpOnly` e sessão no servidor.
+**Status:** aceita (2026-10-14); o ponto "nenhuma senha" foi revisado pelo [ADR 0029](0029-senha-como-hash-argon2id-ao-lado-da-passkey.md) (senha como hash Argon2id, ao lado da passkey). **Substitui o [ADR 0010](0010-um-keycloak-com-dois-realms-tst-e-prd.md)** (Keycloak) e revisa o [ADR 0011](0011-api-como-bff-oidc-com-cookie-httponly.md) apenas no que diz respeito a *quem emite a identidade*: a API continua sendo o BFF com cookie `httpOnly` e sessão no servidor.
 
 ## Contexto
 O dono não quer que o app conheça a senha de ninguém, nem ficar preso a um provedor externo, nem manter um servidor de identidade pesado (o Keycloak não cabe na VM de 1 GB de tst e é mais um serviço). Ele quer **cadastrar primeiro o admin no próprio app** (banco Neon) e só depois ligar Google e GitHub. O `app_user` identificava a pessoa por `(idp_issuer, idp_subject)` e não guardava e-mail: trocar de provedor criaria usuários novos.

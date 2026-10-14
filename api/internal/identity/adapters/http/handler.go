@@ -21,6 +21,7 @@ type Handler struct {
 	Revoke    app.RevokeSession
 	RevokeAll app.RevokeAllSessions
 	Passkeys  *Passkeys
+	Passwords *Passwords
 	TwoFactor accounts.TwoFactor
 	Secure    bool
 }
