@@ -17,7 +17,6 @@ import (
 	"github.com/keven-rdr/wordloop/api/internal/platform/seal"
 )
 
-// fixture e a API montada com tudo em memoria; os campos deixam o teste "mexer no banco" como o dono faria por SQL.
 type fixture struct {
 	h        http.Handler
 	provider *identitytest.Provider

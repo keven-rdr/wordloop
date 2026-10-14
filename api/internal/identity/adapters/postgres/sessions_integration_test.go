@@ -30,7 +30,6 @@ func TestNewUserIsAlwaysARegularUserAndLoginNeverChangesRole(t *testing.T) {
 	if err != nil || user.Role != domain.RoleUser {
 		t.Fatalf("o papel inicial deve ser user: %+v %v", user, err)
 	}
-	// Quem vira admin so o faz por SQL do dono; um novo login (upsert) nao pode desfazer nem conceder isso.
 	if _, err := pool.Exec(ctx, "UPDATE app_user SET role = 'admin' WHERE id = $1", user.ID); err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +62,6 @@ func TestListAndDeleteAreScopedToTheOwner(t *testing.T) {
 		t.Fatalf("a lista do Bob deve ter 1 sessao, veio %d", len(bobs))
 	}
 
-	// IDOR: o Bob tenta apagar a sessao da Alice pelo id publico dela.
 	if err := sessions.DeleteByPublicID(ctx, bob.ID, mine[0].PublicID); !errors.Is(err, app.ErrNotFound) {
 		t.Fatalf("apagar sessao alheia: esperava ErrNotFound, veio %v", err)
 	}

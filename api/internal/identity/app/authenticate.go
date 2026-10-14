@@ -12,16 +12,13 @@ import (
 
 const touchEvery = time.Minute
 
-// Authenticate descobre quem esta fazendo o pedido a partir do id da sessao (valor do cookie).
-// O papel e lido do banco a cada chamada e define os prazos: nada vem do corpo do pedido.
 type Authenticate struct {
 	Sessions Sessions
 	Users    Users
-	Policy   domain.SessionPolicy // campo zero = padrao (OrDefault)
-	Now      func() time.Time     // injetado nos testes
+	Policy   domain.SessionPolicy
+	Now      func() time.Time
 }
 
-// Run devolve ErrNoSession quando nao ha sessao valida (ausente, inexistente, expirada, ociosa ou de usuario removido).
 func (u Authenticate) Run(ctx context.Context, sessionID string) (domain.Principal, error) {
 	if sessionID == "" {
 		return domain.Principal{}, ErrNoSession
@@ -51,7 +48,6 @@ func (u Authenticate) Run(ctx context.Context, sessionID string) (domain.Princip
 	return domain.Principal{User: user, SessionID: rec.PublicID, AuthenticatedAt: rec.AuthenticatedAt, MFA: rec.MFA}, nil
 }
 
-// alive aplica o teto gravado na sessao e os prazos do papel ATUAL (quem virou admin passa a ter o prazo curto na hora).
 func (u Authenticate) alive(rec SessionRecord, role domain.Role, now time.Time) bool {
 	if !now.Before(rec.ExpiresAt) {
 		return false

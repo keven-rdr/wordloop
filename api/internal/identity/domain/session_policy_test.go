@@ -51,7 +51,7 @@ func TestOrDefaultFillsOnlyTheMissingPieces(t *testing.T) {
 	if got := (domain.SessionPolicy{}).OrDefault(); got != d {
 		t.Fatalf("politica vazia deve virar o padrao: %+v", got)
 	}
-	partial := domain.SessionPolicy{User: domain.Lifetime{Absolute: 24 * time.Hour}} // Idle esquecido; Admin vazio
+	partial := domain.SessionPolicy{User: domain.Lifetime{Absolute: 24 * time.Hour}}
 	got := partial.OrDefault()
 	if got.User.Absolute != 24*time.Hour || got.User.Idle != d.User.Idle || got.Admin != d.Admin {
 		t.Fatalf("OrDefault deve manter o que foi definido e completar o resto: %+v", got)

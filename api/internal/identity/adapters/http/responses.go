@@ -45,7 +45,6 @@ func (r loggedOut) VisitLogoutResponse(w http.ResponseWriter) error {
 	return nil
 }
 
-// mfaRequired e o 403 do callback: conta de administrador sem 2 fatores; limpa o cookie de estado.
 type mfaRequired struct{ cookies []*http.Cookie }
 
 func (r mfaRequired) VisitFinishLoginResponse(w http.ResponseWriter) error {
@@ -56,7 +55,6 @@ func (r mfaRequired) VisitFinishLoginResponse(w http.ResponseWriter) error {
 	return nil
 }
 
-// sessionEnded e o 204 de encerrar sessao quando a sessao atual foi encerrada: apaga o cookie.
 type sessionEnded struct{ cookies []*http.Cookie }
 
 func (r sessionEnded) write(w http.ResponseWriter) error {

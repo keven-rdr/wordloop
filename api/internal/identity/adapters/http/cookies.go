@@ -12,8 +12,6 @@ const (
 	// FlowCookie guarda o estado do login em andamento, selado, por poucos minutos.
 	FlowCookie = "wl_oidc"
 
-	// Com HTTPS os nomes ganham prefixo: "__Host-" obriga Secure, Path=/ e proibe Domain (nenhum subdominio o sobrescreve);
-	// o cookie de fluxo usa "__Secure-" porque seu Path e /api/v1/auth (o "__Host-" exige Path=/).
 	SessionCookieSecure = "__Host-" + SessionCookie
 	FlowCookieSecure    = "__Secure-" + FlowCookie
 
@@ -24,7 +22,6 @@ const (
 // cookies monta os cookies com os mesmos atributos de seguranca; Secure vale quando a URL publica e https.
 type cookies struct{ secure bool }
 
-// sessionName e flowName escolhem o nome com ou sem prefixo; sem HTTPS (dev local) o navegador recusaria o prefixo.
 func (c cookies) sessionName() string {
 	if c.secure {
 		return SessionCookieSecure

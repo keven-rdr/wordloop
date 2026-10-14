@@ -1,5 +1,4 @@
 -- name: UpsertUser :one
--- O papel NUNCA e tocado aqui: so o dono o altera, por SQL.
 INSERT INTO app_user (idp_issuer, idp_subject, display_name, last_seen_at)
 VALUES ($1, $2, $3, now())
 ON CONFLICT (idp_issuer, idp_subject) DO UPDATE

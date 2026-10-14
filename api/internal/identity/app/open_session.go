@@ -29,7 +29,6 @@ func (u FinishLogin) openSession(ctx context.Context, user domain.User, tokens T
 	return LoggedIn{SessionID: id, ReturnTo: returnTo, ExpiresAt: expires}, nil
 }
 
-// authenticatedAt usa o auth_time do provedor, mas nunca aceita um instante no futuro.
 func authenticatedAt(id domain.Identity, now time.Time) time.Time {
 	if id.AuthTime.IsZero() || id.AuthTime.After(now) {
 		return now

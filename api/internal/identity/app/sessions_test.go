@@ -69,8 +69,8 @@ func TestUserSessionExpiresByIdleAndByAbsoluteLimit(t *testing.T) {
 func TestActiveUseKeepsUserSessionPastIdleLimitButNotPastAbsolute(t *testing.T) {
 	e := newEnv(t)
 	done, _ := login(t, e, "/")
-	step := 5 * 24 * time.Hour // menos que os 7 dias de ociosidade
-	for i := 1; i <= 5; i++ {  // 25 dias de uso, sempre dentro do prazo de ociosidade
+	step := 5 * 24 * time.Hour
+	for i := 1; i <= 5; i++ {
 		if _, err := e.auth(now.Add(time.Duration(i)*step)).Run(bg, done.SessionID); err != nil {
 			t.Fatalf("uso no dia %d deveria manter a sessao: %v", i*5, err)
 		}
@@ -93,7 +93,7 @@ func TestPromotingToAdminShortensTheExistingSessionAtOnce(t *testing.T) {
 
 func TestAdminLoginRequiresProvenSecondFactor(t *testing.T) {
 	e := newEnv(t)
-	login(t, e, "/") // primeiro login cria o perfil (usuario comum)
+	login(t, e, "/")
 	stored, _ := e.sessions.Last()
 	e.users.SetRole(stored.UserID, domain.RoleAdmin)
 	_ = e.sessions.DeleteAllByUser(bg, stored.UserID)
@@ -143,7 +143,6 @@ func TestSessionOfRemovedUserIsNoSessionAndIsDeleted(t *testing.T) {
 	}
 }
 
-// otherUserSession abre a sessao de OUTRA pessoa (outro subject) no mesmo "banco".
 func otherUserSession(t *testing.T, e env) string {
 	t.Helper()
 	e.provider.Identity = domain.Identity{Issuer: "https://idp.test", Subject: "outra-pessoa", DisplayName: "Outra"}

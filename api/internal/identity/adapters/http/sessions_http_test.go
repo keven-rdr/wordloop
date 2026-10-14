@@ -13,8 +13,6 @@ import (
 	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
 )
 
-// Estes testes fazem o que alguem faria no Postman: cookie inventado, papel e id de outro usuario no pedido, CSRF.
-
 var csrf = map[string]string{"X-Requested-With": "XMLHttpRequest"}
 
 type meBody struct {
@@ -46,7 +44,6 @@ func listSessions(t *testing.T, h http.Handler, c *http.Cookie) []sessionBody {
 	return out
 }
 
-// loginAs entra como outra pessoa (outro subject do provedor) no mesmo servidor.
 func loginAs(t *testing.T, fx fixture, subject string) *http.Cookie {
 	t.Helper()
 	fx.provider.Identity = domain.Identity{Issuer: "https://idp.test", Subject: subject, DisplayName: subject}
@@ -72,7 +69,6 @@ func TestSessionCookieUsesHostPrefixOverHTTPS(t *testing.T) {
 func TestUnprefixedCookieIsIgnoredOverHTTPS(t *testing.T) {
 	fx := newFixture(t, true)
 	session := loginFlow(t, fx.h)
-	// Um subdominio ou script que consegue gravar "wl_session" (cookie tossing) nao vale para a API em HTTPS.
 	tossed := &http.Cookie{Name: httpapi.SessionCookie, Value: session.Value}
 	if code, _ := getMe(t, fx.h, tossed); code != http.StatusUnauthorized {
 		t.Fatalf("cookie sem prefixo deveria ser ignorado, veio %d", code)
@@ -104,7 +100,6 @@ func TestNothingInTheRequestChangesWhoYouAreOrYourRole(t *testing.T) {
 	session := loginFlow(t, fx.h)
 	_, before := getMe(t, fx.h, session)
 
-	// Papel e id de outra pessoa na query, no corpo JSON e em cabecalhos: tudo e ignorado.
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/me?role=admin&user_id=00000000-0000-0000-0000-000000000001&admin=true", strings.NewReader(`{"role":"admin","id":"00000000-0000-0000-0000-000000000001"}`))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-User-Id", "00000000-0000-0000-0000-000000000001")

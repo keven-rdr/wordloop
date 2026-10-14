@@ -20,12 +20,11 @@ type Handler struct {
 	List      app.ListSessions
 	Revoke    app.RevokeSession
 	RevokeAll app.RevokeAllSessions
-	Secure    bool // cookies Secure e com prefixo (URL publica em https)
+	Secure    bool
 }
 
 func (h Handler) cookies() cookies { return cookies{secure: h.Secure} }
 
-// sessionID le o cookie da sessao do pedido em andamento (o nome muda com o prefixo em HTTPS).
 func (h Handler) sessionID(ctx context.Context) string {
 	return httpx.Cookie(ctx, h.cookies().sessionName())
 }

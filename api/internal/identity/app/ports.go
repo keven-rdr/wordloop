@@ -29,19 +29,17 @@ type Users interface {
 }
 
 // NewSession e a sessao a gravar. So o HASH do id vai ao banco, nunca o id.
-// Todos os instantes vem do relogio do app (um so relogio, testavel), nunca do now() do banco.
 type NewSession struct {
 	IDHash          []byte
 	UserID          uuid.UUID
 	RefreshTokenEnc string
-	CreatedAt       time.Time // tambem e o primeiro "ultimo uso"
+	CreatedAt       time.Time
 	ExpiresAt       time.Time
-	AuthenticatedAt time.Time // quando o provedor autenticou a pessoa
+	AuthenticatedAt time.Time
 	MFA             bool
 	UserAgent       string
 }
 
-// SessionRecord e o que se le de uma sessao. PublicID identifica a sessao nas listagens; nao e o segredo do cookie.
 type SessionRecord struct {
 	PublicID        uuid.UUID
 	UserID          uuid.UUID
@@ -60,7 +58,6 @@ type Sessions interface {
 	Touch(ctx context.Context, idHash []byte, at time.Time) error
 	Delete(ctx context.Context, idHash []byte) error
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]SessionRecord, error)
-	// DeleteByPublicID so apaga sessao DO usuario; ErrNotFound se nao existe ou e de outra pessoa (anti-IDOR).
 	DeleteByPublicID(ctx context.Context, userID, publicID uuid.UUID) error
 	DeleteAllByUser(ctx context.Context, userID uuid.UUID) error
 }

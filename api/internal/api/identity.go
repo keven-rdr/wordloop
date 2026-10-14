@@ -51,7 +51,6 @@ func (s Server) GetMe(ctx context.Context, req gen.GetMeRequestObject) (gen.GetM
 	return s.Identity.GetMe(ctx, req)
 }
 
-// ListSessions delega ao modulo de identidade.
 func (s Server) ListSessions(ctx context.Context, req gen.ListSessionsRequestObject) (gen.ListSessionsResponseObject, error) {
 	if s.Identity == nil {
 		return gen.ListSessions401Response{}, nil
@@ -59,7 +58,6 @@ func (s Server) ListSessions(ctx context.Context, req gen.ListSessionsRequestObj
 	return s.Identity.ListSessions(ctx, req)
 }
 
-// RevokeSession delega ao modulo de identidade.
 func (s Server) RevokeSession(ctx context.Context, req gen.RevokeSessionRequestObject) (gen.RevokeSessionResponseObject, error) {
 	if s.Identity == nil {
 		return gen.RevokeSession401Response{}, nil
@@ -67,7 +65,6 @@ func (s Server) RevokeSession(ctx context.Context, req gen.RevokeSessionRequestO
 	return s.Identity.RevokeSession(ctx, req)
 }
 
-// RevokeAllSessions delega ao modulo de identidade.
 func (s Server) RevokeAllSessions(ctx context.Context, req gen.RevokeAllSessionsRequestObject) (gen.RevokeAllSessionsResponseObject, error) {
 	if s.Identity == nil {
 		return gen.RevokeAllSessions401Response{}, nil

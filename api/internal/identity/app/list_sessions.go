@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// SessionView e uma sessao como a pessoa a ve na lista de aparelhos.
 type SessionView struct {
 	ID         uuid.UUID
 	CreatedAt  time.Time
@@ -17,13 +16,11 @@ type SessionView struct {
 	Current    bool
 }
 
-// ListSessions lista as sessoes ainda validas de quem esta logado.
 type ListSessions struct {
 	Auth     Authenticate
 	Sessions Sessions
 }
 
-// Run devolve ErrNoSession se o id da sessao nao vale.
 func (u ListSessions) Run(ctx context.Context, sessionID string) ([]SessionView, error) {
 	who, err := u.Auth.Run(ctx, sessionID)
 	if err != nil {

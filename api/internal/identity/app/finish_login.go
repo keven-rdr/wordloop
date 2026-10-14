@@ -17,9 +17,9 @@ type FinishLogin struct {
 	Users    Users
 	Sessions Sessions
 	Sealer   Sealer
-	Rand     io.Reader            // nil = crypto/rand
-	Now      func() time.Time     // injetado nos testes
-	Policy   domain.SessionPolicy // campo zero = padrao (OrDefault)
+	Rand     io.Reader
+	Now      func() time.Time
+	Policy   domain.SessionPolicy
 }
 
 // FinishInput vem da query do callback e do cookie de estado.
@@ -36,7 +36,7 @@ type LoggedIn struct {
 	ExpiresAt time.Time
 }
 
-// Run valida e abre a sessao; qualquer problema com o pedido vira ErrInvalidLogin e admin sem 2 fatores vira ErrMFARequired.
+// Run valida e abre a sessao; qualquer problema com o pedido vira ErrInvalidLogin.
 func (u FinishLogin) Run(ctx context.Context, in FinishInput) (LoggedIn, error) {
 	flow, err := u.readFlow(in)
 	if err != nil {
@@ -50,7 +50,6 @@ func (u FinishLogin) Run(ctx context.Context, in FinishInput) (LoggedIn, error) 
 	if err != nil {
 		return LoggedIn{}, fmt.Errorf("gravar o perfil: %w", err)
 	}
-	// Admin so entra com 2 fatores comprovados pelo provedor; sem isso nenhuma sessao e criada (falha fechada).
 	if user.Role == domain.RoleAdmin && !tokens.Identity.MFA {
 		return LoggedIn{}, ErrMFARequired
 	}

@@ -35,7 +35,6 @@ func TestHasMFA(t *testing.T) {
 	}
 }
 
-// idToken assina um ID token de verdade (RS256) e o valida como o go-oidc faz em producao.
 func idToken(t *testing.T, extra map[string]any) *gooidc.IDToken {
 	t.Helper()
 	key, err := rsa.GenerateKey(rand.Reader, 2048)

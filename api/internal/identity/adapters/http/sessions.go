@@ -9,7 +9,6 @@ import (
 	"github.com/keven-rdr/wordloop/api/internal/identity/app"
 )
 
-// ListSessions lista as sessoes de quem esta logado.
 func (h Handler) ListSessions(ctx context.Context, _ gen.ListSessionsRequestObject) (gen.ListSessionsResponseObject, error) {
 	views, err := h.List.Run(ctx, h.sessionID(ctx))
 	if errors.Is(err, app.ErrNoSession) {
@@ -30,7 +29,6 @@ func (h Handler) ListSessions(ctx context.Context, _ gen.ListSessionsRequestObje
 	return out, nil
 }
 
-// RevokeSession encerra uma sessao de quem esta logado; sessao de outra pessoa responde 404, como se nao existisse.
 func (h Handler) RevokeSession(ctx context.Context, req gen.RevokeSessionRequestObject) (gen.RevokeSessionResponseObject, error) {
 	current, err := h.Revoke.Run(ctx, h.sessionID(ctx), req.Id)
 	if errors.Is(err, app.ErrNoSession) {
@@ -48,7 +46,6 @@ func (h Handler) RevokeSession(ctx context.Context, req gen.RevokeSessionRequest
 	return gen.RevokeSession204Response{}, nil
 }
 
-// RevokeAllSessions encerra todas as sessoes de quem esta logado e limpa o cookie.
 func (h Handler) RevokeAllSessions(ctx context.Context, _ gen.RevokeAllSessionsRequestObject) (gen.RevokeAllSessionsResponseObject, error) {
 	err := h.RevokeAll.Run(ctx, h.sessionID(ctx))
 	if errors.Is(err, app.ErrNoSession) {

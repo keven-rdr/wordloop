@@ -72,13 +72,12 @@ func (u *Users) Upsert(_ context.Context, id domain.Identity) (domain.User, erro
 	}
 	user := domain.User{ID: uid, DisplayName: id.DisplayName, Role: domain.RoleUser}
 	if old, ok := u.byID[uid]; ok {
-		user.Role = old.Role // o papel nunca muda por login
+		user.Role = old.Role
 	}
 	u.byID[uid] = user
 	return user, nil
 }
 
-// SetRole muda o papel direto no "banco" (como o dono faria por SQL).
 func (u *Users) SetRole(id uuid.UUID, role domain.Role) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
@@ -104,7 +103,6 @@ func (u *Users) Remove(id uuid.UUID) {
 	delete(u.byID, id)
 }
 
-// row e uma sessao guardada: o que foi gravado mais o que o banco geraria sozinho.
 type row struct {
 	app.NewSession
 	PublicID   uuid.UUID
@@ -149,7 +147,6 @@ func (s *Sessions) Get(_ context.Context, hash []byte) (app.SessionRecord, error
 	return r.record(), nil
 }
 
-// Touch conta os usos e guarda o instante.
 func (s *Sessions) Touch(_ context.Context, hash []byte, at time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -169,7 +166,6 @@ func (s *Sessions) Delete(_ context.Context, hash []byte) error {
 	return nil
 }
 
-// ListByUser devolve as sessoes do usuario (sem ordem garantida).
 func (s *Sessions) ListByUser(_ context.Context, userID uuid.UUID) ([]app.SessionRecord, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -182,7 +178,6 @@ func (s *Sessions) ListByUser(_ context.Context, userID uuid.UUID) ([]app.Sessio
 	return out, nil
 }
 
-// DeleteByPublicID so apaga sessao do proprio usuario; senao app.ErrNotFound.
 func (s *Sessions) DeleteByPublicID(_ context.Context, userID, publicID uuid.UUID) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -195,7 +190,6 @@ func (s *Sessions) DeleteByPublicID(_ context.Context, userID, publicID uuid.UUI
 	return app.ErrNotFound
 }
 
-// DeleteAllByUser apaga todas as sessoes do usuario.
 func (s *Sessions) DeleteAllByUser(_ context.Context, userID uuid.UUID) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

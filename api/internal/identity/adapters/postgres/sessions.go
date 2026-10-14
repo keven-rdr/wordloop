@@ -48,7 +48,6 @@ func (r *Sessions) Get(ctx context.Context, idHash []byte) (app.SessionRecord, e
 	return record(row.PublicID, row.UserID, row.CreatedAt, row.LastUsedAt, row.ExpiresAt, row.AuthenticatedAt, row.Mfa, row.UserAgent), nil
 }
 
-// ListByUser devolve as sessoes do usuario, da mais recente para a mais antiga.
 func (r *Sessions) ListByUser(ctx context.Context, userID uuid.UUID) ([]app.SessionRecord, error) {
 	rows, err := r.q.ListSessionsByUser(ctx, userID)
 	if err != nil {
@@ -77,7 +76,6 @@ func (r *Sessions) Delete(ctx context.Context, idHash []byte) error {
 	return nil
 }
 
-// DeleteByPublicID apaga a sessao SO se ela for do usuario; senao app.ErrNotFound (igual a "nao existe").
 func (r *Sessions) DeleteByPublicID(ctx context.Context, userID, publicID uuid.UUID) error {
 	n, err := r.q.DeleteSessionByPublicID(ctx, db.DeleteSessionByPublicIDParams{UserID: userID, PublicID: publicID})
 	if err != nil {
@@ -89,7 +87,6 @@ func (r *Sessions) DeleteByPublicID(ctx context.Context, userID, publicID uuid.U
 	return nil
 }
 
-// DeleteAllByUser apaga todas as sessoes do usuario.
 func (r *Sessions) DeleteAllByUser(ctx context.Context, userID uuid.UUID) error {
 	if err := r.q.DeleteSessionsByUser(ctx, userID); err != nil {
 		return fmt.Errorf("apagar as sessoes: %w", err)
