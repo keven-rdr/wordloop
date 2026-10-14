@@ -137,3 +137,25 @@ func TestStoresReportDatabaseFailures(t *testing.T) {
 		t.Fatal("falha do banco no login deve voltar como erro")
 	}
 }
+
+func TestSetMFARequiredPersistsAndShowsUpInTheProfile(t *testing.T) {
+	pool := setupPool(t)
+	ctx := context.Background()
+	store, users := postgres.NewAccounts(pool), postgres.NewUsers(pool)
+	id, err := store.CreateAdmin(ctx, "dono@exemplo.com", "Dono", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := users.Get(ctx, id); err != nil || got.MFARequired {
+		t.Fatalf("o 2FA vem desligado: %+v %v", got, err)
+	}
+	if err := store.SetMFARequired(ctx, id, true); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := users.Get(ctx, id); err != nil || !got.MFARequired {
+		t.Fatalf("depois de ligar: %+v %v", got, err)
+	}
+	if err := store.SetMFARequired(ctx, uuid.New(), true); !errors.Is(err, accounts.ErrNotFound) {
+		t.Fatalf("conta que nao existe: esperava ErrNotFound, veio %v", err)
+	}
+}

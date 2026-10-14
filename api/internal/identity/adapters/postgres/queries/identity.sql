@@ -23,10 +23,10 @@ UPDATE app_user
 SET last_seen_at = now(),
     display_name = COALESCE(NULLIF(sqlc.arg(display_name)::text, ''), display_name)
 WHERE id = sqlc.arg(id)
-RETURNING id, display_name, role;
+RETURNING id, display_name, role, mfa_required;
 
 -- name: GetUser :one
-SELECT id, display_name, role FROM app_user WHERE id = $1 AND deleted_at IS NULL;
+SELECT id, display_name, role, mfa_required FROM app_user WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: CreateSession :exec
 INSERT INTO auth_session (id_hash, user_id, refresh_token_enc, created_at, last_used_at, expires_at, authenticated_at, mfa, user_agent)

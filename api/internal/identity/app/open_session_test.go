@@ -29,12 +29,21 @@ func TestSessionOpenerWithoutRefreshTokenNeedsNoSealerAndStoresNothingSecret(t *
 	}
 }
 
-func TestSessionOpenerRefusesAdminWithoutSecondFactorAndCreatesNothing(t *testing.T) {
+func TestSessionOpenerLetsAnAdminInWithoutSecondFactorUnlessTheAccountAsksForIt(t *testing.T) {
 	sessions := &identitytest.Sessions{}
 	opener := app.SessionOpener{Sessions: sessions, Now: identitytest.Clock(now)}
 	admin := domain.User{ID: uuid.New(), Role: domain.RoleAdmin}
+	if _, err := opener.Open(bg, app.Authentication{User: admin}); err != nil {
+		t.Fatalf("2FA vem desligado: o admin entra sem ele, veio %v", err)
+	}
+}
+
+func TestSessionOpenerRefusesAnAccountThatTurnedOnTwoFactorWithoutProofAndCreatesNothing(t *testing.T) {
+	sessions := &identitytest.Sessions{}
+	opener := app.SessionOpener{Sessions: sessions, Now: identitytest.Clock(now)}
+	admin := domain.User{ID: uuid.New(), Role: domain.RoleAdmin, MFARequired: true}
 	if _, err := opener.Open(bg, app.Authentication{User: admin}); !errors.Is(err, app.ErrMFARequired) {
-		t.Fatalf("admin sem MFA: %v", err)
+		t.Fatalf("2FA ligado e sem prova: %v", err)
 	}
 	if sessions.Len() != 0 {
 		t.Fatal("nenhuma sessao pode nascer")

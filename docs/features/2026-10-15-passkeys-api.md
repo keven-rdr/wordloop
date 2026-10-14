@@ -9,7 +9,7 @@ Esta PR entrega só a **API**. O convite emitido por `api create-admin` passa a 
 
 ## Definições confirmadas
 - Passkeys + cadastro no app, depois Google e GitHub (decisão do dono, 14/10/2026).
-- Admin só entra com 2 fatores comprovados: a passkey com verificação do usuário vale como 2 fatores.
+- A passkey com verificação do usuário vale como 2 fatores (o 2FA obrigatório do admin foi trocado por uma opção da conta: ver [2FA opcional](2026-10-16-2fa-opcional.md)).
 - O app nunca recebe, guarda nem registra senha.
 
 ## Decisões
