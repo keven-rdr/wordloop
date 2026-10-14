@@ -33,22 +33,33 @@ type NewSession struct {
 	IDHash          []byte
 	UserID          uuid.UUID
 	RefreshTokenEnc string
+	CreatedAt       time.Time
 	ExpiresAt       time.Time
+	AuthenticatedAt time.Time
+	MFA             bool
 	UserAgent       string
 }
 
-// SessionRecord e o que se le de uma sessao.
 type SessionRecord struct {
-	UserID    uuid.UUID
-	ExpiresAt time.Time
+	PublicID        uuid.UUID
+	UserID          uuid.UUID
+	CreatedAt       time.Time
+	LastUsedAt      time.Time
+	ExpiresAt       time.Time
+	AuthenticatedAt time.Time
+	MFA             bool
+	UserAgent       string
 }
 
 // Sessions guarda as sessoes do BFF.
 type Sessions interface {
 	Create(ctx context.Context, s NewSession) error
 	Get(ctx context.Context, idHash []byte) (SessionRecord, error) // ErrNotFound se nao existe
-	Touch(ctx context.Context, idHash []byte) error
+	Touch(ctx context.Context, idHash []byte, at time.Time) error
 	Delete(ctx context.Context, idHash []byte) error
+	ListByUser(ctx context.Context, userID uuid.UUID) ([]SessionRecord, error)
+	DeleteByPublicID(ctx context.Context, userID, publicID uuid.UUID) error
+	DeleteAllByUser(ctx context.Context, userID uuid.UUID) error
 }
 
 // Sealer cifra e autentica valores que vao ao cookie ou ao banco.

@@ -44,3 +44,26 @@ func (r loggedOut) VisitLogoutResponse(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusNoContent)
 	return nil
 }
+
+type mfaRequired struct{ cookies []*http.Cookie }
+
+func (r mfaRequired) VisitFinishLoginResponse(w http.ResponseWriter) error {
+	for _, c := range r.cookies {
+		http.SetCookie(w, c)
+	}
+	w.WriteHeader(http.StatusForbidden)
+	return nil
+}
+
+type sessionEnded struct{ cookies []*http.Cookie }
+
+func (r sessionEnded) write(w http.ResponseWriter) error {
+	for _, c := range r.cookies {
+		http.SetCookie(w, c)
+	}
+	w.WriteHeader(http.StatusNoContent)
+	return nil
+}
+
+func (r sessionEnded) VisitRevokeSessionResponse(w http.ResponseWriter) error     { return r.write(w) }
+func (r sessionEnded) VisitRevokeAllSessionsResponse(w http.ResponseWriter) error { return r.write(w) }

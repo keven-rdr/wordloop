@@ -23,6 +23,7 @@ Vale junto com o `AGENTS.md` da raiz (que vence em conflito).
 ## API
 - Handlers implementam a interface *strict* gerada; **não edite `gen/`**. Mudou o contrato → `openapi.yaml` → `npm run gen`.
 - Documentação: `GET /api/v1/docs/` (Swagger UI embutido, sem CDN) e `GET /api/v1/openapi.yaml` (o `openapi.yaml` embutido por `api/openapi/embed.go`). Ligada por padrão; `API_DOCS_ENABLED=false` desliga (404). Não é rota de negócio: não entra no contrato.
+- **Quem faz o pedido vem só da sessão** (`identity/app.Authenticate`): nunca leia papel ou id de usuário do corpo, da query ou de cabeçalho. Papel = `app_user.role`, só muda por SQL do dono. Rota que lê/muda dado de usuário filtra pelo `Principal` (anti-IDOR: dado alheio responde 404). `DELETE`/`POST` que mudam estado exigem `X-Requested-With`. Admin só entra com 2 fatores (`amr`) e a sessão dele é curta (`domain.SessionPolicy`).
 - Erro de API: `problem.New(CodeXxx, params)` com **constante gerada**; nunca string literal.
 - Envio de revisão é **idempotente** pelo UUID do cliente; o servidor refaz a correção e a nota.
 

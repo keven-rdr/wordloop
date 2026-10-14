@@ -41,6 +41,10 @@ func (e env) finish() app.FinishLogin {
 	return app.FinishLogin{Provider: e.provider, Users: e.users, Sessions: e.sessions, Sealer: e.sealer, Now: identitytest.Clock(now)}
 }
 
+func (e env) auth(at time.Time) app.Authenticate {
+	return app.Authenticate{Sessions: e.sessions, Users: e.users, Now: identitytest.Clock(at)}
+}
+
 func (e env) flow(t *testing.T, cookie string) app.Flow {
 	t.Helper()
 	raw, err := e.sealer.Open(cookie)
@@ -98,7 +102,7 @@ func login(t *testing.T, e env, returnTo string) (app.LoggedIn, string) {
 func TestFinishLoginOpensSessionAndStoresOnlyHashAndSealedRefresh(t *testing.T) {
 	e := newEnv(t)
 	done, _ := login(t, e, "/estudo")
-	if done.ReturnTo != "/estudo" || !done.ExpiresAt.Equal(now.Add(app.DefaultSessionTTL)) {
+	if done.ReturnTo != "/estudo" || !done.ExpiresAt.Equal(now.Add(domain.DefaultSessionPolicy().User.Absolute)) {
 		t.Fatalf("resultado inesperado: %+v", done)
 	}
 	stored, ok := e.sessions.Last()
@@ -142,47 +146,6 @@ func TestFinishLoginRejectsInvalidRequests(t *testing.T) {
 	}
 	if e.sessions.Len() != 0 {
 		t.Fatal("nenhuma sessao pode ser criada em login invalido")
-	}
-}
-
-func TestGetMeReturnsProfileForValidSessionAndNoSessionOtherwise(t *testing.T) {
-	e := newEnv(t)
-	done, _ := login(t, e, "/")
-	me := app.GetMe{Sessions: e.sessions, Users: e.users, Now: identitytest.Clock(now.Add(time.Hour))}
-	user, err := me.Run(context.Background(), done.SessionID)
-	if err != nil || user.DisplayName != "Aluno" {
-		t.Fatalf("GetMe = %+v, %v", user, err)
-	}
-	if e.sessions.Touched != 1 {
-		t.Fatalf("esperava 1 atualizacao do ultimo uso, veio %d", e.sessions.Touched)
-	}
-	for name, id := range map[string]string{"vazio": "", "desconhecido": "naoexiste"} {
-		if _, err := me.Run(context.Background(), id); !errors.Is(err, app.ErrNoSession) {
-			t.Errorf("%s: esperava ErrNoSession, veio %v", name, err)
-		}
-	}
-}
-
-func TestGetMeExpiredSessionIsDeleted(t *testing.T) {
-	e := newEnv(t)
-	done, _ := login(t, e, "/")
-	late := app.GetMe{Sessions: e.sessions, Users: e.users, Now: identitytest.Clock(now.Add(app.DefaultSessionTTL + time.Second))}
-	if _, err := late.Run(context.Background(), done.SessionID); !errors.Is(err, app.ErrNoSession) {
-		t.Fatalf("esperava ErrNoSession, veio %v", err)
-	}
-	if e.sessions.Len() != 0 {
-		t.Fatal("a sessao expirada deve ser apagada")
-	}
-}
-
-func TestGetMeSessionOfRemovedUserIsNoSession(t *testing.T) {
-	e := newEnv(t)
-	done, _ := login(t, e, "/")
-	stored, _ := e.sessions.Last()
-	e.users.Remove(stored.UserID)
-	me := app.GetMe{Sessions: e.sessions, Users: e.users, Now: identitytest.Clock(now)}
-	if _, err := me.Run(context.Background(), done.SessionID); !errors.Is(err, app.ErrNoSession) {
-		t.Fatalf("esperava ErrNoSession, veio %v", err)
 	}
 }
 

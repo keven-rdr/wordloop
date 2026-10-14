@@ -21,7 +21,12 @@ import (
 // com OIDC_ISSUER, todas as outras variaveis sao obrigatorias.
 func buildIdentity(pool *pgxpool.Pool) (api.Identity, error) {
 	users, sessions := postgres.NewUsers(pool), postgres.NewSessions(pool)
-	h := httpapi.Handler{Me: app.GetMe{Sessions: sessions, Users: users}, Out: app.Logout{Sessions: sessions}}
+	auth := app.Authenticate{Sessions: sessions, Users: users}
+	h := httpapi.Handler{
+		Auth: auth, Out: app.Logout{Sessions: sessions},
+		List:   app.ListSessions{Auth: auth, Sessions: sessions},
+		Revoke: app.RevokeSession{Auth: auth, Sessions: sessions}, RevokeAll: app.RevokeAllSessions{Auth: auth, Sessions: sessions},
+	}
 
 	cfg := oidc.Config{
 		Issuer: os.Getenv("OIDC_ISSUER"), ClientID: os.Getenv("OIDC_CLIENT_ID"),

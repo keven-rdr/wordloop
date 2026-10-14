@@ -54,6 +54,7 @@ paths:
       responses:
         "302": { description: sessao criada, redireciona ao app }
         "400": { description: login invalido ou expirado }
+        "403": { description: conta de administrador sem verificacao em duas etapas; nenhuma sessao e criada }
         "503": { description: login nao configurado neste ambiente }
   /auth/logout:
     post:
@@ -61,7 +62,7 @@ paths:
       operationId: logout
       description: Encerra a sessao atual e limpa o cookie.
       parameters:
-        - { name: X-Requested-With, in: header, required: true, description: protecao contra CSRF, schema: { type: string, enum: [XMLHttpRequest] } }
+        - { $ref: "#/components/parameters/CsrfHeader" }
       responses:
         "204": { description: sessao encerrada }
         "400": { description: cabecalho de protecao ausente }
@@ -77,16 +78,68 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Me" }
         "401": { description: sem sessao valida }
+  /me/sessions:
+    get:
+      tags: [identity]
+      operationId: listSessions
+      description: Sessoes abertas de quem esta logado (a atual vem com current=true).
+      responses:
+        "200":
+          description: sessoes
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Session" } }
+        "401": { description: sem sessao valida }
+    delete:
+      tags: [identity]
+      operationId: revokeAllSessions
+      description: Encerra todas as sessoes de quem esta logado, inclusive a atual ("sair de todos os aparelhos").
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      responses:
+        "204": { description: sessoes encerradas e cookie limpo }
+        "400": { description: cabecalho de protecao ausente }
+        "401": { description: sem sessao valida }
+  /me/sessions/{id}:
+    delete:
+      tags: [identity]
+      operationId: revokeSession
+      description: Encerra uma sessao de quem esta logado. Id de sessao de outra pessoa responde 404, como se nao existisse.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      responses:
+        "204": { description: sessao encerrada (se era a atual, o cookie e limpo) }
+        "400": { description: cabecalho de protecao ausente ou id invalido }
+        "401": { description: sem sessao valida }
+        "404": { description: sessao nao encontrada }
 components:
+  parameters:
+    CsrfHeader:
+      name: X-Requested-With
+      in: header
+      required: true
+      description: protecao contra CSRF (so o JavaScript do proprio app envia este cabecalho)
+      schema: { type: string, enum: [XMLHttpRequest] }
   securitySchemes:
-    sessionCookie: { type: apiKey, in: cookie, name: wl_session }
+    sessionCookie: { type: apiKey, in: cookie, name: wl_session, description: "com HTTPS o nome real e __Host-wl_session" }
   schemas:
     Me:
       type: object
-      required: [id, display_name]
+      required: [id, display_name, role]
       properties:
         id: { type: string, format: uuid }
         display_name: { type: string }
+        role: { type: string, enum: [user, admin], description: "so informativo para a interface; a API confere o papel no banco a cada pedido" }
+    Session:
+      type: object
+      required: [id, created_at, last_used_at, current]
+      properties:
+        id: { type: string, format: uuid, description: "identificador publico da sessao (nao e o segredo do cookie)" }
+        created_at: { type: string, format: date-time }
+        last_used_at: { type: string, format: date-time }
+        user_agent: { type: string }
+        current: { type: boolean }
     Version:
       type: object
       required: [api, commit, env]
