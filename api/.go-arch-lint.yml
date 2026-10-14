@@ -14,6 +14,7 @@ components:
   contract: { in: ../openapi }   # openapi.yaml embutido (go:embed so alcanca a propria pasta)
   id-domain:   { in: identity/domain }
   id-app:      { in: identity/app }
+  id-accounts: { in: identity/accounts }
   id-adapters: { in: [identity/adapters/http, identity/adapters/oidc, identity/adapters/postgres] }
   id-sqlc:     { in: identity/adapters/postgres/db }   # gerado pelo sqlc
   id-test:     { in: identity/identitytest }           # fakes em memoria, so para testes
@@ -24,6 +25,7 @@ deps:
   contract: { anyVendorDeps: true }
   id-domain:   { anyVendorDeps: true }
   id-app:      { mayDependOn: [id-domain, platform], anyVendorDeps: true }
-  id-adapters: { mayDependOn: [id-domain, id-app, id-sqlc, apigen, platform], anyVendorDeps: true }
+  id-accounts: { mayDependOn: [id-domain], anyVendorDeps: true }
+  id-adapters: { mayDependOn: [id-domain, id-app, id-accounts, id-sqlc, apigen, platform], anyVendorDeps: true }
   id-sqlc:     { anyVendorDeps: true }
   id-test:     { mayDependOn: [id-domain, id-app], anyVendorDeps: true }

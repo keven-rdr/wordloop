@@ -1,9 +1,28 @@
--- name: UpsertUser :one
-INSERT INTO app_user (idp_issuer, idp_subject, display_name, last_seen_at)
-VALUES ($1, $2, $3, now())
-ON CONFLICT (idp_issuer, idp_subject) DO UPDATE
+-- name: GetUserIDByIdentity :one
+SELECT user_id FROM auth_identity WHERE provider = $1 AND subject = $2;
+
+-- name: GetUserIDByLegacyIdentity :one
+SELECT id FROM app_user WHERE idp_issuer = $1 AND idp_subject = $2;
+
+-- name: LinkIdentity :exec
+INSERT INTO auth_identity (user_id, provider, subject) VALUES ($1, $2, $3)
+ON CONFLICT (provider, subject) DO NOTHING;
+
+-- name: CreateUserWithIdentity :one
+WITH u AS (
+    INSERT INTO app_user (idp_issuer, idp_subject, display_name, last_seen_at)
+    VALUES ($1, $2, $3, now())
+    RETURNING id
+), l AS (
+    INSERT INTO auth_identity (user_id, provider, subject) SELECT id, $1, $2 FROM u
+)
+SELECT id FROM u;
+
+-- name: TouchUser :one
+UPDATE app_user
 SET last_seen_at = now(),
-    display_name = COALESCE(NULLIF(EXCLUDED.display_name, ''), app_user.display_name)
+    display_name = COALESCE(NULLIF(sqlc.arg(display_name)::text, ''), display_name)
+WHERE id = sqlc.arg(id)
 RETURNING id, display_name, role;
 
 -- name: GetUser :one
