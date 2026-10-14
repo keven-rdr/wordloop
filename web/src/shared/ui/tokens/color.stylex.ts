@@ -5,6 +5,7 @@ export const color = stylex.defineVars({
   surface: { default: '#F4F6F8', '@media (prefers-color-scheme: dark)': '#1A2530' },
   text: { default: '#16202A', '@media (prefers-color-scheme: dark)': '#EAF0F5' },
   primary: { default: '#0E9F8E', '@media (prefers-color-scheme: dark)': '#2CC4B2' },
+  onPrimary: '#062B26',
   primaryEdge: { default: '#0A7A6D', '@media (prefers-color-scheme: dark)': '#1B9C8C' },
   success: '#2E9E4F',
   danger: '#D64545',

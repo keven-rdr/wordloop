@@ -1,6 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { useTranslation } from 'react-i18next';
 import { VersionFooter } from './core/VersionFooter';
+import { AuthPanel } from './features/auth/components/AuthPanel';
 import { color, space } from './shared/ui/tokens/color.stylex';
 
 const styles = stylex.create({
@@ -21,6 +22,7 @@ export function App() {
       <main {...stylex.props(styles.main)}>
         <h1>{t('app.name')}</h1>
         <p>{t('app.tagline')}</p>
+        <AuthPanel />
       </main>
       <VersionFooter />
     </div>
