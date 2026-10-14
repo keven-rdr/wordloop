@@ -24,15 +24,50 @@ func NewUsers(conn db.DBTX) *Users { return &Users{q: db.New(conn)} }
 
 func text(s string) pgtype.Text { return pgtype.Text{String: s, Valid: s != ""} }
 
-// Upsert cria o perfil no primeiro login e atualiza o ultimo acesso nos seguintes.
 func (r *Users) Upsert(ctx context.Context, id domain.Identity) (domain.User, error) {
-	row, err := r.q.UpsertUser(ctx, db.UpsertUserParams{
-		IdpIssuer: text(id.Issuer), IdpSubject: text(id.Subject), DisplayName: text(id.DisplayName),
-	})
+	uid, err := r.resolve(ctx, id)
 	if err != nil {
-		return domain.User{}, fmt.Errorf("upsert do perfil: %w", err)
+		return domain.User{}, fmt.Errorf("resolver o perfil: %w", err)
+	}
+	row, err := r.q.TouchUser(ctx, db.TouchUserParams{ID: uid, DisplayName: id.DisplayName})
+	if err != nil {
+		return domain.User{}, fmt.Errorf("atualizar o perfil: %w", err)
 	}
 	return domain.User{ID: row.ID, DisplayName: row.DisplayName.String, Role: domain.ParseRole(row.Role)}, nil
+}
+
+func (r *Users) resolve(ctx context.Context, id domain.Identity) (uuid.UUID, error) {
+	for range 2 {
+		uid, err := r.q.GetUserIDByIdentity(ctx, db.GetUserIDByIdentityParams{Provider: id.Issuer, Subject: id.Subject})
+		if err == nil {
+			return uid, nil
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return uuid.Nil, err
+		}
+		if uid, ok, err := r.linkLegacy(ctx, id); err != nil || ok {
+			return uid, err
+		}
+		uid, err = r.q.CreateUserWithIdentity(ctx, db.CreateUserWithIdentityParams{
+			IdpIssuer: text(id.Issuer), IdpSubject: text(id.Subject), DisplayName: text(id.DisplayName),
+		})
+		if err == nil || !isUniqueViolation(err) {
+			return uid, err
+		}
+	}
+	return uuid.Nil, errors.New("conflito repetido ao criar o perfil")
+}
+
+func (r *Users) linkLegacy(ctx context.Context, id domain.Identity) (uuid.UUID, bool, error) {
+	uid, err := r.q.GetUserIDByLegacyIdentity(ctx, db.GetUserIDByLegacyIdentityParams{IdpIssuer: text(id.Issuer), IdpSubject: text(id.Subject)})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return uuid.Nil, false, nil
+	}
+	if err != nil {
+		return uuid.Nil, false, err
+	}
+	err = r.q.LinkIdentity(ctx, db.LinkIdentityParams{UserID: uid, Provider: id.Issuer, Subject: id.Subject})
+	return uid, err == nil, err
 }
 
 // Get le o perfil; app.ErrNotFound se nao existe ou foi removido.

@@ -1,6 +1,6 @@
 # ADR 0010 — Um Keycloak com dois realms (tst e prd)
 
-**Status:** aceita (2026-10-06)
+**Status:** substituída pelo [ADR 0028](0028-contas-proprias-sem-senha-passkeys-depois-google-github.md) (2026-10-14); era: aceita (2026-10-06)
 
 ## Contexto
 Identidade pronta (vínculo por e-mail, verificação, MFA); a VM tem 12 GB.
