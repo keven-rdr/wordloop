@@ -10,5 +10,9 @@
   "notFound": {
     "title": "Página não encontrada",
     "back": "Voltar ao início"
+  },
+  "theme": {
+    "toLight": "Usar tema claro",
+    "toDark": "Usar tema escuro"
   }
 }

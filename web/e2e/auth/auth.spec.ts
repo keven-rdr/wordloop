@@ -134,3 +134,21 @@ test('abrir /invite sem segredo mostra que o convite não vale', async ({ page }
   await page.goto('/invite');
   await expect(page.getByRole('alert')).toContainText('não é válido');
 });
+
+test('login: cadastro e voltar, Google em breve e troca de tema', async ({ page }) => {
+  await mockApi(page, { signedIn: false, bodies: {}, csrf: [] });
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole('button', { name: /Continuar com Google/ })).toBeDisabled();
+  await page.getByRole('link', { name: 'Criar conta' }).click();
+  await expect(page).toHaveURL(/\/signup$/);
+  await expect(page.getByRole('heading', { name: 'Criar conta' })).toBeVisible();
+  await page.getByRole('link', { name: 'Entrar' }).click();
+  await expect(page).toHaveURL(/\/login$/);
+
+  const side = page.locator('section');
+  await page.getByRole('button', { name: 'Usar tema escuro' }).click();
+  await expect(side).toHaveCSS('background-color', 'rgb(18, 14, 36)');
+  await page.getByRole('button', { name: 'Usar tema claro' }).click();
+  await expect(side).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+});

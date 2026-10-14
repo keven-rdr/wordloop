@@ -9,7 +9,8 @@ test.describe('idioma', () => {
     );
     await page.route('**/api/v1/version', (route) => route.fulfill({ json: version }));
     await page.goto('/');
-    await expect(page.locator('main p')).toContainText('vocabulário de inglês');
+    await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible();
+    await expect(page.locator('main aside p')).toContainText(/Vocabulário com repetição/);
   });
 
   test('nunca mostra chaves cruas antes da tradução carregar', async ({ page }) => {
@@ -18,12 +19,12 @@ test.describe('idioma', () => {
       w.__raw = [];
       new MutationObserver(() => {
         const text = document.body?.innerText ?? '';
-        if (/\b(app|footer)\.[a-zA-Z]+/.test(text)) w.__raw.push(text.slice(0, 80));
+        if (/\b(app|footer|brand|login|signup|provider|theme)\.[a-zA-Z]+/.test(text)) w.__raw.push(text.slice(0, 80));
       }).observe(document, { childList: true, subtree: true, characterData: true });
     });
     await page.route('**/api/v1/version', (route) => route.fulfill({ json: version }));
     await page.goto('/');
-    await expect(page.locator('main p')).toContainText('vocabulário');
+    await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible();
     const raw = await page.evaluate(() => (window as unknown as { __raw: string[] }).__raw);
     expect(raw).toEqual([]);
   });

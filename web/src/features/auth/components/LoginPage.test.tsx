@@ -39,7 +39,7 @@ function loginApi(extra: Record<string, () => Response> = {}) {
   });
 }
 
-describe('AuthPanel: entrar', () => {
+describe('LoginPage: entrar', () => {
   it('sem sessão mostra o botão Entrar com passkey (nada de link para provedor externo)', async () => {
     loginApi();
     stubWebAuthn();
@@ -94,7 +94,7 @@ describe('AuthPanel: entrar', () => {
   });
 });
 
-describe('AuthPanel: com sessão', () => {
+describe('Início: com sessão', () => {
   it('com sessão mostra Olá, o atalho para as passkeys e Sair', async () => {
     loginApi({ 'GET /me': () => json(me) });
     stubWebAuthn();
@@ -132,5 +132,30 @@ describe('AuthPanel: com sessão', () => {
     renderApp('/');
     expect(screen.queryByRole('button', { name: 'Entrar com passkey' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument();
+  });
+});
+
+describe('LoginPage: estados', () => {
+  it('enquanto a passkey é verificada mostra "Verificando…" e desabilita o botão', async () => {
+    let release: (value: Response) => void = () => undefined;
+    stubApi({
+      'GET /version': () => json(version),
+      'GET /me': () => status(401),
+      'POST /auth/passkeys/login/begin': () =>
+        new Promise<Response>((resolve) => {
+          release = resolve;
+        }),
+    });
+    stubWebAuthn();
+    renderApp('/login');
+    fireEvent.click(await screen.findByRole('button', { name: 'Entrar com passkey' }));
+    expect(await screen.findByRole('button', { name: 'Verificando…' })).toBeDisabled();
+    release(status(500));
+  });
+
+  it('sem nome no perfil o início cumprimenta só com "Olá!"', async () => {
+    loginApi({ 'GET /me': () => json({ ...me, display_name: '' }) });
+    renderApp('/');
+    expect(await screen.findByText('Olá!')).toBeInTheDocument();
   });
 });

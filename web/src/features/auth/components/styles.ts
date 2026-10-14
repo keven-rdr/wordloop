@@ -1,14 +1,16 @@
 import * as stylex from '@stylexjs/stylex';
-import { color, radius, space } from '../../../shared/ui/tokens/color.stylex';
+import { color, radius, size, space } from '../../../shared/ui/tokens/color.stylex';
+import { bp } from '../../../shared/ui/tokens/media.stylex';
 
 export const ui = stylex.create({
-  panel: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: space.md, marginTop: space.lg },
+  panel: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: space.md },
   button: {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: '48px',
-    minWidth: '48px',
+    gap: space.sm,
+    minHeight: size.touch,
+    minWidth: size.touch,
     paddingInline: space.lg,
     borderRadius: radius.md,
     borderWidth: 0,
@@ -18,16 +20,24 @@ export const ui = stylex.create({
     fontWeight: 600,
     textDecoration: 'none',
     cursor: 'pointer',
+    transitionProperty: 'background-color, transform',
+    transitionDuration: { default: '150ms', [bp.reduceMotion]: '0s' },
+    transform: { default: 'none', ':active': 'translateY(1px)' },
+    outlineStyle: { default: 'none', ':focus-visible': 'solid' },
+    outlineWidth: 3,
+    outlineColor: color.link,
+    outlineOffset: 2,
   },
   secondary: {
-    backgroundColor: { default: color.surface, ':hover': color.surface },
+    backgroundColor: { default: color.surface, ':hover': color.border },
     color: color.text,
     borderWidth: 1,
     borderStyle: 'solid',
-    borderColor: color.primaryEdge,
+    borderColor: color.border,
   },
+  block: { width: '100%' },
   error: { color: color.danger, margin: 0 },
-  muted: { opacity: 0.75, margin: 0 },
+  muted: { color: color.textMuted, margin: 0 },
   list: {
     listStyle: 'none',
     padding: 0,
@@ -43,6 +53,19 @@ export const ui = stylex.create({
     gap: space.sm,
     padding: space.md,
     borderRadius: radius.md,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: color.border,
     backgroundColor: color.surface,
+  },
+  title: { margin: 0, fontSize: '1.9rem', lineHeight: 1.2, fontWeight: 700 },
+  link: {
+    color: color.link,
+    fontWeight: 600,
+    textDecoration: { default: 'none', ':hover': 'underline' },
+    outlineStyle: { default: 'none', ':focus-visible': 'solid' },
+    outlineWidth: 2,
+    outlineColor: color.link,
+    outlineOffset: 2,
   },
 });

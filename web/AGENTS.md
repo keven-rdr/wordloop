@@ -28,4 +28,5 @@ Vale junto com o `AGENTS.md` da raiz (que vence em conflito).
 
 ## Testes
 - Vitest + Testing Library por componente/hook; Playwright por feature (specs com mocks de API em `e2e/<feature>/`), mais poucos *smoke tests* contra a API real em tst.
+- O React Compiler fica **desligado no Vitest** (`vite.config.ts`): ele gera ramos de cache de memoização que os testes nunca percorrem e que derrubavam a cobertura do código novo no Sonar. Dev e build seguem com o compilador.
 - Comandos: `npm run test` · `npm run test:e2e` · `npm run check`.

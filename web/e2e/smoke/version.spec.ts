@@ -6,6 +6,6 @@ test('rodape mostra a versao do web e da API', async ({ page }) => {
   );
   await page.route('**/api/v1/me', (route) => route.fulfill({ status: 401 }));
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'wordloop' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible();
   await expect(page.getByTestId('version-footer')).toContainText('API v0.1.0 · tst');
 });
