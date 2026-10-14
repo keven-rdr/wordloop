@@ -3,12 +3,16 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"net"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/keven-rdr/wordloop/api/internal/identity/accounts"
 	"github.com/keven-rdr/wordloop/api/internal/platform/db"
 	"github.com/keven-rdr/wordloop/api/internal/platform/db/dbtest"
 )
@@ -83,5 +87,45 @@ func TestServeFailsWhenPortIsTaken(t *testing.T) {
 	t.Setenv("API_ADDR", busy.Addr().String())
 	if err := execute(context.Background(), nil); err == nil {
 		t.Fatal("esperava erro com a porta ocupada")
+	}
+}
+
+func TestCreateAdminPrintsAnInviteAndNeverTakesOverAnAccount(t *testing.T) {
+	url, _ := dbtest.Postgres(t)
+	t.Setenv("DATABASE_URL", url)
+	t.Setenv("APP_PUBLIC_URL", "http://localhost:5173")
+	ctx := context.Background()
+	if err := execute(ctx, []string{"migrate"}); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := createAdmin(ctx, []string{"--email", "Voce@Exemplo.com", "--name", "Voce"}, &out); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "Admin criado: voce@exemplo.com") || !strings.Contains(out.String(), "http://localhost:5173/invite#") {
+		t.Fatalf("saida inesperada: %q", out.String())
+	}
+	out.Reset()
+	if err := execute(ctx, []string{"create-admin", "--email", "voce@exemplo.com"}); err != nil {
+		t.Fatalf("reemitir o convite de um admin sem como entrar deve funcionar: %v", err)
+	}
+
+	pool, err := db.Open(ctx, url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	var unused int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM auth_token WHERE purpose = 'invite' AND used_at IS NULL`).Scan(&unused); err != nil || unused != 1 {
+		t.Fatalf("so o convite mais novo pode valer: %d (%v)", unused, err)
+	}
+	if _, err := pool.Exec(ctx, `INSERT INTO app_user (display_name, email, role) VALUES ('Aluno', 'aluno@exemplo.com', 'user')`); err != nil {
+		t.Fatal(err)
+	}
+	if err := createAdmin(ctx, []string{"--email", "aluno@exemplo.com"}, &out); !errors.Is(err, accounts.ErrAccountExists) {
+		t.Fatalf("nao pode transformar um aluno em admin: %v", err)
+	}
+	if out.Len() != 0 {
+		t.Fatalf("nada deve ser impresso quando recusa: %q", out.String())
 	}
 }

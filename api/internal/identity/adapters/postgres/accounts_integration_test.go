@@ -118,3 +118,22 @@ func TestAccountsStore(t *testing.T) {
 		t.Fatal("com vinculo de provedor a conta ja tem como entrar")
 	}
 }
+
+func TestStoresReportDatabaseFailures(t *testing.T) {
+	pool := setupPool(t)
+	pool.Close()
+	ctx := context.Background()
+	store := postgres.NewAccounts(pool)
+	if _, err := store.FindByEmail(ctx, "a@b.co"); err == nil || errors.Is(err, accounts.ErrNotFound) {
+		t.Fatalf("falha do banco nao e 'conta nao encontrada': %v", err)
+	}
+	if _, err := store.CreateAdmin(ctx, "a@b.co", "A", time.Now()); err == nil || errors.Is(err, accounts.ErrEmailTaken) {
+		t.Fatalf("falha do banco nao e 'e-mail ja cadastrado': %v", err)
+	}
+	if err := store.ReplaceInvite(ctx, uuid.New(), []byte("h"), time.Now(), time.Now().Add(time.Minute)); err == nil {
+		t.Fatal("falha do banco deve voltar como erro")
+	}
+	if _, err := postgres.NewUsers(pool).Upsert(ctx, domain.Identity{Issuer: "i", Subject: "s"}); err == nil {
+		t.Fatal("falha do banco no login deve voltar como erro")
+	}
+}

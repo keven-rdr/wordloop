@@ -18,10 +18,11 @@ import (
 var now = time.Date(2026, 10, 14, 12, 0, 0, 0, time.UTC)
 
 type fakeStore struct {
-	byEmail map[string]accounts.Account
-	names   map[uuid.UUID]string
-	invites map[uuid.UUID][][]byte
-	expires map[uuid.UUID]time.Time
+	byEmail                          map[string]accounts.Account
+	names                            map[uuid.UUID]string
+	invites                          map[uuid.UUID][][]byte
+	expires                          map[uuid.UUID]time.Time
+	failFind, failCreate, failInvite error
 }
 
 func newStore() *fakeStore {
@@ -32,6 +33,9 @@ func newStore() *fakeStore {
 }
 
 func (s *fakeStore) FindByEmail(_ context.Context, email string) (accounts.Account, error) {
+	if s.failFind != nil {
+		return accounts.Account{}, s.failFind
+	}
 	if a, ok := s.byEmail[email]; ok {
 		return a, nil
 	}
@@ -39,6 +43,9 @@ func (s *fakeStore) FindByEmail(_ context.Context, email string) (accounts.Accou
 }
 
 func (s *fakeStore) CreateAdmin(_ context.Context, email, name string, _ time.Time) (uuid.UUID, error) {
+	if s.failCreate != nil {
+		return uuid.Nil, s.failCreate
+	}
 	if _, ok := s.byEmail[email]; ok {
 		return uuid.Nil, accounts.ErrEmailTaken
 	}
@@ -49,6 +56,9 @@ func (s *fakeStore) CreateAdmin(_ context.Context, email, name string, _ time.Ti
 }
 
 func (s *fakeStore) ReplaceInvite(_ context.Context, userID uuid.UUID, hash []byte, _, expiresAt time.Time) error {
+	if s.failInvite != nil {
+		return s.failInvite
+	}
 	s.invites[userID] = [][]byte{hash}
 	s.expires[userID] = expiresAt
 	return nil
@@ -174,5 +184,37 @@ func TestTwoInvitesNeverShareAToken(t *testing.T) {
 			t.Fatal("token repetido")
 		}
 		seen[tok] = true
+	}
+}
+
+var errBoom = errors.New("falha de teste")
+
+type brokenReader struct{}
+
+func (brokenReader) Read([]byte) (int, error) { return 0, errBoom }
+
+func TestCreateAdminSurfacesStorageAndRandomnessFailures(t *testing.T) {
+	cases := map[string]struct {
+		store *fakeStore
+		rand  *brokenReader
+	}{
+		"falha ao buscar a conta":   {store: &fakeStore{failFind: errBoom}},
+		"falha ao criar o admin":    {store: &fakeStore{failCreate: errBoom}},
+		"falha ao gravar o convite": {store: &fakeStore{failInvite: errBoom}},
+		"sem aleatoriedade":         {store: &fakeStore{}, rand: &brokenReader{}},
+	}
+	for name, c := range cases {
+		s := c.store
+		s.byEmail, s.names, s.invites, s.expires = map[string]accounts.Account{}, map[uuid.UUID]string{}, map[uuid.UUID][][]byte{}, map[uuid.UUID]time.Time{}
+		uc := useCase(s)
+		if c.rand != nil {
+			uc.Rand = c.rand
+		}
+		if _, err := uc.Run(context.Background(), "a@b.co", ""); !errors.Is(err, errBoom) {
+			t.Errorf("%s: esperava propagar o erro, veio %v", name, err)
+		}
+		if len(s.invites) != 0 {
+			t.Errorf("%s: nenhum convite pode ficar gravado", name)
+		}
 	}
 }
