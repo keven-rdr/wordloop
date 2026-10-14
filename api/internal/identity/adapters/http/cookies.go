@@ -12,8 +12,13 @@ const (
 	SessionCookieSecure = "__Host-" + SessionCookie
 	FlowCookieSecure    = "__Secure-" + FlowCookie
 
-	flowPath = "/api/v1/auth"
-	flowTTL  = 10 * time.Minute
+	ChallengeCookie       = "wl_pk"
+	ChallengeCookieSecure = "__Secure-wl_pk"
+
+	flowPath      = "/api/v1/auth"
+	challengePath = "/api/v1/auth/passkeys"
+	challengeTTL  = 5 * time.Minute
+	flowTTL       = 10 * time.Minute
 )
 
 type cookies struct{ secure bool }
@@ -30,6 +35,25 @@ func (c cookies) flowName() string {
 		return FlowCookieSecure
 	}
 	return FlowCookie
+}
+
+func (c cookies) challengeName() string {
+	if c.secure {
+		return ChallengeCookieSecure
+	}
+	return ChallengeCookie
+}
+
+func (c cookies) challenge(id string) *http.Cookie {
+	ck := c.base(c.challengeName(), id, challengePath)
+	ck.MaxAge = int(challengeTTL.Seconds())
+	return ck
+}
+
+func (c cookies) clearChallenge() *http.Cookie {
+	ck := c.base(c.challengeName(), "", challengePath)
+	ck.MaxAge = -1
+	return ck
 }
 
 func (c cookies) base(name, value, path string) *http.Cookie {

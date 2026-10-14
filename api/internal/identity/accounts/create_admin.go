@@ -2,9 +2,6 @@ package accounts
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -16,6 +13,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
+	"github.com/keven-rdr/wordloop/api/internal/platform/token"
 )
 
 const InviteTTL = 15 * time.Minute
@@ -48,7 +46,7 @@ func (u CreateAdmin) Run(ctx context.Context, email, name string) (Invite, error
 	if err != nil {
 		return Invite{}, err
 	}
-	token, hash, err := newToken(u.Rand)
+	tok, hash, err := token.New(u.Rand)
 	if err != nil {
 		return Invite{}, err
 	}
@@ -56,7 +54,7 @@ func (u CreateAdmin) Run(ctx context.Context, email, name string) (Invite, error
 	if err := u.Store.ReplaceInvite(ctx, id, hash, now, expires); err != nil {
 		return Invite{}, fmt.Errorf("gravar o convite: %w", err)
 	}
-	return Invite{URL: base + "/invite#" + token, Email: addr, ExpiresAt: expires, Reissued: reissued}, nil
+	return Invite{URL: base + "/invite#" + tok, Email: addr, ExpiresAt: expires, Reissued: reissued}, nil
 }
 
 func (u CreateAdmin) account(ctx context.Context, email, name string, now time.Time) (uuid.UUID, bool, error) {
@@ -110,17 +108,4 @@ func publicBase(raw string) (string, error) {
 		return "", ErrInvalidURL
 	}
 	return u.String(), nil
-}
-
-func newToken(r io.Reader) (string, []byte, error) {
-	if r == nil {
-		r = rand.Reader
-	}
-	buf := make([]byte, 32)
-	if _, err := io.ReadFull(r, buf); err != nil {
-		return "", nil, fmt.Errorf("gerar o token: %w", err)
-	}
-	token := base64.RawURLEncoding.EncodeToString(buf)
-	sum := sha256.Sum256([]byte(token))
-	return token, sum[:], nil
 }

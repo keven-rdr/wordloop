@@ -14,6 +14,12 @@ type Identity interface {
 	ListSessions(ctx context.Context, req gen.ListSessionsRequestObject) (gen.ListSessionsResponseObject, error)
 	RevokeSession(ctx context.Context, req gen.RevokeSessionRequestObject) (gen.RevokeSessionResponseObject, error)
 	RevokeAllSessions(ctx context.Context, req gen.RevokeAllSessionsRequestObject) (gen.RevokeAllSessionsResponseObject, error)
+	BeginPasskeyRegistration(ctx context.Context, req gen.BeginPasskeyRegistrationRequestObject) (gen.BeginPasskeyRegistrationResponseObject, error)
+	FinishPasskeyRegistration(ctx context.Context, req gen.FinishPasskeyRegistrationRequestObject) (gen.FinishPasskeyRegistrationResponseObject, error)
+	BeginPasskeyLogin(ctx context.Context, req gen.BeginPasskeyLoginRequestObject) (gen.BeginPasskeyLoginResponseObject, error)
+	FinishPasskeyLogin(ctx context.Context, req gen.FinishPasskeyLoginRequestObject) (gen.FinishPasskeyLoginResponseObject, error)
+	ListPasskeys(ctx context.Context, req gen.ListPasskeysRequestObject) (gen.ListPasskeysResponseObject, error)
+	DeletePasskey(ctx context.Context, req gen.DeletePasskeyRequestObject) (gen.DeletePasskeyResponseObject, error)
 }
 
 func (s Server) StartLogin(ctx context.Context, req gen.StartLoginRequestObject) (gen.StartLoginResponseObject, error) {
@@ -63,4 +69,46 @@ func (s Server) RevokeAllSessions(ctx context.Context, req gen.RevokeAllSessions
 		return gen.RevokeAllSessions401Response{}, nil
 	}
 	return s.Identity.RevokeAllSessions(ctx, req)
+}
+
+func (s Server) BeginPasskeyRegistration(ctx context.Context, req gen.BeginPasskeyRegistrationRequestObject) (gen.BeginPasskeyRegistrationResponseObject, error) {
+	if s.Identity == nil {
+		return gen.BeginPasskeyRegistration503Response{}, nil
+	}
+	return s.Identity.BeginPasskeyRegistration(ctx, req)
+}
+
+func (s Server) FinishPasskeyRegistration(ctx context.Context, req gen.FinishPasskeyRegistrationRequestObject) (gen.FinishPasskeyRegistrationResponseObject, error) {
+	if s.Identity == nil {
+		return gen.FinishPasskeyRegistration503Response{}, nil
+	}
+	return s.Identity.FinishPasskeyRegistration(ctx, req)
+}
+
+func (s Server) BeginPasskeyLogin(ctx context.Context, req gen.BeginPasskeyLoginRequestObject) (gen.BeginPasskeyLoginResponseObject, error) {
+	if s.Identity == nil {
+		return gen.BeginPasskeyLogin503Response{}, nil
+	}
+	return s.Identity.BeginPasskeyLogin(ctx, req)
+}
+
+func (s Server) FinishPasskeyLogin(ctx context.Context, req gen.FinishPasskeyLoginRequestObject) (gen.FinishPasskeyLoginResponseObject, error) {
+	if s.Identity == nil {
+		return gen.FinishPasskeyLogin503Response{}, nil
+	}
+	return s.Identity.FinishPasskeyLogin(ctx, req)
+}
+
+func (s Server) ListPasskeys(ctx context.Context, req gen.ListPasskeysRequestObject) (gen.ListPasskeysResponseObject, error) {
+	if s.Identity == nil {
+		return gen.ListPasskeys401Response{}, nil
+	}
+	return s.Identity.ListPasskeys(ctx, req)
+}
+
+func (s Server) DeletePasskey(ctx context.Context, req gen.DeletePasskeyRequestObject) (gen.DeletePasskeyResponseObject, error) {
+	if s.Identity == nil {
+		return gen.DeletePasskey401Response{}, nil
+	}
+	return s.Identity.DeletePasskey(ctx, req)
 }

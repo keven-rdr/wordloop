@@ -19,6 +19,7 @@ type Handler struct {
 	List      app.ListSessions
 	Revoke    app.RevokeSession
 	RevokeAll app.RevokeAllSessions
+	Passkeys  *Passkeys
 	Secure    bool
 }
 
