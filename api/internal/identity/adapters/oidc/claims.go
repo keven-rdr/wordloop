@@ -15,6 +15,8 @@ func identityFrom(idt *gooidc.IDToken) (domain.Identity, error) {
 	var claims struct {
 		Name              string `json:"name"`
 		PreferredUsername string `json:"preferred_username"`
+		Email             string `json:"email"`
+		EmailVerified     any    `json:"email_verified"`
 		AMR               any    `json:"amr"`
 		AuthTime          any    `json:"auth_time"`
 	}
@@ -27,6 +29,7 @@ func identityFrom(idt *gooidc.IDToken) (domain.Identity, error) {
 	}
 	return domain.Identity{
 		Issuer: idt.Issuer, Subject: idt.Subject, DisplayName: name,
+		Email: claims.Email, EmailVerified: truthy(claims.EmailVerified),
 		AuthTime: unixTime(claims.AuthTime), MFA: hasMFA(methods(claims.AMR)),
 	}, nil
 }
@@ -72,4 +75,14 @@ func unixTime(v any) time.Time {
 		return time.Time{}
 	}
 	return time.Unix(int64(secs), 0).UTC()
+}
+
+func truthy(v any) bool {
+	switch b := v.(type) {
+	case bool:
+		return b
+	case string:
+		return b == "true"
+	}
+	return false
 }

@@ -18,7 +18,7 @@ components:
   id-passkeys: { in: identity/passkeys }
   id-passwords: { in: identity/passwords }
   id-registration: { in: identity/registration }
-  id-adapters: { in: [identity/adapters/http, identity/adapters/oidc, identity/adapters/postgres, identity/adapters/webauthn] }
+  id-adapters: { in: [identity/adapters/http, identity/adapters/oidc, identity/adapters/postgres, identity/adapters/webauthn, identity/adapters/github] }
   id-sqlc:     { in: identity/adapters/postgres/db }   # gerado pelo sqlc
   id-test:     { in: identity/identitytest }           # fakes em memoria, so para testes
 deps:

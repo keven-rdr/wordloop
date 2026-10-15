@@ -7,11 +7,13 @@ import (
 )
 
 type Identity struct {
-	Issuer      string
-	Subject     string
-	DisplayName string
-	AuthTime    time.Time
-	MFA         bool
+	Issuer        string
+	Subject       string
+	DisplayName   string
+	Email         string
+	EmailVerified bool
+	AuthTime      time.Time
+	MFA           bool
 }
 
 type User struct {

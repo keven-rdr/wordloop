@@ -56,7 +56,7 @@ O gate é o padrão "Sonar way" do plano gratuito, aplicado ao **código novo** 
 - **Contas e convites:** o admin é criado pelo dono, no servidor, com `docker compose --env-file versions.env run --rm api create-admin --email voce@exemplo.com --name Voce` (em `/srv/wordloop/tst`, por SSH com a chave do dono; a chave de deploy é de comando forçado e não serve). O comando imprime um link de convite de uso único (15 min) montado com `APP_PUBLIC_URL` (já em `deploy/tst/api.env`). Ver [ADR 0028](adr/0028-contas-proprias-sem-senha-passkeys-depois-google-github.md): o app não guarda senha. **Sem acesso SSH** (ou para criar o admin direto no banco), rode `deploy/scripts/create-admin.sql` no *SQL Editor* do Neon: troque o e-mail e o nome no início do arquivo e a resposta é o link do convite (o banco guarda só o hash, como o comando); o link abre a tela em que o admin **define a própria senha** (ou cria uma passkey). Esqueceu a senha: `deploy/scripts/reset-admin-access.sql` gera outro convite, apaga as sessões e destrava a conta. A senha vira hash Argon2id ([ADR 0029](adr/0029-senha-como-hash-argon2id-ao-lado-da-passkey.md)); nunca passa por SQL.
 - **E-mail (cadastro e recuperação de senha):** conta no Brevo (plano gratuito), o domínio `wordloop.com.br` verificado como remetente (registros DNS de DKIM/SPF que o Brevo mostra) e o secret `BREVO_API_KEY` no GitHub (*Settings → Secrets and variables → Actions → Secrets*). O remetente (`MAIL_FROM` e `MAIL_FROM_NAME`) está em `deploy/tst/api.env`; troque se usar outro endereço verificado. Sem a chave, `POST /auth/register` e `POST /auth/password/forgot` respondem 503 e a tela mostra que o envio não está disponível. Em desenvolvimento, `MAIL_DRIVER=log` escreve o e-mail (com o link) no log da API, sem enviar nada. Os links vão com o segredo depois do `#`, que o navegador não manda ao servidor.
 - **Passkeys (login sem senha):** `WEBAUTHN_RP_ID` e `WEBAUTHN_ORIGIN` (já em `deploy/tst/api.env`: `tst.wordloop.com.br` e `https://tst.wordloop.com.br`). Sem as duas, as rotas de passkey respondem 503 e a API sobe normalmente. Em dev local: `WEBAUTHN_RP_ID=localhost` e `WEBAUTHN_ORIGIN=http://localhost:5173` (a origem é a do navegador, a do Vite). A API limita `/api/v1/auth/*` a 30 pedidos por minuto por IP (rajada de 15) e corpos a 64 KB; o IP só vem do `X-Forwarded-For` (posto pelo Caddy) com `API_TRUST_PROXY=true`, já em `deploy/tst/api.env`; sem isso o cabeçalho é ignorado.
-- **Login (opcional, tudo ou nada):** `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` e `SESSION_KEY` (32 bytes em base64, `openssl rand -base64 32`). Sem eles a API sobe com o login desligado (`/auth/*` responde 503); com só alguns, o deploy falha dizendo o que falta. O callback de tst, `https://tst.wordloop.com.br/api/v1/auth/callback`, vem do `deploy/tst/api.env`.
+- **Login social (opcional):** `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` e `GH_OAUTH_CLIENT_ID`/`GH_OAUTH_CLIENT_SECRET` (o GitHub não aceita nome de secret começando com `GITHUB_`; o deploy os entrega à API como `GITHUB_CLIENT_ID/SECRET`), mais `SESSION_KEY` (32 bytes em base64, `openssl rand -base64 32`), obrigatório com qualquer provedor. Cada par é tudo ou nada; sem nenhum, só e-mail e senha e passkey funcionam e os botões ficam como "em breve". `OIDC_ISSUER`/`OIDC_CLIENT_ID`/`OIDC_CLIENT_SECRET` ligam um provedor OIDC genérico (usado em dev com o Keycloak). O callback, o mesmo para todos, vem de `OIDC_REDIRECT_URL` em `deploy/tst/api.env`. Passo a passo em [Login social em tst](#login-social-em-tst).
 - **Manual:** *Actions → deploy → Run workflow* escolhe as tags ou faz `rollback`.
 - **Só configuração:** um push na `develop` que altere `deploy/tst/**` ou `deploy/scripts/**` (Caddyfile, compose, scripts) roda o `deploy.yml` sozinho, mantendo as versões atuais; o `deploy.sh` grava o `Caddyfile` no lugar e recarrega o Caddy sem derrubar conexões.
 - **CSP:** o Caddy aplica uma política estrita ao app e à API. Só `/api/v1/docs/*` admite `unsafe-inline`, porque o Swagger UI embutido gera `<script>` e `<style>` inline; sem isso a página fica em branco.
@@ -71,14 +71,22 @@ Deploy em prd, promoção por re-etiqueta com release-please, Keycloak fora do d
 
 Instalados por `npm install` na raiz (script `prepare`). `commit-msg`: Conventional Commits. `pre-commit`: `gofmt` nos `.go` e `biome ci` no web. `pre-push`: `npm run check` (só os componentes alterados). **Não use `--no-verify`.**
 
-## Login em tst (IdP OIDC externo)
+## Login social em tst
 
-A VM de tst não comporta o Keycloak, então tst usa um provedor OIDC hospedado (qualquer um que siga o padrão; a API só precisa do *issuer*). Passo a passo, uma vez:
+O login com Google e GitHub **vincula ou cria** a conta pelo **e-mail confirmado** que o provedor informa: se já existe conta com aquele e-mail (de senha, passkey ou convite), a pessoa entra nela e o vínculo fica guardado; se não existe, a conta é criada já com o e-mail confirmado. Sem e-mail confirmado no provedor, o login é recusado (`/login?error=email`). Quem ligou o 2FA na conta não entra só pelo provedor (`/login?error=two_factor`).
 
-1. No provedor, crie uma aplicação **Web (confidencial)** com *Authorization Code* + PKCE.
-2. Cadastre o *redirect URI* `https://tst.wordloop.com.br/api/v1/auth/callback` e o *logout/web origin* `https://tst.wordloop.com.br`.
-3. Copie o *issuer* (a URL base que serve `/.well-known/openid-configuration`), o *client id* e o *client secret*.
-4. No GitHub, em *Settings → Secrets and variables → Actions → Secrets*, crie `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` e `SESSION_KEY`.
-5. O próximo push na `develop` envia tudo à VM; confira `https://tst.wordloop.com.br/api/v1/auth/login` (deve redirecionar ao provedor).
+Passo a passo, uma vez por provedor (o endereço de retorno é o mesmo nos dois: `https://tst.wordloop.com.br/api/v1/auth/callback`):
 
-Em dev o login usa o Keycloak do Compose (`deploy/dev`, realm `wordloop-dev`): defina `SESSION_KEY` no `api/.env` e entre com `aluno@wordloop.local` / `aluno`.
+**Google**
+1. [Google Cloud Console](https://console.cloud.google.com/) → crie um projeto → *APIs & Services → OAuth consent screen*: tipo *External*, nome `wordloop`, seu e-mail; escopos `openid`, `email` e `profile`.
+2. *Credentials → Create credentials → OAuth client ID* → *Web application*. Em *Authorized redirect URIs* coloque o endereço de retorno acima. Copie o *Client ID* e o *Client secret*.
+3. No GitHub (*Settings → Secrets and variables → Actions → Secrets*): `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`.
+
+**GitHub**
+1. GitHub → *Settings → Developer settings → OAuth Apps → New OAuth App*. *Homepage URL* `https://tst.wordloop.com.br` e *Authorization callback URL* o endereço de retorno acima.
+2. Gere um *Client secret* e copie com o *Client ID*.
+3. Secrets `GH_OAUTH_CLIENT_ID` e `GH_OAUTH_CLIENT_SECRET`.
+
+**Os dois:** crie também o secret `SESSION_KEY` (rode `openssl rand -base64 32` no terminal e cole o resultado) e faça um push na `develop` (ou rode o workflow *deploy*). Confira em `https://tst.wordloop.com.br/api/v1/auth/providers`: deve listar `google` e/ou `github`; os botões da tela de login passam a funcionar sozinhos. **Nunca mande o client secret ou a `SESSION_KEY` no chat.**
+
+Em dev o login social usa o Keycloak do Compose (`deploy/dev`, realm `wordloop-dev`, provedor `oidc`): defina `SESSION_KEY` no `api/.env` e entre com `aluno@wordloop.local` / `aluno`.

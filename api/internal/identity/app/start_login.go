@@ -9,9 +9,10 @@ import (
 
 // StartLogin prepara o login: gera state, nonce e verifier PKCE e devolve a URL do provedor.
 type StartLogin struct {
-	Provider Provider
-	Sealer   Sealer
-	Rand     io.Reader // nil = crypto/rand
+	Provider  Provider
+	Providers Providers
+	Sealer    Sealer
+	Rand      io.Reader // nil = crypto/rand
 }
 
 // LoginRedirect e para onde mandar o navegador e o cookie de estado a gravar.
@@ -22,6 +23,17 @@ type LoginRedirect struct {
 
 // Run inicia o login. returnTo so vale se for caminho relativo.
 func (u StartLogin) Run(ctx context.Context, returnTo string) (LoginRedirect, error) {
+	return u.RunProvider(ctx, "", returnTo)
+}
+
+func (u StartLogin) Names() []string { return providerNames(u.Provider, u.Providers) }
+
+// RunProvider inicia o login no provedor pedido ("" = o padrao).
+func (u StartLogin) RunProvider(ctx context.Context, name, returnTo string) (LoginRedirect, error) {
+	provider, name, ok := resolveProvider(u.Provider, u.Providers, name)
+	if !ok {
+		return LoginRedirect{}, ErrUnknownProvider
+	}
 	var tokens [3]string
 	for i := range tokens {
 		t, err := randomToken(u.Rand, 32)
@@ -30,8 +42,8 @@ func (u StartLogin) Run(ctx context.Context, returnTo string) (LoginRedirect, er
 		}
 		tokens[i] = t
 	}
-	flow := Flow{State: tokens[0], Nonce: tokens[1], Verifier: tokens[2], ReturnTo: safeReturnTo(returnTo)}
-	authURL, err := u.Provider.AuthURL(ctx, flow.State, flow.Nonce, flow.Verifier)
+	flow := Flow{State: tokens[0], Nonce: tokens[1], Verifier: tokens[2], ReturnTo: safeReturnTo(returnTo), Provider: name}
+	authURL, err := provider.AuthURL(ctx, flow.State, flow.Nonce, flow.Verifier)
 	if err != nil {
 		return LoginRedirect{}, fmt.Errorf("montar a URL do provedor: %w", err)
 	}

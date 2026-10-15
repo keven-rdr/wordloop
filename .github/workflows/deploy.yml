@@ -5,7 +5,7 @@
 # deploy/tst ou deploy/scripts, que so atualiza a configuracao) e
 # MANUAL (workflow_dispatch: escolher tags ou fazer rollback).
 # Secrets (repositorio ou Environment `tst`): DEPLOY_SSH_KEY, DEPLOY_HOST, DEPLOY_KNOWN_HOSTS e DATABASE_URL;
-# opcionais do login (tudo ou nada): OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET e SESSION_KEY; opcional do e-mail: BREVO_API_KEY.
+# opcionais do login social: GOOGLE_CLIENT_ID/_SECRET, GH_OAUTH_CLIENT_ID/_SECRET (o GitHub nao deixa secret comecar com GITHUB_), OIDC_* e SESSION_KEY; do e-mail: BREVO_API_KEY.
 # Tags: 'sha-<commit>' (ou '-' para manter a atual).
 name: deploy
 on:
@@ -40,10 +40,14 @@ jobs:
           KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          # Login (opcionais, tudo ou nada): sem eles a API sobe com o login desligado (503).
+          # Login social (opcionais): cada grupo e tudo ou nada; com qualquer provedor, o SESSION_KEY e obrigatorio.
           OIDC_ISSUER: ${{ secrets.OIDC_ISSUER }}
           OIDC_CLIENT_ID: ${{ secrets.OIDC_CLIENT_ID }}
           OIDC_CLIENT_SECRET: ${{ secrets.OIDC_CLIENT_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GITHUB_CLIENT_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
+          GITHUB_CLIENT_SECRET: ${{ secrets.GH_OAUTH_CLIENT_SECRET }}
           SESSION_KEY: ${{ secrets.SESSION_KEY }}
           # E-mail (opcional): sem a chave, o cadastro e a recuperacao por e-mail ficam desligados (503).
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
@@ -56,18 +60,22 @@ jobs:
           printf '%s\n' "$KNOWN" | tr -d '\r' > ~/.ssh/known_hosts
           install -d "$RUNNER_TEMP/pacote"
           cp deploy/tst/compose.yaml deploy/tst/Caddyfile deploy/tst/api.env deploy/scripts/deploy.sh "$RUNNER_TEMP/pacote/"
-          login_vars="OIDC_ISSUER OIDC_CLIENT_ID OIDC_CLIENT_SECRET SESSION_KEY"
-          set_count=0; for v in $login_vars; do if [ -n "${!v}" ]; then set_count=$((set_count + 1)); fi; done
-          if [ "$set_count" -ne 0 ] && [ "$set_count" -ne 4 ]; then
-            echo "::error::login parcialmente configurado: defina os 4 secrets ($login_vars) ou nenhum"; exit 1
-          fi
+          providers=0
+          group_ok() { # tudo ou nada: devolve 0 se o grupo esta completo, 1 se vazio; erro se pela metade
+            local total=0 set=0 v; for v in "$@"; do total=$((total + 1)); if [ -n "${!v}" ]; then set=$((set + 1)); fi; done
+            if [ "$set" -ne 0 ] && [ "$set" -ne "$total" ]; then echo "::error::grupo incompleto: defina todos ou nenhum de: $*" >&2; exit 1; fi
+            [ "$set" -eq "$total" ]
+          }
+          emit() { local v; for v in "$@"; do printf '%s=%s\n' "$v" "$(printf '%s' "${!v}" | tr -d '\r\n')"; done; }
           {
             printf 'DATABASE_URL=%s\n' "$(printf '%s' "$DATABASE_URL" | tr -d '\r\n')"
-            if [ "$set_count" -eq 4 ]; then
-              for v in $login_vars; do printf '%s=%s\n' "$v" "$(printf '%s' "${!v}" | tr -d '\r\n')"; done
-            fi
+            if group_ok OIDC_ISSUER OIDC_CLIENT_ID OIDC_CLIENT_SECRET; then emit OIDC_ISSUER OIDC_CLIENT_ID OIDC_CLIENT_SECRET; providers=1; fi
+            if group_ok GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET; then emit GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET; providers=1; fi
+            if group_ok GITHUB_CLIENT_ID GITHUB_CLIENT_SECRET; then emit GITHUB_CLIENT_ID GITHUB_CLIENT_SECRET; providers=1; fi
+            if [ -n "$SESSION_KEY" ]; then emit SESSION_KEY; fi
             if [ -n "$BREVO_API_KEY" ]; then printf 'BREVO_API_KEY=%s\n' "$(printf '%s' "$BREVO_API_KEY" | tr -d '[:space:]')"; fi
           } > "$RUNNER_TEMP/pacote/secrets.env"
+          if [ "$providers" -eq 1 ] && [ -z "$SESSION_KEY" ]; then echo "::error::com login social, defina tambem o secret SESSION_KEY (openssl rand -base64 32)"; exit 1; fi
           tar -C "$RUNNER_TEMP/pacote" -cf "$RUNNER_TEMP/pacote.tar" compose.yaml Caddyfile api.env secrets.env deploy.sh
       - name: Executa o deploy.sh na VM (comando forcado)
         env:

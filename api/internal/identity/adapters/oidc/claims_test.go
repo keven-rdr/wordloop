@@ -101,3 +101,25 @@ func TestIdentityFromFallsBackToUsernameAndToleratesOddClaimShapes(t *testing.T)
 		t.Fatalf("valor estranho nao prova 2 fatores nem define horario: %+v", got)
 	}
 }
+
+func TestIdentityFromReadsTheEmailAndOnlyTrustsAnExplicitlyVerifiedOne(t *testing.T) {
+	cases := map[string]struct {
+		extra    map[string]any
+		email    string
+		verified bool
+	}{
+		"confirmado (booleano)": {map[string]any{"email": "ana@exemplo.com", "email_verified": true}, "ana@exemplo.com", true},
+		"confirmado (texto)":    {map[string]any{"email": "ana@exemplo.com", "email_verified": "true"}, "ana@exemplo.com", true},
+		"nao confirmado":        {map[string]any{"email": "ana@exemplo.com", "email_verified": false}, "ana@exemplo.com", false},
+		"sem a claim":           {map[string]any{"email": "ana@exemplo.com"}, "ana@exemplo.com", false},
+		"texto que nao e true":  {map[string]any{"email": "ana@exemplo.com", "email_verified": "sim"}, "ana@exemplo.com", false},
+		"numero estranho":       {map[string]any{"email": "ana@exemplo.com", "email_verified": 1}, "ana@exemplo.com", false},
+		"sem e-mail":            {map[string]any{"email_verified": true}, "", true},
+	}
+	for name, c := range cases {
+		got, err := identityFrom(idToken(t, c.extra))
+		if err != nil || got.Email != c.email || got.EmailVerified != c.verified {
+			t.Errorf("%s: %+v %v", name, got, err)
+		}
+	}
+}

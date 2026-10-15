@@ -26,14 +26,18 @@ func (r redirect) write(w http.ResponseWriter) error {
 func (r redirect) VisitStartLoginResponse(w http.ResponseWriter) error  { return r.write(w) }
 func (r redirect) VisitFinishLoginResponse(w http.ResponseWriter) error { return r.write(w) }
 
-// badLogin e o 400 do callback; limpa o cookie de estado para o login nao ser repetido.
-type badLogin struct{ cookies []*http.Cookie }
+// loginFailed e a falha do callback: redireciona o navegador a /login?error=<codigo> e limpa o cookie de estado.
+type loginFailed struct {
+	code    string
+	cookies []*http.Cookie
+}
 
-func (r badLogin) VisitFinishLoginResponse(w http.ResponseWriter) error {
+func (r loginFailed) VisitFinishLoginResponse(w http.ResponseWriter) error {
 	for _, c := range r.cookies {
 		http.SetCookie(w, c)
 	}
-	w.WriteHeader(http.StatusBadRequest)
+	w.Header().Set("Location", "/login?error="+r.code)
+	w.WriteHeader(http.StatusFound)
 	return nil
 }
 
@@ -45,16 +49,6 @@ func (r loggedOut) VisitLogoutResponse(w http.ResponseWriter) error {
 		http.SetCookie(w, c)
 	}
 	w.WriteHeader(http.StatusNoContent)
-	return nil
-}
-
-type mfaRequired struct{ cookies []*http.Cookie }
-
-func (r mfaRequired) VisitFinishLoginResponse(w http.ResponseWriter) error {
-	for _, c := range r.cookies {
-		http.SetCookie(w, c)
-	}
-	w.WriteHeader(http.StatusForbidden)
 	return nil
 }
 

@@ -28,7 +28,7 @@ func newPkEnv(t *testing.T) pkEnv {
 	t.Helper()
 	pool := setupPool(t)
 	ctx := context.Background()
-	u, err := postgres.NewUsers(pool).Upsert(ctx, domain.Identity{Issuer: "i", Subject: "s", DisplayName: "Voce"})
+	u, err := postgres.NewUsers(pool).Upsert(ctx, domain.Identity{Issuer: "i", Subject: "s", Email: "s" + "@exemplo.com", EmailVerified: true, DisplayName: "Voce"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -192,7 +192,7 @@ func TestInviteRejectsExpiredAndForeignUsers(t *testing.T) {
 	if err := e.store.AddWithInvite(ctx, e.cred("a"), expired, e.at); !errors.Is(err, passkeys.ErrUnauthorized) {
 		t.Fatalf("convite vencido no registro: %v", err)
 	}
-	other, _ := postgres.NewUsers(e.pool).Upsert(ctx, domain.Identity{Issuer: "i", Subject: "outra"})
+	other, _ := postgres.NewUsers(e.pool).Upsert(ctx, domain.Identity{Issuer: "i", Subject: "outra", Email: "outra" + "@exemplo.com", EmailVerified: true})
 	valid := e.invite(t, "valido", e.at.Add(time.Minute))
 	foreign := e.cred("b")
 	foreign.UserID = other.ID

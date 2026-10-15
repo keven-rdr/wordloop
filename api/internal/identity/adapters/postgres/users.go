@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -48,14 +50,34 @@ func (r *Users) resolve(ctx context.Context, id domain.Identity) (uuid.UUID, err
 		if uid, ok, err := r.linkLegacy(ctx, id); err != nil || ok {
 			return uid, err
 		}
-		uid, err = r.q.CreateUserWithIdentity(ctx, db.CreateUserWithIdentityParams{
-			IdpIssuer: text(id.Issuer), IdpSubject: text(id.Subject), DisplayName: text(id.DisplayName),
-		})
+		uid, err = r.linkOrCreate(ctx, id)
 		if err == nil || !isUniqueViolation(err) {
 			return uid, err
 		}
 	}
 	return uuid.Nil, errors.New("conflito repetido ao criar o perfil")
+}
+
+func (r *Users) linkOrCreate(ctx context.Context, id domain.Identity) (uuid.UUID, error) {
+	email := strings.ToLower(strings.TrimSpace(id.Email))
+	if email == "" || !id.EmailVerified {
+		return uuid.Nil, app.ErrEmailNotVerified
+	}
+	now := time.Now()
+	uid, err := r.q.GetUserIDByEmail(ctx, email)
+	if err == nil {
+		if err := r.q.LinkIdentity(ctx, db.LinkIdentityParams{UserID: uid, Provider: id.Issuer, Subject: id.Subject}); err != nil {
+			return uuid.Nil, err
+		}
+		return uid, r.q.MarkEmailVerified(ctx, db.MarkEmailVerifiedParams{ID: uid, EmailVerifiedAt: ts(now)})
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return uuid.Nil, err
+	}
+	return r.q.CreateUserWithIdentity(ctx, db.CreateUserWithIdentityParams{
+		IdpIssuer: text(id.Issuer), IdpSubject: text(id.Subject), DisplayName: text(id.DisplayName),
+		Email: text(email), EmailVerifiedAt: ts(now),
+	})
 }
 
 func (r *Users) linkLegacy(ctx context.Context, id domain.Identity) (uuid.UUID, bool, error) {

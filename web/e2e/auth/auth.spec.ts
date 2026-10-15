@@ -44,6 +44,7 @@ async function mockApi(page: Page, state: State) {
   await page.route('**/api/v1/me', (route) =>
     state.signedIn ? route.fulfill({ json: me }) : route.fulfill({ status: 401 }),
   );
+  await page.route('**/api/v1/auth/providers', (route) => route.fulfill({ json: { providers: [] } }));
   await page.route('**/api/v1/auth/passkeys/**', (route) => {
     const path = new URL(route.request().url()).pathname;
     state.bodies[path] = route.request().postDataJSON();

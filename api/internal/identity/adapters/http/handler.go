@@ -43,7 +43,10 @@ func (h Handler) StartLogin(ctx context.Context, req gen.StartLoginRequestObject
 	if req.Params.ReturnTo != nil {
 		returnTo = *req.Params.ReturnTo
 	}
-	login, err := h.Start.Run(ctx, returnTo)
+	login, err := h.Start.RunProvider(ctx, provider(req.Params.Provider), returnTo)
+	if errors.Is(err, app.ErrUnknownProvider) {
+		return gen.StartLogin400Response{}, nil
+	}
 	if err != nil {
 		slog.Warn("login indisponivel", "err", err)
 		return gen.StartLogin503Response{}, nil
@@ -61,13 +64,8 @@ func (h Handler) FinishLogin(ctx context.Context, req gen.FinishLoginRequestObje
 		FlowCookie: httpx.Cookie(ctx, c.flowName()), UserAgent: httpx.UserAgent(ctx),
 	}
 	done, err := h.Finish.Run(ctx, in)
-	if errors.Is(err, app.ErrInvalidLogin) {
-		slog.Info("login recusado", "err", err)
-		return badLogin{cookies: []*http.Cookie{c.clearFlow()}}, nil
-	}
-	if errors.Is(err, app.ErrMFARequired) {
-		slog.Warn("login recusado: a conta exige 2 fatores e o provedor nao os comprovou")
-		return mfaRequired{cookies: []*http.Cookie{c.clearFlow()}}, nil
+	if code, known := loginFailure(err); known {
+		return loginFailed{code: code, cookies: []*http.Cookie{c.clearFlow()}}, nil
 	}
 	if err != nil {
 		return nil, err
@@ -100,4 +98,36 @@ func deref(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+func provider(p *gen.StartLoginParamsProvider) string {
+	if p == nil {
+		return ""
+	}
+	return string(*p)
+}
+
+func loginFailure(err error) (string, bool) {
+	switch {
+	case errors.Is(err, app.ErrInvalidLogin):
+		slog.Info("login recusado", "err", err)
+		return "failed", true
+	case errors.Is(err, app.ErrMFARequired):
+		slog.Warn("login recusado: a conta exige 2 fatores e o provedor nao os comprovou")
+		return "two_factor", true
+	case errors.Is(err, app.ErrEmailNotVerified):
+		slog.Info("login recusado: o provedor nao informou um e-mail confirmado")
+		return "email", true
+	}
+	return "", false
+}
+
+func (h Handler) ListLoginProviders(_ context.Context, _ gen.ListLoginProvidersRequestObject) (gen.ListLoginProvidersResponseObject, error) {
+	names := []gen.LoginProvidersProviders{}
+	if h.enabled() {
+		for _, name := range h.Start.Names() {
+			names = append(names, gen.LoginProvidersProviders(name))
+		}
+	}
+	return gen.ListLoginProviders200JSONResponse{Providers: names}, nil
 }
