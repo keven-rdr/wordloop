@@ -21,6 +21,11 @@ components:
   id-adapters: { in: [identity/adapters/http, identity/adapters/oidc, identity/adapters/postgres, identity/adapters/webauthn, identity/adapters/github] }
   id-sqlc:     { in: identity/adapters/postgres/db }   # gerado pelo sqlc
   id-test:     { in: identity/identitytest }           # fakes em memoria, so para testes
+  cat-domain:   { in: catalog/domain }
+  cat-app:      { in: catalog/app }
+  cat-adapters: { in: [catalog/adapters/http, catalog/adapters/postgres] }
+  cat-sqlc:     { in: catalog/adapters/postgres/db }   # gerado pelo sqlc
+  cat-test:     { in: catalog/catalogtest }            # fakes em memoria, so para testes
 deps:
   api:      { mayDependOn: [apigen, platform, contract], anyVendorDeps: true }
   apigen:   { anyVendorDeps: true }
@@ -35,3 +40,8 @@ deps:
   id-adapters: { mayDependOn: [id-domain, id-app, id-accounts, id-passkeys, id-passwords, id-registration, id-sqlc, apigen, platform], anyVendorDeps: true }
   id-sqlc:     { anyVendorDeps: true }
   id-test:     { mayDependOn: [id-domain, id-app, id-passkeys, id-passwords, id-registration, platform], anyVendorDeps: true }
+  cat-domain:   { anyVendorDeps: true }
+  cat-app:      { mayDependOn: [cat-domain, platform], anyVendorDeps: true }
+  cat-adapters: { mayDependOn: [cat-domain, cat-app, cat-sqlc, apigen, platform], anyVendorDeps: true }
+  cat-sqlc:     { anyVendorDeps: true }
+  cat-test:     { mayDependOn: [cat-domain, cat-app], anyVendorDeps: true }

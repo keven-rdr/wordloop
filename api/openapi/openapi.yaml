@@ -10,6 +10,7 @@ security:
 tags:
   - name: meta
   - name: identity
+  - name: catalog
 paths:
   /version:
     get:
@@ -359,6 +360,71 @@ paths:
         "401": { description: sem sessao valida }
         "404": { description: passkey nao encontrada }
         "409": { description: a conta ficaria sem forma de entrar }
+  /catalog/units:
+    get:
+      tags: [catalog]
+      operationId: listUnits
+      description: Unidades tematicas do curso, com a quantidade de itens que quem pergunta pode ver.
+      responses:
+        "200":
+          description: unidades em ordem
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/CatalogUnit" } }
+        "401": { description: sem sessao valida }
+  /catalog/items:
+    get:
+      tags: [catalog]
+      operationId: listItems
+      description: >
+        Palavras, expressoes e frases do curso, paginadas (page a partir de 1). Itens em rascunho so aparecem para
+        administradores (com status=draft); os demais veem so o publicado.
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { name: sort, in: query, schema: { type: string, enum: ["term,asc", "term,desc", "cefr,asc", "cefr,desc"], default: "term,asc" } }
+        - { name: q, in: query, description: "busca no termo e na traducao", schema: { type: string, maxLength: 100 } }
+        - { name: unit, in: query, schema: { type: string, format: uuid } }
+        - { name: cefr, in: query, schema: { type: string, enum: [A1, A2, B1, B2, C1, C2] } }
+        - { name: kind, in: query, schema: { type: string, enum: [word, expression, phrasal_verb, sentence] } }
+        - { name: locale, in: query, description: "idioma da traducao; o padrao e pt-BR", schema: { type: string, enum: [pt-BR, en-US], default: pt-BR } }
+      responses:
+        "200":
+          description: uma pagina de itens
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ItemPage" }
+        "400": { description: parametro invalido }
+        "401": { description: sem sessao valida }
+  /catalog/items/{id}:
+    get:
+      tags: [catalog]
+      operationId: getItem
+      description: Um item com exemplos, imagens (com credito) e itens relacionados. Rascunho para quem nao e administrador responde 404.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: locale, in: query, schema: { type: string, enum: [pt-BR, en-US], default: pt-BR } }
+      responses:
+        "200":
+          description: o item
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ItemDetail" }
+        "400": { description: id ou parametro invalido }
+        "401": { description: sem sessao valida }
+        "404": { description: item nao encontrado }
+  /catalog/credits:
+    get:
+      tags: [catalog]
+      operationId: listCredits
+      description: Fontes e licencas do conteudo, com o texto de credito exigido por cada licenca. Publico.
+      security: []
+      responses:
+        "200":
+          description: fontes
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Credit" } }
 components:
   responses:
     TooManyRequests:
@@ -461,6 +527,77 @@ components:
         last_used_at: { type: string, format: date-time }
         user_agent: { type: string }
         current: { type: boolean }
+    CatalogUnit:
+      type: object
+      required: [id, position, theme_key, item_count]
+      properties:
+        id: { type: string, format: uuid }
+        position: { type: integer }
+        theme_key: { type: string, description: "chave de traducao do tema; a tela traduz" }
+        item_count: { type: integer }
+    ItemSummary:
+      type: object
+      required: [id, kind, term, status]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [word, expression, phrasal_verb, sentence] }
+        term: { type: string }
+        gloss: { type: string }
+        cefr: { type: string, enum: [A1, A2, B1, B2, C1, C2] }
+        unit_id: { type: string, format: uuid }
+        status: { type: string, enum: [draft, reviewed, published, retired] }
+        image_url: { type: string }
+    ItemPage:
+      type: object
+      required: [items, page, size, total]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/ItemSummary" } }
+        page: { type: integer }
+        size: { type: integer }
+        total: { type: integer }
+    ItemExample:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string }
+        translation: { type: string }
+    ItemImage:
+      type: object
+      required: [url, credit]
+      properties:
+        url: { type: string }
+        credit: { type: string }
+    RelatedItem:
+      type: object
+      required: [id, term, type]
+      properties:
+        id: { type: string, format: uuid }
+        term: { type: string }
+        gloss: { type: string }
+        type: { type: string, enum: [collocation, family, synonym, antonym, hypernym, contrast, related] }
+    ItemDetail:
+      type: object
+      required: [id, kind, term, status, examples, images, related]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [word, expression, phrasal_verb, sentence] }
+        term: { type: string }
+        gloss: { type: string }
+        cefr: { type: string, enum: [A1, A2, B1, B2, C1, C2] }
+        unit_id: { type: string, format: uuid }
+        status: { type: string, enum: [draft, reviewed, published, retired] }
+        examples: { type: array, items: { $ref: "#/components/schemas/ItemExample" } }
+        images: { type: array, items: { $ref: "#/components/schemas/ItemImage" } }
+        related: { type: array, items: { $ref: "#/components/schemas/RelatedItem" } }
+    Credit:
+      type: object
+      required: [code, name, license, notice]
+      properties:
+        code: { type: string }
+        name: { type: string }
+        url: { type: string }
+        license: { type: string, description: "identificador SPDX" }
+        notice: { type: string, description: "texto de credito exigido pela licenca" }
     Version:
       type: object
       required: [api, commit, env]

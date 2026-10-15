@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/keven-rdr/wordloop/api/internal/api"
 	"github.com/keven-rdr/wordloop/api/internal/identity/accounts"
 	httpapi "github.com/keven-rdr/wordloop/api/internal/identity/adapters/http"
 	"github.com/keven-rdr/wordloop/api/internal/identity/adapters/postgres"
@@ -11,7 +10,7 @@ import (
 )
 
 // buildIdentity liga o modulo de login: e-mail e senha, passkeys e, se configurados, Google, GitHub e OIDC generico.
-func buildIdentity(pool *pgxpool.Pool) (api.Identity, error) {
+func buildIdentity(pool *pgxpool.Pool) (httpapi.Handler, error) {
 	users, sessions := postgres.NewUsers(pool), postgres.NewSessions(pool)
 	auth := app.Authenticate{Sessions: sessions, Users: users}
 	h := httpapi.Handler{
@@ -22,11 +21,11 @@ func buildIdentity(pool *pgxpool.Pool) (api.Identity, error) {
 	}
 
 	if err := buildLocalLogin(&h, pool, users, sessions); err != nil {
-		return nil, err
+		return httpapi.Handler{}, err
 	}
 
 	if err := buildSocial(&h, users, sessions); err != nil {
-		return nil, err
+		return httpapi.Handler{}, err
 	}
 	return h, nil
 }
