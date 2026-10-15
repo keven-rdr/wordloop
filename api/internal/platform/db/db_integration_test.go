@@ -62,3 +62,31 @@ func TestMigrateReportsBrokenMigrations(t *testing.T) {
 		t.Fatal("esperava erro com SQL invalido")
 	}
 }
+
+// Um seed grande deve ir num bloco StatementBegin/End: o goose o manda inteiro de uma vez (uma ida e volta ao banco)
+// em vez de uma instrucao por vez (ver api/AGENTS.md, secao Banco). Aqui: o bloco com varias instrucoes roda inteiro.
+func TestMigrateRunsAStatementBlockWithManyInsertsAtOnce(t *testing.T) {
+	ctx := context.Background()
+	url, _ := dbtest.Postgres(t)
+	pool, err := db.Open(ctx, url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+
+	const seed = `-- +goose Up
+CREATE TABLE palavra (id int PRIMARY KEY, texto text NOT NULL);
+-- +goose StatementBegin
+INSERT INTO palavra VALUES (1, 'um');
+INSERT INTO palavra VALUES (2, 'dois');
+INSERT INTO palavra VALUES (3, 'tres');
+-- +goose StatementEnd
+`
+	if err := db.Migrate(ctx, pool, fstest.MapFS{"00001_seed.sql": {Data: []byte(seed)}}); err != nil {
+		t.Fatal(err)
+	}
+	var n int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM palavra`).Scan(&n); err != nil || n != 3 {
+		t.Fatalf("esperava 3 linhas do bloco, veio %d (err=%v)", n, err)
+	}
+}

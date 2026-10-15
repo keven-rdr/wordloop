@@ -41,8 +41,10 @@ fi
 compose pull
 if [[ "${API_TAG:-}" != "rollback" && "${API_TAG:-}" != "-" ]]; then
   # Migracoes ANTES de subir a API nova (expand/contract). Nunca no rollback: migracao nao se desfaz.
-  # So quando a API muda; timeout porque uma imagem sem o subcomando `migrate` subiria o servidor e ficaria presa.
-  timeout 120 docker compose --env-file versions.env run --rm api migrate
+  # So quando a API muda. O timeout existe porque uma imagem sem o subcomando `migrate` subiria o servidor e ficaria
+  # presa; 15 min, porque uma migracao grande e lenta ate o Neon (cada instrucao e uma ida e volta de ~0,15 s):
+  # com 120 s, o seed v0 (849 instrucoes) estourou por 8 s mesmo funcionando.
+  timeout 900 docker compose --env-file versions.env run --rm api migrate
 fi
 compose up -d --remove-orphans
 # Recarrega a configuracao do Caddy sem derrubar conexoes (valida antes de aplicar); aviso, nao erro, se ele ainda subia.
