@@ -43,7 +43,7 @@ func setupPool(t *testing.T) *pgxpool.Pool {
 func TestUpsertCreatesOnceAndKeepsIdentityStable(t *testing.T) {
 	users, _ := setup(t)
 	ctx := context.Background()
-	ident := domain.Identity{Issuer: "https://idp.test", Subject: "abc", DisplayName: "Aluno"}
+	ident := domain.Identity{Issuer: "https://idp.test", Subject: "abc", Email: "abc" + "@exemplo.com", EmailVerified: true, DisplayName: "Aluno"}
 
 	first, err := users.Upsert(ctx, ident)
 	if err != nil || first.ID == uuid.Nil || first.DisplayName != "Aluno" {
@@ -58,11 +58,11 @@ func TestUpsertCreatesOnceAndKeepsIdentityStable(t *testing.T) {
 	if renamed, _ := users.Upsert(ctx, ident); renamed.DisplayName != "Aluno Novo" || renamed.ID != first.ID {
 		t.Fatalf("o nome novo deve atualizar o perfil: %+v", renamed)
 	}
-	other, err := users.Upsert(ctx, domain.Identity{Issuer: "https://idp.test", Subject: "outro"})
+	other, err := users.Upsert(ctx, domain.Identity{Issuer: "https://idp.test", Subject: "outro", Email: "outro" + "@exemplo.com", EmailVerified: true})
 	if err != nil || other.ID == first.ID {
 		t.Fatalf("outro subject deve ser outro perfil: %+v %v", other, err)
 	}
-	sameSubjectOtherIssuer, err := users.Upsert(ctx, domain.Identity{Issuer: "https://outro.idp", Subject: "abc"})
+	sameSubjectOtherIssuer, err := users.Upsert(ctx, domain.Identity{Issuer: "https://outro.idp", Subject: "abc", Email: "abc@outro.idp.test", EmailVerified: true})
 	if err != nil || sameSubjectOtherIssuer.ID == first.ID {
 		t.Fatalf("o mesmo subject em outro emissor e outra pessoa: %+v %v", sameSubjectOtherIssuer, err)
 	}
@@ -78,7 +78,7 @@ func TestUpsertCreatesOnceAndKeepsIdentityStable(t *testing.T) {
 func TestSessionLifecycle(t *testing.T) {
 	users, sessions := setup(t)
 	ctx := context.Background()
-	user, _ := users.Upsert(ctx, domain.Identity{Issuer: "i", Subject: "s"})
+	user, _ := users.Upsert(ctx, domain.Identity{Issuer: "i", Subject: "s", Email: "s" + "@exemplo.com", EmailVerified: true})
 	hash := []byte("0123456789abcdef0123456789abcdef")
 	created := time.Now().Truncate(time.Millisecond)
 	expires := created.Add(time.Hour)

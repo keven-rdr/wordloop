@@ -43,9 +43,11 @@ func (p *Provider) Exchange(_ context.Context, code, verifier, nonce string) (ap
 }
 
 type Users struct {
-	mu   sync.Mutex
-	byID map[uuid.UUID]domain.User
-	ids  map[domain.Identity]uuid.UUID
+	mu                   sync.Mutex
+	byID                 map[uuid.UUID]domain.User
+	ids                  map[domain.Identity]uuid.UUID
+	RequireVerifiedEmail bool
+	FailUpsert           error
 }
 
 var _ app.Users = (*Users)(nil)
@@ -53,6 +55,12 @@ var _ app.Users = (*Users)(nil)
 func (u *Users) Upsert(_ context.Context, id domain.Identity) (domain.User, error) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
+	if u.FailUpsert != nil {
+		return domain.User{}, u.FailUpsert
+	}
+	if u.RequireVerifiedEmail && !id.EmailVerified {
+		return domain.User{}, app.ErrEmailNotVerified
+	}
 	if u.byID == nil {
 		u.byID, u.ids = map[uuid.UUID]domain.User{}, map[domain.Identity]uuid.UUID{}
 	}

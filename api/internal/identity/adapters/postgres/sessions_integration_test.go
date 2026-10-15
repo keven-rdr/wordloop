@@ -25,7 +25,7 @@ func TestNewUserIsAlwaysARegularUserAndLoginNeverChangesRole(t *testing.T) {
 	pool := setupPool(t)
 	users := postgres.NewUsers(pool)
 	ctx := context.Background()
-	ident := domain.Identity{Issuer: "i", Subject: "s", DisplayName: "A"}
+	ident := domain.Identity{Issuer: "i", Subject: "s", Email: "s" + "@exemplo.com", EmailVerified: true, DisplayName: "A"}
 	user, err := users.Upsert(ctx, ident)
 	if err != nil || user.Role != domain.RoleUser {
 		t.Fatalf("o papel inicial deve ser user: %+v %v", user, err)
@@ -45,8 +45,8 @@ func TestNewUserIsAlwaysARegularUserAndLoginNeverChangesRole(t *testing.T) {
 func TestListAndDeleteAreScopedToTheOwner(t *testing.T) {
 	users, sessions := setup(t)
 	ctx := context.Background()
-	alice, _ := users.Upsert(ctx, domain.Identity{Issuer: "i", Subject: "alice"})
-	bob, _ := users.Upsert(ctx, domain.Identity{Issuer: "i", Subject: "bob"})
+	alice, _ := users.Upsert(ctx, domain.Identity{Issuer: "i", Subject: "alice", Email: "alice" + "@exemplo.com", EmailVerified: true})
+	bob, _ := users.Upsert(ctx, domain.Identity{Issuer: "i", Subject: "bob", Email: "bob" + "@exemplo.com", EmailVerified: true})
 	at := time.Now().Truncate(time.Millisecond)
 	for _, n := range []app.NewSession{newSession(alice.ID, "a1", at), newSession(alice.ID, "a2", at.Add(time.Minute)), newSession(bob.ID, "b1", at)} {
 		if err := sessions.Create(ctx, n); err != nil {
@@ -79,8 +79,8 @@ func TestListAndDeleteAreScopedToTheOwner(t *testing.T) {
 func TestDeleteAllByUserLeavesOthersAlone(t *testing.T) {
 	users, sessions := setup(t)
 	ctx := context.Background()
-	alice, _ := users.Upsert(ctx, domain.Identity{Issuer: "i", Subject: "alice"})
-	bob, _ := users.Upsert(ctx, domain.Identity{Issuer: "i", Subject: "bob"})
+	alice, _ := users.Upsert(ctx, domain.Identity{Issuer: "i", Subject: "alice", Email: "alice" + "@exemplo.com", EmailVerified: true})
+	bob, _ := users.Upsert(ctx, domain.Identity{Issuer: "i", Subject: "bob", Email: "bob" + "@exemplo.com", EmailVerified: true})
 	at := time.Now().Truncate(time.Millisecond)
 	for _, n := range []app.NewSession{newSession(alice.ID, "a1", at), newSession(alice.ID, "a2", at), newSession(bob.ID, "b1", at)} {
 		if err := sessions.Create(ctx, n); err != nil {

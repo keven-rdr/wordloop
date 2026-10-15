@@ -5,7 +5,7 @@ import { useSession } from '../hooks/useSession';
 import { AuthShell } from './AuthShell';
 import { EmailRequestForm } from './EmailRequestForm';
 import { form } from './formStyles';
-import { Divider, GoogleButton } from './ProviderButton';
+import { Divider, SocialButtons } from './ProviderButton';
 import { ui } from './styles';
 
 export function SignupPage() {
@@ -17,7 +17,7 @@ export function SignupPage() {
     <AuthShell>
       <h1 {...stylex.props(ui.title)}>{t('signup.title')}</h1>
       <p {...stylex.props(ui.muted)}>{t('signup.intro')}</p>
-      <GoogleButton />
+      <SocialButtons />
       <Divider label={t('signup.orEmail')} />
       <EmailRequestForm flow="signup" />
       <p {...stylex.props(form.footnote)}>

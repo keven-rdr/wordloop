@@ -34,27 +34,46 @@ paths:
     get:
       tags: [identity]
       operationId: startLogin
-      description: Inicia o login (OIDC code + PKCE) e redireciona ao provedor de identidade.
+      description: >
+        Inicia o login social (code + PKCE) e redireciona ao provedor. Sem `provider`, usa o provedor OIDC padrao.
+        Quais provedores existem neste ambiente: `GET /auth/providers`.
       security: []
       parameters:
+        - { name: provider, in: query, required: false, description: provedor de login, schema: { type: string, enum: [google, github, oidc] } }
         - { name: return_to, in: query, required: false, description: caminho relativo para voltar depois de entrar, schema: { type: string, maxLength: 512 } }
       responses:
         "302": { description: redireciona ao provedor de identidade }
+        "400": { description: provedor desconhecido ou desligado neste ambiente }
         "503": { description: login nao configurado neste ambiente }
+  /auth/providers:
+    get:
+      tags: [identity]
+      operationId: listLoginProviders
+      description: Provedores de login social ligados neste ambiente (a tela habilita so os botoes desta lista).
+      security: []
+      responses:
+        "200":
+          description: provedores ligados (lista vazia se nenhum)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LoginProviders" }
   /auth/callback:
     get:
       tags: [identity]
       operationId: finishLogin
-      description: Conclui o login, cria a sessao (cookie httpOnly) e redireciona de volta ao app.
+      description: >
+        Conclui o login social, cria a sessao (cookie httpOnly) e redireciona de volta ao app. Se algo falhar, a
+        resposta tambem e um redirecionamento, para `/login?error=failed` (login invalido ou expirado),
+        `/login?error=two_factor` (a conta exige 2 fatores e o provedor nao os comprovou) ou `/login?error=email`
+        (o provedor nao informou um e-mail confirmado); nenhuma sessao e criada. So um e-mail confirmado pelo provedor
+        vincula a uma conta existente ou cria uma conta nova.
       security: []
       parameters:
         - { name: code, in: query, required: false, schema: { type: string } }
         - { name: state, in: query, required: false, schema: { type: string } }
         - { name: error, in: query, required: false, schema: { type: string } }
       responses:
-        "302": { description: sessao criada, redireciona ao app }
-        "400": { description: login invalido ou expirado }
-        "403": { description: a conta exige 2 fatores e o provedor nao os comprovou; nenhuma sessao e criada }
+        "302": { description: "redireciona ao app (sessao criada) ou a /login?error=... (falha)" }
         "503": { description: login nao configurado neste ambiente }
   /auth/logout:
     post:
@@ -370,6 +389,11 @@ components:
       properties:
         email: { type: string, maxLength: 254 }
         password: { type: string, maxLength: 1024 }
+    LoginProviders:
+      type: object
+      required: [providers]
+      properties:
+        providers: { type: array, items: { type: string, enum: [google, github, oidc] } }
     EmailRequest:
       type: object
       required: [email]

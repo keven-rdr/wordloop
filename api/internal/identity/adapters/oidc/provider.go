@@ -51,7 +51,7 @@ func (p *Provider) discover() (*oauth2.Config, *gooidc.IDTokenVerifier, error) {
 	}
 	p.oauth = &oauth2.Config{
 		ClientID: p.cfg.ClientID, ClientSecret: p.cfg.ClientSecret, RedirectURL: p.cfg.RedirectURL,
-		Endpoint: prov.Endpoint(), Scopes: []string{gooidc.ScopeOpenID, "profile"},
+		Endpoint: prov.Endpoint(), Scopes: []string{gooidc.ScopeOpenID, "profile", "email"},
 	}
 	p.verifier = prov.Verifier(&gooidc.Config{ClientID: p.cfg.ClientID})
 	return p.oauth, p.verifier, nil

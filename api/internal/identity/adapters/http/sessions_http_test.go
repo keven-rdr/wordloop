@@ -150,8 +150,8 @@ func TestAccountThatTurnedTwoFactorOnIsRefusedWith403AndNoSessionWithoutProof(t 
 	flow := cookie(t, res, httpapi.FlowCookieSecure)
 	state := res.Header.Get("Location")[strings.Index(res.Header.Get("Location"), "state=")+len("state="):]
 	cb := do(fx.h, http.MethodGet, "/api/v1/auth/callback?code=code-ok&state="+state, nil, flow)
-	if cb.StatusCode != http.StatusForbidden {
-		t.Fatalf("admin sem 2 fatores: esperava 403, veio %d", cb.StatusCode)
+	if cb.StatusCode != http.StatusFound || cb.Header.Get("Location") != "/login?error=two_factor" {
+		t.Fatalf("2FA ligado sem prova: esperava voltar ao login com error=two_factor, veio %d %s", cb.StatusCode, cb.Header.Get("Location"))
 	}
 	for _, c := range cb.Cookies() {
 		if c.Name == httpapi.SessionCookieSecure && c.MaxAge >= 0 {

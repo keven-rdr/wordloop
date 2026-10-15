@@ -15,6 +15,7 @@ type Flow struct {
 	Nonce    string `json:"n"`
 	Verifier string `json:"v"`
 	ReturnTo string `json:"r"`
+	Provider string `json:"p,omitempty"`
 }
 
 // randomToken devolve n bytes aleatorios em base64url (sem preenchimento).

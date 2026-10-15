@@ -12,13 +12,14 @@ import (
 )
 
 type FinishLogin struct {
-	Provider Provider
-	Users    Users
-	Sessions Sessions
-	Sealer   Sealer
-	Rand     io.Reader
-	Now      func() time.Time
-	Policy   domain.SessionPolicy
+	Provider  Provider
+	Providers Providers
+	Users     Users
+	Sessions  Sessions
+	Sealer    Sealer
+	Rand      io.Reader
+	Now       func() time.Time
+	Policy    domain.SessionPolicy
 }
 
 type FinishInput struct {
@@ -38,7 +39,11 @@ func (u FinishLogin) Run(ctx context.Context, in FinishInput) (LoggedIn, error) 
 	if err != nil {
 		return LoggedIn{}, err
 	}
-	tokens, err := u.Provider.Exchange(ctx, in.Code, flow.Verifier, flow.Nonce)
+	provider, _, ok := resolveProvider(u.Provider, u.Providers, flow.Provider)
+	if !ok {
+		return LoggedIn{}, ErrInvalidLogin
+	}
+	tokens, err := provider.Exchange(ctx, in.Code, flow.Verifier, flow.Nonce)
 	if err != nil {
 		return LoggedIn{}, fmt.Errorf("%w: trocar o code: %w", ErrInvalidLogin, err)
 	}

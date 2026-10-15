@@ -24,6 +24,7 @@ type Identity interface {
 	LoginWithPassword(ctx context.Context, req gen.LoginWithPasswordRequestObject) (gen.LoginWithPasswordResponseObject, error)
 	SetPassword(ctx context.Context, req gen.SetPasswordRequestObject) (gen.SetPasswordResponseObject, error)
 	RegisterAccount(ctx context.Context, req gen.RegisterAccountRequestObject) (gen.RegisterAccountResponseObject, error)
+	ListLoginProviders(ctx context.Context, req gen.ListLoginProvidersRequestObject) (gen.ListLoginProvidersResponseObject, error)
 	RequestPasswordReset(ctx context.Context, req gen.RequestPasswordResetRequestObject) (gen.RequestPasswordResetResponseObject, error)
 }
 
@@ -151,4 +152,11 @@ func (s Server) RequestPasswordReset(ctx context.Context, req gen.RequestPasswor
 		return gen.RequestPasswordReset503Response{}, nil
 	}
 	return s.Identity.RequestPasswordReset(ctx, req)
+}
+
+func (s Server) ListLoginProviders(ctx context.Context, req gen.ListLoginProvidersRequestObject) (gen.ListLoginProvidersResponseObject, error) {
+	if s.Identity == nil {
+		return gen.ListLoginProviders200JSONResponse{Providers: []gen.LoginProvidersProviders{}}, nil
+	}
+	return s.Identity.ListLoginProviders(ctx, req)
 }

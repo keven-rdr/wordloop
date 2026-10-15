@@ -227,7 +227,7 @@ func TestCallbackWithForgedStateIsRejected(t *testing.T) {
 		t.Fatalf("login: %d", login.StatusCode)
 	}
 	forged := b.do(http.MethodGet, base+"/api/v1/auth/callback?code=qualquer&state=forjado", nil, nil)
-	if forged.StatusCode != http.StatusBadRequest {
-		t.Fatalf("state forjado: esperava 400, veio %d", forged.StatusCode)
+	if forged.StatusCode != http.StatusFound || forged.Header.Get("Location") != "/login?error=failed" {
+		t.Fatalf("state forjado: esperava voltar ao login com error=failed, veio %d %s", forged.StatusCode, forged.Header.Get("Location"))
 	}
 }

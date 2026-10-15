@@ -25,7 +25,7 @@ func TestUpsertLinksRowsCreatedBeforeTheIdentityTable(t *testing.T) {
 		t.Fatal(err)
 	}
 	users := postgres.NewUsers(pool)
-	got, err := users.Upsert(ctx, domain.Identity{Issuer: "https://idp.test", Subject: "antigo"})
+	got, err := users.Upsert(ctx, domain.Identity{Issuer: "https://idp.test", Subject: "antigo", Email: "antigo" + "@exemplo.com", EmailVerified: true})
 	if err != nil || got.ID != legacyID || got.DisplayName != "Antigo" {
 		t.Fatalf("o login deve reaproveitar a linha antiga: %+v %v", got, err)
 	}
@@ -38,7 +38,7 @@ func TestUpsertLinksRowsCreatedBeforeTheIdentityTable(t *testing.T) {
 func TestSimultaneousFirstLoginsCreateASingleProfile(t *testing.T) {
 	pool := setupPool(t)
 	users := postgres.NewUsers(pool)
-	ident := domain.Identity{Issuer: "https://idp.test", Subject: "corrida", DisplayName: "Corrida"}
+	ident := domain.Identity{Issuer: "https://idp.test", Subject: "corrida", Email: "corrida" + "@exemplo.com", EmailVerified: true, DisplayName: "Corrida"}
 	ids := make(chan uuid.UUID, 8)
 	var wg sync.WaitGroup
 	for range 8 {
@@ -133,7 +133,7 @@ func TestStoresReportDatabaseFailures(t *testing.T) {
 	if err := store.ReplaceInvite(ctx, uuid.New(), []byte("h"), time.Now(), time.Now().Add(time.Minute)); err == nil {
 		t.Fatal("falha do banco deve voltar como erro")
 	}
-	if _, err := postgres.NewUsers(pool).Upsert(ctx, domain.Identity{Issuer: "i", Subject: "s"}); err == nil {
+	if _, err := postgres.NewUsers(pool).Upsert(ctx, domain.Identity{Issuer: "i", Subject: "s", Email: "s" + "@exemplo.com", EmailVerified: true}); err == nil {
 		t.Fatal("falha do banco no login deve voltar como erro")
 	}
 }

@@ -148,11 +148,11 @@ func TestMeWithoutOrWithBogusSessionIs401(t *testing.T) {
 func TestCallbackRejectsInvalidLoginAndClearsStateCookie(t *testing.T) {
 	h := newHandler(t, true)
 	res := do(h, http.MethodGet, "/api/v1/auth/callback?code=x&state=y", nil, &http.Cookie{Name: httpapi.FlowCookieSecure, Value: "lixo"})
-	if res.StatusCode != http.StatusBadRequest || cookie(t, res, httpapi.FlowCookieSecure).MaxAge >= 0 {
-		t.Fatalf("callback invalido: %d", res.StatusCode)
+	if res.StatusCode != http.StatusFound || res.Header.Get("Location") != "/login?error=failed" || cookie(t, res, httpapi.FlowCookieSecure).MaxAge >= 0 {
+		t.Fatalf("callback invalido: %d %s", res.StatusCode, res.Header.Get("Location"))
 	}
-	if res := do(h, http.MethodGet, "/api/v1/auth/callback?error=access_denied", nil); res.StatusCode != http.StatusBadRequest {
-		t.Fatalf("callback com erro do provedor: esperava 400, veio %d", res.StatusCode)
+	if res := do(h, http.MethodGet, "/api/v1/auth/callback?error=access_denied", nil); res.StatusCode != http.StatusFound || res.Header.Get("Location") != "/login?error=failed" {
+		t.Fatalf("callback com erro do provedor: esperava o redirecionamento ao login, veio %d %s", res.StatusCode, res.Header.Get("Location"))
 	}
 }
 

@@ -31,11 +31,11 @@ export const form = stylex.create({
     borderWidth: 1,
     borderStyle: 'solid',
     borderColor: color.border,
-    opacity: 0.8,
-    cursor: 'not-allowed',
     whiteSpace: 'nowrap',
     paddingInline: space.md,
   },
+  providerOff: { opacity: 0.8, cursor: 'not-allowed' },
+  providerOn: { backgroundColor: { default: color.bg, ':hover': color.surface } },
   providerIcon: { width: '1.4rem', height: '1.4rem' },
   badge: {
     paddingInline: space.sm,
