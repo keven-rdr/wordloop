@@ -5,8 +5,9 @@ Pipeline reproduzível: **fonte JSON → `gen_sql.py` → SQL idempotente + SQL 
 ## Como rodar (amostra)
 
 ```bash
+# O gerador mudou para content/seed/gen_sql.py (seed v0 real, gera a migração do goose).
+# Esta pasta guarda a amostra do Sprint 0a: out/ é um instantâneo gerado pela versão antiga do gerador.
 cd docs/fase-6/seed
-python gen_sql.py                 # gera out/sample-seed.sql e out/sample-verify.sql
 python validate_sqlite.py         # valida num SQLite em memória (integridade, CHECKs, idempotência, conferência)
 ```
 No **PostgreSQL** (ainda **não executado**; é o primeiro item do Sprint 0 do banco):
@@ -49,7 +50,7 @@ Resultado da validação de hoje (SQLite): contagens batem, idempotente (2 execu
 | 4. Traduções | do Tatoeba/Wiktionary; o que faltar é rascunho assistido, marcado `draft` | `review/to-review.csv` |
 | 5. Revisão humana | **você** revisa PT-BR em planilha; o inglês passa por validação automática (vocabulário permitido) e segunda leitura | `review/reviewed.csv` → `status = reviewed` |
 | 6. Imagens | OpenMoji por mapeamento palavra→hexcode (manual nas concretas); Wikimedia Commons só com licença permitida | `source/media.json` |
-| 7. Geração | `gen_sql.py` → seed + conferência | `out/*.sql` |
+| 7. Geração | `content/seed/gen_sql.py` → migração + conferência | `api/migrations/00009_*.sql`, `content/seed/verify-v0.sql` |
 | 8. Carga | comando `api seed` (idempotente) no deploy de tst; **prd só depois da revisão** | — |
 
 **Metas do MVP** `[PREMISSA]`: ~500 palavras (T0 + parte de T1), ~100 frases, ~40 expressões e *phrasal verbs*, imagem em ~150 concretas, ~100 colocações e ~30 antônimos como relações. **Regras de qualidade:** sem duplicata por `natural_key`; 1 sentido principal por palavra nos 500 primeiros; todo texto com `source_id`; `published` só com tradução revisada e (nas concretas) imagem `approved`; checagem automática de licença no CI.
