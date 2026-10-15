@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { getVersionOptions } from '../api/generated/@tanstack/react-query.gen';
 import { color, space } from '../shared/ui/tokens/color.stylex';
+import { footerParts } from './formatVersion';
 import { webCommit, webVersion } from './version';
 
 const styles = stylex.create({
@@ -12,12 +13,11 @@ const styles = stylex.create({
 export function VersionFooter() {
   const { t } = useTranslation('common');
   const { data } = useQuery(getVersionOptions());
-  const commit = data && data.commit !== webCommit ? `${webCommit}/${data.commit}` : webCommit;
+  const web = { version: webVersion, commit: webCommit };
+  const { kind, ...values } = footerParts(web, data && { version: data.api, commit: data.commit, env: data.env });
   return (
     <footer {...stylex.props(styles.footer)} data-testid="version-footer">
-      {data
-        ? t('footer.version', { web: webVersion, api: data.api, env: data.env, commit })
-        : t('footer.versionWebOnly', { web: webVersion, commit: webCommit })}
+      {t(`footer.${kind}`, values)}
     </footer>
   );
 }

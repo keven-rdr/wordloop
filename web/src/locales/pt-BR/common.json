@@ -4,8 +4,10 @@
     "tagline": "Amplie seu vocabulário de inglês com repetição espaçada."
   },
   "footer": {
-    "version": "v{{web}} · API v{{api}} · {{env}} · {{commit}}",
-    "versionWebOnly": "v{{web}} · {{commit}}"
+    "version": "{{web}} · API {{api}} · {{env}} · {{commit}}",
+    "versionWebOnly": "{{web}} · {{commit}}",
+    "build": "web {{web}} · API {{api}} · {{env}}",
+    "buildWebOnly": "web {{web}}"
   },
   "notFound": {
     "title": "Página não encontrada",
