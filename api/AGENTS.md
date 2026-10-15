@@ -18,6 +18,7 @@ Vale junto com o `AGENTS.md` da raiz (que vence em conflito).
 ## Banco
 - **Obrigatorio em todos os ambientes:** a API exige `DATABASE_URL` e nao inicia sem ela; nada de banco simulado. Migracoes: `api migrate` (goose, embutido em `api/migrations/`); o deploy as roda antes de subir a versao nova.
 - SQL em `adapters/postgres/queries/*.sql` → `sqlc generate`. Migração nova = arquivo novo em `migrations/` (goose), **expand/contract**.
+- **Migração com muitas instruções (seed):** o `goose` manda uma instrução por vez e cada uma é uma ida e volta até o banco (~0,15 s até o Neon em tst). Um seed de ~850 instruções levou 2 min e estourou o limite do deploy. Envolva o bloco todo em `-- +goose StatementBegin` … `-- +goose StatementEnd`: vira **um** envio. Migração já aplicada não se edita; vale para a próxima (seed v1, ~500 palavras).
 - Transação por Unit of Work (`platform/db`). `review_log` é **append-only**: nunca `UPDATE`/`DELETE`; correção é evento `review_void`.
 
 ## API
