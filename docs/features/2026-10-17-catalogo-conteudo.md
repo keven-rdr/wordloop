@@ -31,14 +31,19 @@ Ponto de partida já existente (rascunho, nunca executado em PostgreSQL): [`docs
 | Validação | Primeira execução real em PostgreSQL (Testcontainers/PGlite), não só SQLite | confiar no SQLite: não provou a sintaxe |
 
 ## Checklist de progresso
-- [ ] Contrato: `openapi.yaml` (+ `npm run gen`)
-- [ ] API: migrações, SQL (`sqlc`), casos de uso, handlers, testes (unidade + integração)
-- [ ] Seed v0 gerado e conferido (toda linha com fonte e licença)
-- [ ] Web: rota Palavras, feature, hooks gerados, textos `pt-BR`/`en-US`, tokens StyleX, testes (Vitest + Playwright)
-- [ ] Mídia servida e créditos
-- [ ] Documentação: este arquivo e `docs/`
-- [ ] `npm run check` verde
+- [x] Contrato: `openapi.yaml` (+ `npm run gen`)
+- [x] API: migrações 00008/00009, SQL (`sqlc`), casos de uso, handlers, testes de unidade e HTTP
+- [x] Teste de integração no Postgres escrito (roda no CI; as mesmas consultas foram conferidas em PGlite)
+- [x] Seed v0 gerado e conferido (125 itens, toda linha com fonte e licença, idempotente)
+- [x] Web: rotas `/words` e `/words/$unit`, busca, baralho com cartão que vira, textos `pt-BR`/`en-US`, tokens StyleX, testes Vitest
+- [x] Spec Playwright mockado escrito (`web/e2e/words`); **não rodou aqui** (navegador do Playwright não instalado)
+- [ ] Imagens (OpenMoji) servidas pelo web e telas de créditos: pendente de aprovação para baixar os SVGs
+- [ ] Filtro por unidade e nível na tela de busca (a API já filtra)
+- [x] `npm run check` verde
 - [ ] PR aberta (com aprovação do usuário)
 
 ## Verificação
-A preencher.
+- `npm run check` verde (Go, web, estrutura, linhas alteradas).
+- Seed e consultas validados em PostgreSQL (PGlite): 125 itens, 490 textos, 36 mídias; segunda execução sem duplicar; conferências sem violação.
+- Visual conferido no navegador do app com API simulada: cabeçalho roxo, lista de unidades, cartão branco com cartões atrás, barra de progresso e botão de virar.
+- Falta ver em tst depois do deploy (o admin enxerga os itens em rascunho com o selo).

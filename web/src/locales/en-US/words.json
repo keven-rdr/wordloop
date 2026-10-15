@@ -1,0 +1,42 @@
+{
+  "title": "Words",
+  "subtitle": "Pick a unit to study",
+  "search": {
+    "label": "Search for a word or translation",
+    "placeholder": "Search word or translation",
+    "short": "Type at least 2 letters to search.",
+    "empty": "Nothing found for this search.",
+    "results_one": "{{count}} result",
+    "results_other": "{{count}} results"
+  },
+  "units": {
+    "title": "Units",
+    "empty": "No units available for you yet.",
+    "count_one": "{{count}} word",
+    "count_other": "{{count}} words",
+    "theme": {
+      "home-and-family": "Home and family",
+      "food-and-drink": "Food and drink",
+      "animals-and-things": "Animals and things",
+      "actions": "Actions",
+      "describing": "Describing",
+      "little-words": "Little words"
+    }
+  },
+  "draft": "draft",
+  "deck": {
+    "back": "Back to units",
+    "progress": "Position in the deck",
+    "counter": "{{current}}/{{total}}",
+    "reveal": "Show the translation",
+    "hide": "Hide the translation",
+    "previous": "Previous card",
+    "next": "Next card",
+    "tap": "Tap the card to see the translation",
+    "empty": "This unit has no words for you yet."
+  },
+  "error": {
+    "load": "Could not load right now.",
+    "retry": "Try again"
+  }
+}

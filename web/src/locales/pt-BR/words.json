@@ -1,0 +1,42 @@
+{
+  "title": "Palavras",
+  "subtitle": "Escolha uma unidade para estudar",
+  "search": {
+    "label": "Buscar uma palavra ou tradução",
+    "placeholder": "Buscar palavra ou tradução",
+    "short": "Digite pelo menos 2 letras para buscar.",
+    "empty": "Nada encontrado para essa busca.",
+    "results_one": "{{count}} resultado",
+    "results_other": "{{count}} resultados"
+  },
+  "units": {
+    "title": "Unidades",
+    "empty": "Nenhuma unidade disponível para você ainda.",
+    "count_one": "{{count}} palavra",
+    "count_other": "{{count}} palavras",
+    "theme": {
+      "home-and-family": "Casa e família",
+      "food-and-drink": "Comida e bebida",
+      "animals-and-things": "Bichos e coisas",
+      "actions": "Ações",
+      "describing": "Descrever",
+      "little-words": "Palavrinhas"
+    }
+  },
+  "draft": "rascunho",
+  "deck": {
+    "back": "Voltar às unidades",
+    "progress": "Posição no baralho",
+    "counter": "{{current}}/{{total}}",
+    "reveal": "Mostrar a tradução",
+    "hide": "Esconder a tradução",
+    "previous": "Cartão anterior",
+    "next": "Próximo cartão",
+    "tap": "Toque no cartão para ver a tradução",
+    "empty": "Esta unidade ainda não tem palavras para você."
+  },
+  "error": {
+    "load": "Não foi possível carregar agora.",
+    "retry": "Tentar de novo"
+  }
+}

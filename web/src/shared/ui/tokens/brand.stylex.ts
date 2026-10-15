@@ -10,4 +10,8 @@ export const brand = stylex.defineVars({
   paper: '#FFFFFF',
   onBrand: '#FFFFFF',
   onBrandMuted: 'rgba(255, 255, 255, 0.78)',
+  ink: '#1A1530',
+  inkMuted: '#5B5478',
+  glass: 'rgba(255, 255, 255, 0.16)',
+  shade: 'rgba(21, 15, 51, 0.32)',
 });
