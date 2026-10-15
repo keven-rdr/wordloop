@@ -58,5 +58,5 @@ test('convite: define a senha, esconde o segredo e entra', async ({ page }) => {
   await page.getByLabel('Repita a senha').fill('uma senha bem comprida');
   await page.getByRole('button', { name: 'Definir senha e entrar' }).click();
   await expect(page.getByText('Olá, Maria!')).toBeVisible();
-  expect(seen.set).toEqual({ invite: 'segredo-do-convite', password: 'uma senha bem comprida' });
+  expect(seen.set).toEqual({ token: 'segredo-do-convite', password: 'uma senha bem comprida' });
 });

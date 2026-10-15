@@ -1,0 +1,15 @@
+Subject: You already have a wordloop account
+
+Hello!
+
+Someone (probably you) tried to create a wordloop account with this e-mail, but it is already registered.
+
+To sign in, go to: {{.LoginLink}}
+
+If you forgot your password, set a new one with this link (valid for {{.Validity}}, single use):
+
+{{.Link}}
+
+If this was not you, ignore this message: nothing changed in your account.
+
+wordloop

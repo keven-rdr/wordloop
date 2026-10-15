@@ -44,11 +44,11 @@ describe('Login e cadastro: navegação', () => {
 });
 
 describe('SignupPage', () => {
-  it('avisa que o cadastro por e-mail abre em breve e não envia nada', async () => {
+  it('explica o cadastro por e-mail e tem o campo e o botão prontos', async () => {
     anonymousApi();
     renderApp('/signup');
-    expect(await screen.findByRole('status')).toHaveTextContent('abre em breve');
-    expect(screen.getByLabelText('E-mail')).toBeDisabled();
+    expect(await screen.findByText(/enviaremos um link para confirmá-lo/)).toBeInTheDocument();
+    expect(screen.getByLabelText('E-mail')).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Continuar' })).toBeDisabled();
   });
 

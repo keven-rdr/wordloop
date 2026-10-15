@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/keven-rdr/wordloop/api/internal/identity/app"
+	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
 	"github.com/keven-rdr/wordloop/api/internal/platform/token"
 )
 
@@ -20,20 +21,23 @@ type SetPassword struct {
 }
 
 type SetInput struct {
-	Invite    string
+	Token     string
 	Password  string
 	UserAgent string
 }
 
 func (u SetPassword) Run(ctx context.Context, in SetInput) (*app.Opened, error) {
 	now := nowOf(u.Now)
-	inviteHash := token.Hash(in.Invite)
-	owner, err := u.Store.PeekInvite(ctx, inviteHash, now)
+	tokenHash := token.Hash(in.Token)
+	owner, err := u.Store.PeekToken(ctx, tokenHash, now)
 	if errors.Is(err, ErrNotFound) {
 		return nil, ErrUnauthorized
 	}
 	if err != nil {
-		return nil, fmt.Errorf("ler o convite: %w", err)
+		return nil, fmt.Errorf("ler o token: %w", err)
+	}
+	if owner.Purpose == domain.TokenRecovery && owner.Role == domain.RoleAdmin {
+		return nil, ErrUnauthorized
 	}
 	if err := CheckPolicy(in.Password, owner.Email); err != nil {
 		return nil, err
@@ -42,7 +46,7 @@ func (u SetPassword) Run(ctx context.Context, in SetInput) (*app.Opened, error) 
 	if err != nil {
 		return nil, fmt.Errorf("gerar o hash: %w", err)
 	}
-	if err := u.Store.SetWithInvite(ctx, inviteHash, owner.ID, hash, now); err != nil {
+	if err := u.Store.SetWithToken(ctx, tokenHash, owner.ID, hash, now); err != nil {
 		return nil, err
 	}
 	return u.open(ctx, owner, in.UserAgent, now), nil

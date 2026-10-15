@@ -1,0 +1,11 @@
+Subject: Confirm your e-mail on wordloop
+
+Hello!
+
+To finish creating your wordloop account, confirm your e-mail and choose a password with this link (valid for {{.Validity}}, single use):
+
+{{.Link}}
+
+If this was not you, ignore this message: nothing is created without the confirmation.
+
+wordloop

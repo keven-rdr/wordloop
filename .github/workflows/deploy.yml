@@ -5,7 +5,7 @@
 # deploy/tst ou deploy/scripts, que so atualiza a configuracao) e
 # MANUAL (workflow_dispatch: escolher tags ou fazer rollback).
 # Secrets (repositorio ou Environment `tst`): DEPLOY_SSH_KEY, DEPLOY_HOST, DEPLOY_KNOWN_HOSTS e DATABASE_URL;
-# opcionais do login (tudo ou nada): OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET e SESSION_KEY.
+# opcionais do login (tudo ou nada): OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET e SESSION_KEY; opcional do e-mail: BREVO_API_KEY.
 # Tags: 'sha-<commit>' (ou '-' para manter a atual).
 name: deploy
 on:
@@ -45,6 +45,8 @@ jobs:
           OIDC_CLIENT_ID: ${{ secrets.OIDC_CLIENT_ID }}
           OIDC_CLIENT_SECRET: ${{ secrets.OIDC_CLIENT_SECRET }}
           SESSION_KEY: ${{ secrets.SESSION_KEY }}
+          # E-mail (opcional): sem a chave, o cadastro e a recuperacao por e-mail ficam desligados (503).
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
         run: |
           for v in KEY KNOWN DATABASE_URL; do
             [ -n "${!v}" ] || { echo "::error::secret ausente ou vazio: $v (Settings > Secrets and variables > Actions > Secrets)"; exit 1; }
@@ -64,6 +66,7 @@ jobs:
             if [ "$set_count" -eq 4 ]; then
               for v in $login_vars; do printf '%s=%s\n' "$v" "$(printf '%s' "${!v}" | tr -d '\r\n')"; done
             fi
+            if [ -n "$BREVO_API_KEY" ]; then printf 'BREVO_API_KEY=%s\n' "$(printf '%s' "$BREVO_API_KEY" | tr -d '[:space:]')"; fi
           } > "$RUNNER_TEMP/pacote/secrets.env"
           tar -C "$RUNNER_TEMP/pacote" -cf "$RUNNER_TEMP/pacote.tar" compose.yaml Caddyfile api.env secrets.env deploy.sh
       - name: Executa o deploy.sh na VM (comando forcado)

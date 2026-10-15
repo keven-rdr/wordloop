@@ -1,4 +1,5 @@
 import * as stylex from '@stylexjs/stylex';
+import { Link } from '@tanstack/react-router';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePasswordSignIn } from '../hooks/usePasswordSignIn';
@@ -33,6 +34,9 @@ export function LoginForm() {
         onChange={setPassword}
         autoComplete="current-password"
       />
+      <Link to="/forgot" {...stylex.props(ui.link)}>
+        {t('login.forgot')}
+      </Link>
       <button type="submit" disabled={signIn.isPending || !email || !password} {...stylex.props(ui.button, ui.block)}>
         {signIn.isPending ? t('login.submitting') : t('login.submit')}
       </button>

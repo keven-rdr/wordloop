@@ -158,13 +158,56 @@ paths:
         "403": { description: a conta exige 2 fatores; entre com a passkey }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "503": { description: login por senha indisponivel neste ambiente }
+  /auth/register:
+    post:
+      tags: [identity]
+      operationId: registerAccount
+      description: >
+        Pede o cadastro por e-mail. A resposta e sempre 202, exista ou nao uma conta com esse e-mail: quem e novo recebe
+        o link de confirmacao (24 horas); quem ja tem conta recebe um aviso com o caminho para entrar ou redefinir a
+        senha. Contas de administrador nao recebem e-mail. No maximo 1 e-mail por minuto e 5 por hora por conta.
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EmailRequest" }
+      responses:
+        "202": { description: pedido recebido (sem dizer se o e-mail ja existia) }
+        "400": { description: cabecalho de protecao ausente, corpo invalido ou e-mail mal formado }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { description: cadastro por e-mail indisponivel neste ambiente (sem servico de e-mail) }
+  /auth/password/forgot:
+    post:
+      tags: [identity]
+      operationId: requestPasswordReset
+      description: >
+        Pede o link para redefinir a senha (30 minutos). A resposta e sempre 202. So contas de aluno com e-mail
+        confirmado recebem o link; o administrador se recupera pelo servidor, nunca por e-mail.
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EmailRequest" }
+      responses:
+        "202": { description: pedido recebido (sem dizer se o e-mail existe) }
+        "400": { description: cabecalho de protecao ausente, corpo invalido ou e-mail mal formado }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { description: recuperacao por e-mail indisponivel neste ambiente (sem servico de e-mail) }
   /auth/password/set:
     post:
       tags: [identity]
       operationId: setPassword
       description: >
-        Define a senha com um convite valido (o link do admin, 15 minutos, uso unico) e abre a sessao. A senha precisa
-        ter de 12 a 128 caracteres, nao ser igual ao e-mail e nao ser um caractere repetido.
+        Define a senha com um token de uso unico e abre a sessao: o convite do admin (15 minutos), a confirmacao de
+        e-mail do cadastro (24 horas) ou a recuperacao de senha (30 minutos). Confirmacao e recuperacao tambem marcam o
+        e-mail como confirmado, e trocar a senha encerra as outras sessoes. A senha precisa ter de 12 a 128 caracteres,
+        nao ser igual ao e-mail e nao ser um caractere repetido.
       security: []
       parameters:
         - { $ref: "#/components/parameters/CsrfHeader" }
@@ -176,7 +219,7 @@ paths:
       responses:
         "204": { description: "senha gravada e convite consumido; abre a sessao (Set-Cookie), exceto em conta que exige 2 fatores" }
         "400": { description: cabecalho de protecao ausente ou corpo invalido }
-        "401": { description: o convite nao vale mais }
+        "401": { description: o token nao vale mais (usado, vencido ou desconhecido) }
         "422": { description: "senha fraca (tamanho, igual ao e-mail ou repetida)" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "503": { description: login por senha indisponivel neste ambiente }
@@ -327,11 +370,17 @@ components:
       properties:
         email: { type: string, maxLength: 254 }
         password: { type: string, maxLength: 1024 }
+    EmailRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, maxLength: 254 }
+        locale: { type: string, enum: [pt-BR, en-US], description: "idioma do e-mail; o padrao e pt-BR" }
     SetPasswordRequest:
       type: object
-      required: [invite, password]
+      required: [token, password]
       properties:
-        invite: { type: string, maxLength: 256, description: "segredo do convite (o que vem depois do # do link)" }
+        token: { type: string, maxLength: 256, description: "segredo do link (o que vem depois do # do convite, da confirmacao de e-mail ou da recuperacao)" }
         password: { type: string, maxLength: 1024 }
     SetTwoFactorRequest:
       type: object

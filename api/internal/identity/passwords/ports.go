@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
 )
 
 var (
@@ -33,16 +35,18 @@ type Account struct {
 }
 
 type Owner struct {
-	ID    uuid.UUID
-	Email string
+	ID      uuid.UUID
+	Email   string
+	Role    domain.Role
+	Purpose domain.TokenPurpose
 }
 
 type Store interface {
 	FindByEmail(ctx context.Context, email string) (Account, error)
 	BeginAttempt(ctx context.Context, id uuid.UUID, at time.Time) (allowed bool, err error)
 	RegisterSuccess(ctx context.Context, id uuid.UUID) error
-	PeekInvite(ctx context.Context, inviteHash []byte, now time.Time) (Owner, error)
-	SetWithInvite(ctx context.Context, inviteHash []byte, userID uuid.UUID, hash string, now time.Time) error
+	PeekToken(ctx context.Context, tokenHash []byte, now time.Time) (Owner, error)
+	SetWithToken(ctx context.Context, tokenHash []byte, userID uuid.UUID, hash string, now time.Time) error
 }
 
 func nowOf(f func() time.Time) time.Time {

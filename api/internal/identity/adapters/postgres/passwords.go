@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/keven-rdr/wordloop/api/internal/identity/adapters/postgres/db"
+	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
 	"github.com/keven-rdr/wordloop/api/internal/identity/passwords"
 )
 
@@ -56,33 +57,38 @@ func (r *Passwords) RegisterSuccess(ctx context.Context, id uuid.UUID) error {
 	return r.q.ResetPasswordFailures(ctx, id)
 }
 
-func (r *Passwords) PeekInvite(ctx context.Context, inviteHash []byte, now time.Time) (passwords.Owner, error) {
-	row, err := r.q.PeekInviteOwner(ctx, db.PeekInviteOwnerParams{IDHash: inviteHash, ExpiresAt: ts(now)})
+func (r *Passwords) PeekToken(ctx context.Context, tokenHash []byte, now time.Time) (passwords.Owner, error) {
+	row, err := r.q.PeekToken(ctx, db.PeekTokenParams{IDHash: tokenHash, ExpiresAt: ts(now)})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return passwords.Owner{}, passwords.ErrNotFound
 	}
 	if err != nil {
-		return passwords.Owner{}, fmt.Errorf("ler o convite: %w", err)
+		return passwords.Owner{}, fmt.Errorf("ler o token: %w", err)
 	}
-	return passwords.Owner{ID: row.UserID, Email: row.Email.String}, nil
+	return passwords.Owner{ID: row.UserID, Email: row.Email.String, Role: domain.ParseRole(row.Role), Purpose: domain.TokenPurpose(row.Purpose)}, nil
 }
 
-func (r *Passwords) SetWithInvite(ctx context.Context, inviteHash []byte, userID uuid.UUID, hash string, now time.Time) error {
+func (r *Passwords) SetWithToken(ctx context.Context, tokenHash []byte, userID uuid.UUID, hash string, now time.Time) error {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	q := r.q.WithTx(tx)
-	owner, err := q.ConsumeInvite(ctx, db.ConsumeInviteParams{IDHash: inviteHash, UsedAt: ts(now)})
-	if errors.Is(err, pgx.ErrNoRows) || (err == nil && owner != userID) {
+	used, err := q.ConsumeToken(ctx, db.ConsumeTokenParams{IDHash: tokenHash, UsedAt: ts(now)})
+	if errors.Is(err, pgx.ErrNoRows) || (err == nil && used.UserID != userID) {
 		return passwords.ErrUnauthorized
 	}
 	if err != nil {
-		return fmt.Errorf("consumir o convite: %w", err)
+		return fmt.Errorf("consumir o token: %w", err)
 	}
 	if err := q.SetPasswordHash(ctx, db.SetPasswordHashParams{ID: userID, PasswordHash: text(hash)}); err != nil {
 		return fmt.Errorf("gravar a senha: %w", err)
+	}
+	if domain.TokenPurpose(used.Purpose) != domain.TokenInvite {
+		if err := q.MarkEmailVerified(ctx, db.MarkEmailVerifiedParams{ID: userID, EmailVerifiedAt: ts(now)}); err != nil {
+			return fmt.Errorf("confirmar o e-mail: %w", err)
+		}
 	}
 	if err := q.DeleteSessionsByUser(ctx, userID); err != nil {
 		return fmt.Errorf("encerrar as sessoes antigas: %w", err)

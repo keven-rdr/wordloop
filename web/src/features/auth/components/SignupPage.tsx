@@ -3,6 +3,7 @@ import { Link, Navigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { useSession } from '../hooks/useSession';
 import { AuthShell } from './AuthShell';
+import { EmailRequestForm } from './EmailRequestForm';
 import { form } from './formStyles';
 import { Divider, GoogleButton } from './ProviderButton';
 import { ui } from './styles';
@@ -15,26 +16,10 @@ export function SignupPage() {
   return (
     <AuthShell>
       <h1 {...stylex.props(ui.title)}>{t('signup.title')}</h1>
-      <p role="status" {...stylex.props(ui.muted)}>
-        {t('signup.soon')}
-      </p>
+      <p {...stylex.props(ui.muted)}>{t('signup.intro')}</p>
       <GoogleButton />
       <Divider label={t('signup.orEmail')} />
-      <div {...stylex.props(form.field)}>
-        <label htmlFor="signup-email" {...stylex.props(form.label)}>
-          {t('signup.email')}
-        </label>
-        <input
-          id="signup-email"
-          type="email"
-          disabled
-          placeholder={t('signup.emailPlaceholder')}
-          {...stylex.props(form.input, form.inputDisabled)}
-        />
-      </div>
-      <button type="button" disabled {...stylex.props(ui.button, ui.block)}>
-        {t('signup.continue')}
-      </button>
+      <EmailRequestForm flow="signup" />
       <p {...stylex.props(form.footnote)}>
         {t('signup.haveAccount')}{' '}
         <Link to="/login" {...stylex.props(ui.link)}>

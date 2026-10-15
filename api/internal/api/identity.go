@@ -23,6 +23,8 @@ type Identity interface {
 	SetTwoFactor(ctx context.Context, req gen.SetTwoFactorRequestObject) (gen.SetTwoFactorResponseObject, error)
 	LoginWithPassword(ctx context.Context, req gen.LoginWithPasswordRequestObject) (gen.LoginWithPasswordResponseObject, error)
 	SetPassword(ctx context.Context, req gen.SetPasswordRequestObject) (gen.SetPasswordResponseObject, error)
+	RegisterAccount(ctx context.Context, req gen.RegisterAccountRequestObject) (gen.RegisterAccountResponseObject, error)
+	RequestPasswordReset(ctx context.Context, req gen.RequestPasswordResetRequestObject) (gen.RequestPasswordResetResponseObject, error)
 }
 
 func (s Server) StartLogin(ctx context.Context, req gen.StartLoginRequestObject) (gen.StartLoginResponseObject, error) {
@@ -135,4 +137,18 @@ func (s Server) SetPassword(ctx context.Context, req gen.SetPasswordRequestObjec
 		return gen.SetPassword503Response{}, nil
 	}
 	return s.Identity.SetPassword(ctx, req)
+}
+
+func (s Server) RegisterAccount(ctx context.Context, req gen.RegisterAccountRequestObject) (gen.RegisterAccountResponseObject, error) {
+	if s.Identity == nil {
+		return gen.RegisterAccount503Response{}, nil
+	}
+	return s.Identity.RegisterAccount(ctx, req)
+}
+
+func (s Server) RequestPasswordReset(ctx context.Context, req gen.RequestPasswordResetRequestObject) (gen.RequestPasswordResetResponseObject, error) {
+	if s.Identity == nil {
+		return gen.RequestPasswordReset503Response{}, nil
+	}
+	return s.Identity.RequestPasswordReset(ctx, req)
 }
