@@ -26,7 +26,6 @@ func (r redirect) write(w http.ResponseWriter) error {
 func (r redirect) VisitStartLoginResponse(w http.ResponseWriter) error  { return r.write(w) }
 func (r redirect) VisitFinishLoginResponse(w http.ResponseWriter) error { return r.write(w) }
 
-// loginFailed e a falha do callback: redireciona o navegador a /login?error=<codigo> e limpa o cookie de estado.
 type loginFailed struct {
 	code    string
 	cookies []*http.Cookie

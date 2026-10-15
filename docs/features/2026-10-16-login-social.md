@@ -28,6 +28,8 @@ A tela de entrar tinha os botões do Google e do GitHub desligados ("em breve").
 - Mudar o e-mail na conta do Google/GitHub **não** muda o e-mail da conta no wordloop (o vínculo é pelo `subject`, que não muda).
 - Conta apagada segura o e-mail: o login social falha com erro (ainda não existe exclusão de conta; a regra da LGPD virá no Sprint 6).
 - Sem tela para desvincular provedores.
+- Conta criada antes por um login OIDC antigo (Keycloak) não tem e-mail guardado: o primeiro login pelo Google com o mesmo e-mail cria outra conta. Em tst só existe o admin, que nasce com e-mail.
+- Entrar pelo Google/GitHub não prova 2 fatores (`MFA=false`): quem quiser exigir passkey liga o 2FA na conta.
 
 ## Checklist de progresso
 - [x] `app.Providers`, provedor no fluxo selado, `ErrUnknownProvider` e `ErrEmailNotVerified`

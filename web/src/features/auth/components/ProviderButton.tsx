@@ -19,12 +19,13 @@ function ProviderIcon({ provider }: Readonly<{ provider: Provider }>) {
 
 export function SocialButton({ provider }: Readonly<{ provider: Provider }>) {
   const { t } = useTranslation('auth');
-  const enabled = useLoginProviders().includes(provider);
+  const { providers, loading } = useLoginProviders();
+  const enabled = providers.includes(provider);
   const content = (
     <>
       <ProviderIcon provider={provider} />
       {t(labels[provider])}
-      {!enabled && <span {...stylex.props(form.badge)}>{t('provider.soon')}</span>}
+      {!enabled && !loading && <span {...stylex.props(form.badge)}>{t('provider.soon')}</span>}
     </>
   );
   if (enabled) {

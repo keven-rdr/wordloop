@@ -28,7 +28,6 @@ func (u StartLogin) Run(ctx context.Context, returnTo string) (LoginRedirect, er
 
 func (u StartLogin) Names() []string { return providerNames(u.Provider, u.Providers) }
 
-// RunProvider inicia o login no provedor pedido ("" = o padrao).
 func (u StartLogin) RunProvider(ctx context.Context, name, returnTo string) (LoginRedirect, error) {
 	provider, name, ok := resolveProvider(u.Provider, u.Providers, name)
 	if !ok {

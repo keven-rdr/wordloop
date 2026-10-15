@@ -74,7 +74,7 @@ func (p *Provider) Exchange(ctx context.Context, code, verifier, _ string) (app.
 		Primary  bool   `json:"primary"`
 		Verified bool   `json:"verified"`
 	}
-	if err := p.get(ctx, client, "/user/emails", &emails); err != nil {
+	if err := p.get(ctx, client, "/user/emails?per_page=100", &emails); err != nil {
 		return app.Tokens{}, err
 	}
 	name := strings.TrimSpace(user.Name)

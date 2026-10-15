@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { json, me, renderApp, setupTestApp, status, stubApi, version } from '../../../test-support';
 
@@ -57,6 +57,6 @@ describe('SignupPage', () => {
     renderApp('/login');
     const google = await screen.findByRole('button', { name: /Continuar com Google/ });
     expect(google).toBeDisabled();
-    expect(google).toHaveTextContent('em breve');
+    await waitFor(() => expect(google).toHaveTextContent('em breve'));
   });
 });

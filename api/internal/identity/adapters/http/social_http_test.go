@@ -2,6 +2,7 @@ package httpapi_test
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"testing"
@@ -68,5 +69,18 @@ func TestACallbackWithoutAVerifiedEmailGoesBackToTheLoginAndOpensNoSession(t *te
 	}
 	if fx.sessions.Len() != 0 {
 		t.Fatal("nenhuma sessao no banco")
+	}
+}
+
+func TestAnUnexpectedErrorInTheCallbackAlsoGoesBackToTheLogin(t *testing.T) {
+	fx := newFixture(t, true)
+	fx.users.FailUpsert = errors.New("banco fora do ar")
+	res := do(fx.h, http.MethodGet, "/api/v1/auth/login", nil)
+	flow := cookie(t, res, httpapi.FlowCookieSecure)
+	location := res.Header.Get("Location")
+	state := location[strings.Index(location, "state=")+len("state="):]
+	cb := do(fx.h, http.MethodGet, "/api/v1/auth/callback?code=code-ok&state="+state, nil, flow)
+	if cb.StatusCode != http.StatusFound || cb.Header.Get("Location") != "/login?error=failed" {
+		t.Fatalf("esperava voltar ao login, veio %d %s", cb.StatusCode, cb.Header.Get("Location"))
 	}
 }

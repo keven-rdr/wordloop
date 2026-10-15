@@ -68,7 +68,8 @@ func (h Handler) FinishLogin(ctx context.Context, req gen.FinishLoginRequestObje
 		return loginFailed{code: code, cookies: []*http.Cookie{c.clearFlow()}}, nil
 	}
 	if err != nil {
-		return nil, err
+		slog.Error("o login social falhou por um erro inesperado", "err", err)
+		return loginFailed{code: "failed", cookies: []*http.Cookie{c.clearFlow()}}, nil
 	}
 	return redirect{location: done.ReturnTo, cookies: []*http.Cookie{c.session(done.SessionID, done.ExpiresAt), c.clearFlow()}}, nil
 }

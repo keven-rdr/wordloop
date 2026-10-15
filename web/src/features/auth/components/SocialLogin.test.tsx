@@ -46,6 +46,19 @@ describe('Botões de login social', () => {
   });
 });
 
+describe('Enquanto a lista de provedores carrega', () => {
+  it('os botões não mostram "em breve" antes de a resposta chegar', async () => {
+    stubApi({
+      'GET /version': () => json(version),
+      'GET /me': () => status(401),
+      'GET /auth/providers': () => new Promise<Response>(() => undefined) as unknown as Response,
+    });
+    renderApp('/login');
+    expect(await screen.findByRole('button', { name: /Continuar com Google/ })).toBeDisabled();
+    expect(screen.queryByText('em breve')).not.toBeInTheDocument();
+  });
+});
+
 describe('Volta do provedor com erro', () => {
   it.each([
     ['failed', 'Não foi possível entrar com o provedor'],
