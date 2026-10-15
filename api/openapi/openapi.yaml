@@ -134,6 +134,52 @@ paths:
         "400": { description: cabecalho de protecao ausente ou id invalido }
         "401": { description: sem sessao valida }
         "404": { description: sessao nao encontrada }
+  /auth/password/login:
+    post:
+      tags: [identity]
+      operationId: loginWithPassword
+      description: >
+        Entra com e-mail e senha e abre a sessao (cookie httpOnly). Qualquer recusa (e-mail inexistente, senha errada,
+        conta bloqueada por tentativas) responde 401 igual, para nao revelar quais e-mails existem. Depois de 5 erros
+        seguidos a conta fica bloqueada por um tempo crescente (ate 15 minutos). Conta que ligou o 2FA nao entra so
+        com senha: 403 depois de a senha estar certa.
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PasswordLoginRequest" }
+      responses:
+        "204": { description: sessao aberta (Set-Cookie) }
+        "400": { description: cabecalho de protecao ausente ou corpo invalido }
+        "401": { description: e-mail ou senha incorretos }
+        "403": { description: a conta exige 2 fatores; entre com a passkey }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { description: login por senha indisponivel neste ambiente }
+  /auth/password/set:
+    post:
+      tags: [identity]
+      operationId: setPassword
+      description: >
+        Define a senha com um convite valido (o link do admin, 15 minutos, uso unico) e abre a sessao. A senha precisa
+        ter de 12 a 128 caracteres, nao ser igual ao e-mail e nao ser um caractere repetido.
+      security: []
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SetPasswordRequest" }
+      responses:
+        "204": { description: "senha gravada e convite consumido; abre a sessao (Set-Cookie), exceto em conta que exige 2 fatores" }
+        "400": { description: cabecalho de protecao ausente ou corpo invalido }
+        "401": { description: o convite nao vale mais }
+        "422": { description: "senha fraca (tamanho, igual ao e-mail ou repetida)" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { description: login por senha indisponivel neste ambiente }
   /auth/passkeys/register/begin:
     post:
       tags: [identity]
@@ -275,6 +321,18 @@ components:
         display_name: { type: string }
         two_factor_enabled: { type: boolean, description: "se a conta exige 2 fatores para entrar (desligado por padrao)" }
         role: { type: string, enum: [user, admin], description: "so informativo para a interface; a API confere o papel no banco a cada pedido" }
+    PasswordLoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, maxLength: 254 }
+        password: { type: string, maxLength: 1024 }
+    SetPasswordRequest:
+      type: object
+      required: [invite, password]
+      properties:
+        invite: { type: string, maxLength: 256, description: "segredo do convite (o que vem depois do # do link)" }
+        password: { type: string, maxLength: 1024 }
     SetTwoFactorRequest:
       type: object
       required: [enabled]

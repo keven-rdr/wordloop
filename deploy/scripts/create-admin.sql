@@ -1,6 +1,6 @@
 -- Cria o administrador (ou gera um novo convite para um admin que ainda nao tem passkey) direto no banco.
 -- Cole no SQL Editor do Neon, troque os 3 valores marcados e rode. A resposta e o link do convite.
--- O link vale 15 minutos e so uma vez; abra-o no aparelho em que vai guardar a passkey.
+-- O link vale 15 minutos e so uma vez; abra-o para definir a sua senha (ou criar uma passkey).
 -- Resposta vazia: o e-mail ja pertence a uma conta que nao e um admin pendente (nada foi alterado).
 WITH p AS (
     SELECT lower(btrim('SEU_EMAIL@EXEMPLO.COM')) AS email,
@@ -15,6 +15,7 @@ WITH p AS (
     WHERE app_user.role = 'admin' AND app_user.deleted_at IS NULL
       AND NOT EXISTS (SELECT 1 FROM passkey_credential c WHERE c.user_id = app_user.id)
       AND NOT EXISTS (SELECT 1 FROM auth_identity i WHERE i.user_id = app_user.id)
+      AND app_user.password_hash IS NULL
     RETURNING id
 ), revogados AS (
     DELETE FROM auth_token

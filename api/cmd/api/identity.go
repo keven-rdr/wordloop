@@ -30,7 +30,7 @@ func buildIdentity(pool *pgxpool.Pool) (api.Identity, error) {
 		TwoFactor: accounts.TwoFactor{Store: postgres.NewAccounts(pool)},
 	}
 
-	if err := buildPasskeys(&h, pool, users, sessions); err != nil {
+	if err := buildLocalLogin(&h, pool, users, sessions); err != nil {
 		return nil, err
 	}
 

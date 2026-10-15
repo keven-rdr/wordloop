@@ -2,25 +2,13 @@ package httpapi_test
 
 import (
 	"net/http"
-	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
 )
 
 func putTwoFactor(fx fixture, body string, headers map[string]string, cs ...*http.Cookie) *http.Response {
-	req := httptest.NewRequest(http.MethodPut, "/api/v1/me/two-factor", strings.NewReader(body))
-	req.Header.Set("Content-Type", "application/json")
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
-	for _, c := range cs {
-		req.AddCookie(c)
-	}
-	rec := httptest.NewRecorder()
-	fx.h.ServeHTTP(rec, req)
-	return rec.Result()
+	return sendJSON(fx.h, http.MethodPut, "/api/v1/me/two-factor", body, headers, cs...)
 }
 
 func TestTwoFactorNeedsASessionAndTheAntiCSRFHeader(t *testing.T) {

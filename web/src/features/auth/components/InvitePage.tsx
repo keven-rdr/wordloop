@@ -5,30 +5,46 @@ import { useTranslation } from 'react-i18next';
 import { useRegisterPasskey } from '../hooks/useRegisterPasskey';
 import { passkeyMessageKey } from '../passkey/errors';
 import { AuthShell } from './AuthShell';
+import { Divider } from './ProviderButton';
+import { SetPasswordForm } from './SetPasswordForm';
 import { ui } from './styles';
 
 export function InvitePage() {
   const { t, ready } = useTranslation('auth');
-  const navigate = useNavigate();
-  const register = useRegisterPasskey();
   const invite = useInviteFromFragment();
   if (!ready || invite === undefined) return <div aria-busy="true" />;
-  if (invite === '') {
-    return (
-      <AuthShell>
-        <h1 {...stylex.props(ui.title)}>{t('invite.title')}</h1>
-        <p role="alert" {...stylex.props(ui.error)}>
-          {t('invite.invalid')}
-        </p>
-      </AuthShell>
-    );
-  }
-  const create = () => register.mutate({ invite }, { onSuccess: () => void navigate({ to: '/' }) });
   return (
     <AuthShell>
       <h1 {...stylex.props(ui.title)}>{t('invite.title')}</h1>
-      <p {...stylex.props(ui.muted)}>{t('invite.explain')}</p>
-      <button type="button" onClick={create} disabled={register.isPending} {...stylex.props(ui.button, ui.block)}>
+      {invite === '' ? (
+        <p role="alert" {...stylex.props(ui.error)}>
+          {t('invite.invalid')}
+        </p>
+      ) : (
+        <>
+          <p {...stylex.props(ui.muted)}>{t('invite.explain')}</p>
+          <SetPasswordForm invite={invite} />
+          <Divider label={t('invite.or')} />
+          <PasskeyChoice invite={invite} />
+        </>
+      )}
+    </AuthShell>
+  );
+}
+
+function PasskeyChoice({ invite }: Readonly<{ invite: string }>) {
+  const { t } = useTranslation('auth');
+  const navigate = useNavigate();
+  const register = useRegisterPasskey();
+  const create = () => register.mutate({ invite }, { onSuccess: () => void navigate({ to: '/' }) });
+  return (
+    <>
+      <button
+        type="button"
+        onClick={create}
+        disabled={register.isPending}
+        {...stylex.props(ui.button, ui.secondary, ui.block)}
+      >
         {register.isPending ? t('invite.creating') : t('invite.create')}
       </button>
       {register.isError && (
@@ -36,7 +52,7 @@ export function InvitePage() {
           {t(passkeyMessageKey(register.error))}
         </p>
       )}
-    </AuthShell>
+    </>
   );
 }
 

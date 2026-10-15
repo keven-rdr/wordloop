@@ -10,12 +10,13 @@ excludeFiles:
 components:
   api:      { in: api }
   apigen:   { in: api/gen }
-  platform: { in: [platform/httpx, platform/seal, platform/token, platform/ratelimit, platform/db, platform/db/dbtest, platform/version] }
+  platform: { in: [platform/httpx, platform/seal, platform/token, platform/ratelimit, platform/password, platform/db, platform/db/dbtest, platform/version] }
   contract: { in: ../openapi }   # openapi.yaml embutido (go:embed so alcanca a propria pasta)
   id-domain:   { in: identity/domain }
   id-app:      { in: identity/app }
   id-accounts: { in: identity/accounts }
   id-passkeys: { in: identity/passkeys }
+  id-passwords: { in: identity/passwords }
   id-adapters: { in: [identity/adapters/http, identity/adapters/oidc, identity/adapters/postgres, identity/adapters/webauthn] }
   id-sqlc:     { in: identity/adapters/postgres/db }   # gerado pelo sqlc
   id-test:     { in: identity/identitytest }           # fakes em memoria, so para testes
@@ -28,6 +29,7 @@ deps:
   id-app:      { mayDependOn: [id-domain, platform], anyVendorDeps: true }
   id-accounts: { mayDependOn: [id-domain, platform], anyVendorDeps: true }
   id-passkeys: { mayDependOn: [id-domain, id-app, platform], anyVendorDeps: true }
-  id-adapters: { mayDependOn: [id-domain, id-app, id-accounts, id-passkeys, id-sqlc, apigen, platform], anyVendorDeps: true }
+  id-passwords: { mayDependOn: [id-domain, id-app, platform], anyVendorDeps: true }
+  id-adapters: { mayDependOn: [id-domain, id-app, id-accounts, id-passkeys, id-passwords, id-sqlc, apigen, platform], anyVendorDeps: true }
   id-sqlc:     { anyVendorDeps: true }
-  id-test:     { mayDependOn: [id-domain, id-app, id-passkeys, platform], anyVendorDeps: true }
+  id-test:     { mayDependOn: [id-domain, id-app, id-passkeys, id-passwords, platform], anyVendorDeps: true }

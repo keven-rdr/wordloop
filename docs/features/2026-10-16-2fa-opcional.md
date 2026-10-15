@@ -16,6 +16,7 @@ Hoje o admin **só entra** se o login provar 2 fatores. O dono não quer um 2FA 
 |---|---|---|
 | Onde fica | coluna `app_user.mfa_required boolean NOT NULL DEFAULT false` (migração 00006, só aditiva) | tabela própria: um booleano por conta não precisa |
 | Regra | `SessionOpener` recusa o login (403 no OIDC; 401 na passkey) só se `mfa_required` e a prova de 2 fatores faltar | manter "admin sempre exige": é o que o dono não quer |
+| Senha | entrar só com senha **não** comprova 2 fatores (`MFA=false`); conta com o 2FA ligado recebe 403 e entra pela passkey ([ADR 0029](../adr/0029-senha-como-hash-argon2id-ao-lado-da-passkey.md)) | tratar a senha como 2º fator: ela é o 1º |
 | Passkey | continua `userVerification: required`, então entrar com passkey já comprova 2 fatores | relaxar o UV: enfraquece todas as contas para uma opção |
 | Ligar | `PUT /me/two-factor {enabled}` (204); só admin (403); **ligar exige sessão que já comprovou 2 fatores** (409), para o admin não se trancar fora ao ligar numa sessão fraca; desligar vale de qualquer sessão | permitir ligar de qualquer sessão: tranca fora quem entrou pelo Google |
 | Mostrar | `GET /me` ganha `two_factor_enabled` | endpoint separado: um pedido a mais |

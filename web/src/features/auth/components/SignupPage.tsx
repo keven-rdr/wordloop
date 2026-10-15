@@ -29,7 +29,7 @@ export function SignupPage() {
           type="email"
           disabled
           placeholder={t('signup.emailPlaceholder')}
-          {...stylex.props(form.input)}
+          {...stylex.props(form.input, form.inputDisabled)}
         />
       </div>
       <button type="button" disabled {...stylex.props(ui.button, ui.block)}>
