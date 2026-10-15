@@ -9,6 +9,7 @@ import (
 	"github.com/keven-rdr/wordloop/api/internal/api/gen"
 	"github.com/keven-rdr/wordloop/api/internal/identity/accounts"
 	"github.com/keven-rdr/wordloop/api/internal/identity/app"
+	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
 	"github.com/keven-rdr/wordloop/api/internal/platform/httpx"
 )
 
@@ -31,6 +32,12 @@ func (h Handler) cookies() cookies { return cookies{secure: h.Secure} }
 
 func (h Handler) sessionID(ctx context.Context) string {
 	return httpx.Cookie(ctx, h.cookies().sessionName())
+}
+
+// Principal diz quem esta logado nesta requisicao; sem sessao valida devolve app.ErrNoSession.
+// E o que outros modulos usam (pela composicao em cmd/api) para saber quem pergunta.
+func (h Handler) Principal(ctx context.Context) (domain.Principal, error) {
+	return h.Auth.Run(ctx, h.sessionID(ctx))
 }
 
 func (h Handler) enabled() bool { return h.Start != nil && h.Finish != nil }

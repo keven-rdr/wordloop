@@ -10,6 +10,9 @@ export function SignedInPanel({ name }: Readonly<{ name: string }>) {
   return (
     <div {...stylex.props(ui.panel)}>
       <p>{name ? t('greeting', { name }) : t('greetingAnonymous')}</p>
+      <Link to="/words" {...stylex.props(ui.button)}>
+        {t('myWords')}
+      </Link>
       <Link to="/passkeys" {...stylex.props(ui.button, ui.secondary)}>
         {t('myPasskeys')}
       </Link>

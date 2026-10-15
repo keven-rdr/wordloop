@@ -65,7 +65,7 @@ func serve(ctx context.Context) error {
 	srv := &http.Server{
 		Addr: envOr("API_ADDR", ":8080"),
 		Handler: api.Handler(api.Server{
-			Version: info.Version, Commit: info.Commit, Env: info.Env, DocsEnabled: info.DocsEnabled, DB: pool, Identity: ident,
+			Version: info.Version, Commit: info.Commit, Env: info.Env, DocsEnabled: info.DocsEnabled, DB: pool, Identity: ident, Catalog: buildCatalog(pool, ident),
 			AuthLimiter: authLimiter(),
 		}),
 		ReadHeaderTimeout: 5 * time.Second,

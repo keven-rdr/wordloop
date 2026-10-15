@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Gerador do seed (Fase 6): fonte JSON -> SQL idempotente + SQL de conferência.
 
-Uso:  python gen_sql.py [--source source/sample-seed.json] [--out out]
+Uso:  python content/seed/gen_sql.py   (a partir da raiz do repositório)
+Saída: migração do goose em api/migrations/ e SQL de conferência em content/seed/verify-v0.sql
 
 Princípios (mesmos do `seed-referencias` do Contratos, escritos do zero):
   * Reproduzível: mesmo JSON => mesmo SQL (UUIDs v5 derivados da chave natural, ordem fixa).
@@ -53,9 +54,9 @@ class Gen:
 
     def build(self) -> str:
         d = self.d
-        self.emit("-- GERADO por gen_sql.py a partir de source/sample-seed.json. NÃO EDITE À MÃO.")
-        self.emit("-- Idempotente: pode rodar várias vezes. Depois rode sample-verify.sql.")
-        self.emit("BEGIN;")
+        self.emit("-- GERADO por content/seed/gen_sql.py a partir de content/seed/seed-v0.json. NÃO EDITE À MÃO.")
+        self.emit("-- Idempotente (ON CONFLICT). Não sobrescreve status nem content_version. Conferência: content/seed/verify-v0.sql.")
+        self.emit("-- +goose Up")
 
         for s in d["sources"]:
             row = {"id": self.uid("source", s["code"]), "code": s["code"], "name": s["name"], "url": s.get("url"),
@@ -165,7 +166,10 @@ class Gen:
                                         "source_id": src_icon, "creator": "OpenMoji contributors", "source_ref": m["hexcode"],
                                         "notice": notice}, "id", ["notice"])
 
-        self.emit("COMMIT;")
+        self.emit("")
+        self.emit("-- +goose Down")
+        self.emit("-- Sem desfazer: o conteúdo é só acrescentado (expand); remover o seed é decisão de contract futura.")
+        self.emit("SELECT 1;")
         return "\n".join(self.sql) + "\n"
 
     def verify(self) -> str:
@@ -216,17 +220,17 @@ class Gen:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--source", default="source/sample-seed.json")
-    ap.add_argument("--out", default="out")
+    ap.add_argument("--source", default="content/seed/seed-v0.json")
+    ap.add_argument("--migration", default="api/migrations/00009_content_seed_v0.sql")
+    ap.add_argument("--verify", default="content/seed/verify-v0.sql")
     a = ap.parse_args()
     data = json.loads(pathlib.Path(a.source).read_text(encoding="utf-8"))
     g = Gen(data)
     seed = g.build()
-    out = pathlib.Path(a.out)
-    out.mkdir(parents=True, exist_ok=True)
-    (out / "sample-seed.sql").write_text(seed, encoding="utf-8")
-    (out / "sample-verify.sql").write_text(g.verify(), encoding="utf-8")
-    print(f"ok: {sum(g.counts.values())} itens {g.counts}, {g.n_relations} relações, {g.n_media} mídias -> {out}/")
+    for target, text in ((a.migration, seed), (a.verify, g.verify())):
+        with open(target, "w", encoding="utf-8", newline="") as f:
+            f.write(text)
+    print(f"ok: {sum(g.counts.values())} itens {g.counts}, {g.n_relations} relações, {g.n_media} mídias -> {a.migration}")
 
 
 if __name__ == "__main__":

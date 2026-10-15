@@ -1,0 +1,1449 @@
+{
+ "_comment": "Fonte do seed v0 (Sprint 2). Texto original do projeto, tudo 'draft': nenhuma traducao foi revisada. Direitos de texto gerado com IA: VERIFICAR. Rode `python content/seed/gen_sql.py` para gerar a migracao.",
+ "namespace": "wordloop-seed-v0",
+ "sources": [
+  {
+   "code": "wordloop-original",
+   "name": "Texto original do projeto wordloop",
+   "url": "https://github.com/keven-rdr/wordloop",
+   "version": "v0",
+   "license_spdx": "CC-BY-SA-4.0",
+   "attribution_notice": "Texto original do projeto wordloop, licenciado sob CC BY-SA 4.0.",
+   "notes": "Traduções e exemplos escritos para a amostra com apoio de IA; revisar antes de publicar. Situação de direitos sobre texto gerado por IA: VERIFICAR."
+  },
+  {
+   "code": "openmoji",
+   "name": "OpenMoji",
+   "url": "https://openmoji.org/",
+   "version": "VERIFICAR",
+   "license_spdx": "CC-BY-SA-4.0",
+   "attribution_notice": "All emojis designed by OpenMoji – the open-source emoji and icon project. License: CC BY-SA 4.0",
+   "notes": "Códigos hexadecimais dos emojis a conferir contra o acervo na ingestão."
+  }
+ ],
+ "subject": {
+  "code": "english",
+  "name_key": "subjects.english"
+ },
+ "course": {
+  "slug": "en-for-pt-br",
+  "studied_locale": "en-US",
+  "help_locale": "pt-BR",
+  "status": "published"
+ },
+ "units": [
+  {
+   "position": 1,
+   "theme_key": "home-and-family"
+  },
+  {
+   "position": 2,
+   "theme_key": "food-and-drink"
+  },
+  {
+   "position": 3,
+   "theme_key": "animals-and-things"
+  },
+  {
+   "position": 4,
+   "theme_key": "actions"
+  },
+  {
+   "position": 5,
+   "theme_key": "describing"
+  },
+  {
+   "position": 6,
+   "theme_key": "little-words"
+  }
+ ],
+ "lexemes_extra": [
+  {
+   "lemma": "look",
+   "pos": "verb"
+  },
+  {
+   "lemma": "turn",
+   "pos": "verb"
+  }
+ ],
+ "words": [
+  {
+   "lemma": "house",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "casa",
+   "ex": "This is a big house.",
+   "ex_pt": "Esta é uma casa grande."
+  },
+  {
+   "lemma": "mother",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "mãe",
+   "ex": "This is my mother.",
+   "ex_pt": "Esta é minha mãe."
+  },
+  {
+   "lemma": "friend",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "amigo, amiga",
+   "ex": "She is my friend.",
+   "ex_pt": "Ela é minha amiga."
+  },
+  {
+   "lemma": "country",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "país",
+   "ex": "My country is big.",
+   "ex_pt": "Meu país é grande."
+  },
+  {
+   "lemma": "apple",
+   "pos": "noun",
+   "unit": 2,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "maçã",
+   "ex": "She has an apple.",
+   "ex_pt": "Ela tem uma maçã."
+  },
+  {
+   "lemma": "water",
+   "pos": "noun",
+   "unit": 2,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "água",
+   "ex": "I want water.",
+   "ex_pt": "Eu quero água."
+  },
+  {
+   "lemma": "eat",
+   "pos": "verb",
+   "unit": 2,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "comer",
+   "ex": "We eat at school.",
+   "ex_pt": "Nós comemos na escola."
+  },
+  {
+   "lemma": "cat",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "gato",
+   "ex": "I have a cat.",
+   "ex_pt": "Eu tenho um gato."
+  },
+  {
+   "lemma": "dog",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "cachorro",
+   "ex": "My dog is small.",
+   "ex_pt": "Meu cachorro é pequeno."
+  },
+  {
+   "lemma": "book",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "livro",
+   "ex": "I have a book.",
+   "ex_pt": "Eu tenho um livro."
+  },
+  {
+   "lemma": "car",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "carro",
+   "ex": "I go by car.",
+   "ex_pt": "Eu vou de carro."
+  },
+  {
+   "lemma": "school",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "escola",
+   "ex": "The school is big.",
+   "ex_pt": "A escola é grande."
+  },
+  {
+   "lemma": "go",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "ir",
+   "ex": "They go to school.",
+   "ex_pt": "Eles vão para a escola."
+  },
+  {
+   "lemma": "have",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "ter",
+   "ex": "I have a dog.",
+   "ex_pt": "Eu tenho um cachorro."
+  },
+  {
+   "lemma": "like",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "gostar de",
+   "ex": "I like water.",
+   "ex_pt": "Eu gosto de água."
+  },
+  {
+   "lemma": "want",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "querer",
+   "ex": "I want a book.",
+   "ex_pt": "Eu quero um livro."
+  },
+  {
+   "lemma": "see",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "ver",
+   "ex": "I see a cat.",
+   "ex_pt": "Eu vejo um gato."
+  },
+  {
+   "lemma": "live",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "morar, viver",
+   "ex": "I live in a house.",
+   "ex_pt": "Eu moro em uma casa."
+  },
+  {
+   "lemma": "sort",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A2",
+   "conc": "abstract",
+   "gloss": "separar, classificar",
+   "ex": "Sort the apples.",
+   "ex_pt": "Separe as maçãs.",
+   "sense_no": 1
+  },
+  {
+   "lemma": "big",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "grande",
+   "ex": "The dog is big.",
+   "ex_pt": "O cachorro é grande."
+  },
+  {
+   "lemma": "small",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "pequeno",
+   "ex": "I have a small car.",
+   "ex_pt": "Eu tenho um carro pequeno."
+  },
+  {
+   "lemma": "hot",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "quente",
+   "ex": "The water is hot.",
+   "ex_pt": "A água está quente."
+  },
+  {
+   "lemma": "cold",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "frio",
+   "ex": "The apple is cold.",
+   "ex_pt": "A maçã está fria."
+  },
+  {
+   "lemma": "good",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "bom, boa",
+   "ex": "He is a good friend.",
+   "ex_pt": "Ele é um bom amigo."
+  },
+  {
+   "lemma": "almost",
+   "pos": "adv",
+   "unit": 5,
+   "cefr": "A2",
+   "conc": "function",
+   "gloss": "quase",
+   "ex": "The water is almost hot.",
+   "ex_pt": "A água está quase quente."
+  },
+  {
+   "lemma": "always",
+   "pos": "adv",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "sempre",
+   "ex": "I always eat an apple.",
+   "ex_pt": "Eu sempre como uma maçã."
+  },
+  {
+   "lemma": "because",
+   "pos": "conj",
+   "unit": 6,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "porque",
+   "ex": "I go because I want.",
+   "ex_pt": "Eu vou porque eu quero."
+  },
+  {
+   "lemma": "between",
+   "pos": "prep",
+   "unit": 6,
+   "cefr": "A2",
+   "conc": "function",
+   "gloss": "entre",
+   "ex": "I am between my friend and my mother.",
+   "ex_pt": "Estou entre meu amigo e minha mãe."
+  },
+  {
+   "lemma": "the",
+   "pos": "det",
+   "unit": 6,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "o, a, os, as",
+   "ex": "The house is big.",
+   "ex_pt": "A casa é grande."
+  },
+  {
+   "lemma": "of",
+   "pos": "prep",
+   "unit": 6,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "de",
+   "ex": "A friend of my mother.",
+   "ex_pt": "Uma amiga da minha mãe."
+  },
+  {
+   "lemma": "sort",
+   "pos": "noun",
+   "unit": 6,
+   "cefr": "A2",
+   "conc": "abstract",
+   "gloss": "tipo, espécie",
+   "ex": "I like this sort of book.",
+   "ex_pt": "Eu gosto deste tipo de livro.",
+   "sense_no": 1
+  },
+  {
+   "lemma": "father",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "pai",
+   "ex": "My father is at home.",
+   "ex_pt": "Meu pai está em casa."
+  },
+  {
+   "lemma": "brother",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "irmão",
+   "ex": "I have a brother.",
+   "ex_pt": "Eu tenho um irmão."
+  },
+  {
+   "lemma": "sister",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "irmã",
+   "ex": "My sister is small.",
+   "ex_pt": "Minha irmã é pequena."
+  },
+  {
+   "lemma": "child",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "criança, filho",
+   "ex": "The child is happy.",
+   "ex_pt": "A criança está feliz."
+  },
+  {
+   "lemma": "family",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "família",
+   "ex": "I love my family.",
+   "ex_pt": "Eu amo minha família."
+  },
+  {
+   "lemma": "room",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "quarto, sala, cômodo",
+   "ex": "My room is small.",
+   "ex_pt": "Meu quarto é pequeno."
+  },
+  {
+   "lemma": "door",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "porta",
+   "ex": "Please close the door.",
+   "ex_pt": "Por favor, feche a porta."
+  },
+  {
+   "lemma": "table",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "mesa",
+   "ex": "The book is on the table.",
+   "ex_pt": "O livro está na mesa."
+  },
+  {
+   "lemma": "bed",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "cama",
+   "ex": "I go to bed at ten.",
+   "ex_pt": "Eu vou para a cama às dez."
+  },
+  {
+   "lemma": "home",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "lar, casa (onde se mora)",
+   "ex": "I am at home.",
+   "ex_pt": "Eu estou em casa."
+  },
+  {
+   "lemma": "man",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "homem",
+   "ex": "The man has a dog.",
+   "ex_pt": "O homem tem um cachorro."
+  },
+  {
+   "lemma": "woman",
+   "pos": "noun",
+   "unit": 1,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "mulher",
+   "ex": "The woman is my teacher.",
+   "ex_pt": "A mulher é minha professora."
+  },
+  {
+   "lemma": "bread",
+   "pos": "noun",
+   "unit": 2,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "pão",
+   "ex": "I eat bread every day.",
+   "ex_pt": "Eu como pão todo dia."
+  },
+  {
+   "lemma": "milk",
+   "pos": "noun",
+   "unit": 2,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "leite",
+   "ex": "I drink milk in the morning.",
+   "ex_pt": "Eu bebo leite de manhã."
+  },
+  {
+   "lemma": "coffee",
+   "pos": "noun",
+   "unit": 2,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "café",
+   "ex": "I want a coffee.",
+   "ex_pt": "Eu quero um café."
+  },
+  {
+   "lemma": "egg",
+   "pos": "noun",
+   "unit": 2,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "ovo",
+   "ex": "She eats an egg.",
+   "ex_pt": "Ela come um ovo."
+  },
+  {
+   "lemma": "rice",
+   "pos": "noun",
+   "unit": 2,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "arroz",
+   "ex": "We eat rice and beans.",
+   "ex_pt": "Nós comemos arroz e feijão."
+  },
+  {
+   "lemma": "meat",
+   "pos": "noun",
+   "unit": 2,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "carne",
+   "ex": "I do not eat meat.",
+   "ex_pt": "Eu não como carne."
+  },
+  {
+   "lemma": "fish",
+   "pos": "noun",
+   "unit": 2,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "peixe",
+   "ex": "The fish is good.",
+   "ex_pt": "O peixe está bom."
+  },
+  {
+   "lemma": "fruit",
+   "pos": "noun",
+   "unit": 2,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "fruta",
+   "ex": "I like fruit.",
+   "ex_pt": "Eu gosto de fruta."
+  },
+  {
+   "lemma": "food",
+   "pos": "noun",
+   "unit": 2,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "comida",
+   "ex": "The food is hot.",
+   "ex_pt": "A comida está quente."
+  },
+  {
+   "lemma": "drink",
+   "pos": "verb",
+   "unit": 2,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "beber",
+   "ex": "I drink water every day.",
+   "ex_pt": "Eu bebo água todo dia."
+  },
+  {
+   "lemma": "cook",
+   "pos": "verb",
+   "unit": 2,
+   "cefr": "A2",
+   "conc": "concrete",
+   "gloss": "cozinhar",
+   "ex": "My mother cooks well.",
+   "ex_pt": "Minha mãe cozinha bem."
+  },
+  {
+   "lemma": "bird",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "pássaro, ave",
+   "ex": "The bird is on the house.",
+   "ex_pt": "O pássaro está na casa."
+  },
+  {
+   "lemma": "horse",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "cavalo",
+   "ex": "The horse is big.",
+   "ex_pt": "O cavalo é grande."
+  },
+  {
+   "lemma": "tree",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "árvore",
+   "ex": "The cat is under the tree.",
+   "ex_pt": "O gato está debaixo da árvore."
+  },
+  {
+   "lemma": "sun",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "sol",
+   "ex": "The sun is hot today.",
+   "ex_pt": "O sol está quente hoje."
+  },
+  {
+   "lemma": "city",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "cidade",
+   "ex": "I live in a big city.",
+   "ex_pt": "Eu moro em uma cidade grande."
+  },
+  {
+   "lemma": "street",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "rua",
+   "ex": "The street is small.",
+   "ex_pt": "A rua é pequena."
+  },
+  {
+   "lemma": "phone",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "telefone, celular",
+   "ex": "My phone is new.",
+   "ex_pt": "Meu celular é novo."
+  },
+  {
+   "lemma": "money",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "dinheiro",
+   "ex": "I have no money.",
+   "ex_pt": "Eu não tenho dinheiro."
+  },
+  {
+   "lemma": "work",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "trabalho",
+   "ex": "I go to work by car.",
+   "ex_pt": "Eu vou ao trabalho de carro."
+  },
+  {
+   "lemma": "time",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "tempo, vez",
+   "ex": "I have no time.",
+   "ex_pt": "Eu não tenho tempo."
+  },
+  {
+   "lemma": "day",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "dia",
+   "ex": "Have a good day.",
+   "ex_pt": "Tenha um bom dia."
+  },
+  {
+   "lemma": "name",
+   "pos": "noun",
+   "unit": 3,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "nome",
+   "ex": "My name is Ana.",
+   "ex_pt": "Meu nome é Ana."
+  },
+  {
+   "lemma": "come",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "vir, chegar",
+   "ex": "Come here, please.",
+   "ex_pt": "Venha aqui, por favor."
+  },
+  {
+   "lemma": "make",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "fazer, fabricar",
+   "ex": "I make coffee every morning.",
+   "ex_pt": "Eu faço café toda manhã."
+  },
+  {
+   "lemma": "know",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "saber, conhecer",
+   "ex": "I know your mother.",
+   "ex_pt": "Eu conheço sua mãe."
+  },
+  {
+   "lemma": "think",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "pensar, achar",
+   "ex": "I think it is good.",
+   "ex_pt": "Eu acho que está bom."
+  },
+  {
+   "lemma": "say",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "dizer",
+   "ex": "What did you say?",
+   "ex_pt": "O que você disse?"
+  },
+  {
+   "lemma": "take",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "pegar, levar",
+   "ex": "Take your book.",
+   "ex_pt": "Pegue seu livro."
+  },
+  {
+   "lemma": "get",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "obter, conseguir, ficar",
+   "ex": "I get up at six.",
+   "ex_pt": "Eu me levanto às seis."
+  },
+  {
+   "lemma": "give",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "dar",
+   "ex": "Give me the water, please.",
+   "ex_pt": "Me dê a água, por favor."
+  },
+  {
+   "lemma": "find",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "encontrar",
+   "ex": "I cannot find my phone.",
+   "ex_pt": "Eu não consigo achar meu celular."
+  },
+  {
+   "lemma": "tell",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "contar, dizer a alguém",
+   "ex": "Tell me your name.",
+   "ex_pt": "Diga-me seu nome."
+  },
+  {
+   "lemma": "work",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "trabalhar, funcionar",
+   "ex": "I work in a school.",
+   "ex_pt": "Eu trabalho em uma escola."
+  },
+  {
+   "lemma": "play",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "jogar, brincar, tocar",
+   "ex": "The children play in the street.",
+   "ex_pt": "As crianças brincam na rua."
+  },
+  {
+   "lemma": "run",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "correr",
+   "ex": "I run every morning.",
+   "ex_pt": "Eu corro toda manhã."
+  },
+  {
+   "lemma": "read",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "ler",
+   "ex": "I read a book every week.",
+   "ex_pt": "Eu leio um livro toda semana."
+  },
+  {
+   "lemma": "write",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "concrete",
+   "gloss": "escrever",
+   "ex": "Write your name here.",
+   "ex_pt": "Escreva seu nome aqui."
+  },
+  {
+   "lemma": "learn",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A2",
+   "conc": "abstract",
+   "gloss": "aprender",
+   "ex": "I learn new words every day.",
+   "ex_pt": "Eu aprendo palavras novas todo dia."
+  },
+  {
+   "lemma": "help",
+   "pos": "verb",
+   "unit": 4,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "ajudar",
+   "ex": "Can you help me?",
+   "ex_pt": "Você pode me ajudar?"
+  },
+  {
+   "lemma": "new",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "novo",
+   "ex": "I have a new phone.",
+   "ex_pt": "Eu tenho um celular novo."
+  },
+  {
+   "lemma": "old",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "velho, antigo",
+   "ex": "My house is old.",
+   "ex_pt": "Minha casa é velha."
+  },
+  {
+   "lemma": "young",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "jovem",
+   "ex": "My sister is young.",
+   "ex_pt": "Minha irmã é jovem."
+  },
+  {
+   "lemma": "happy",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "feliz",
+   "ex": "I am happy today.",
+   "ex_pt": "Eu estou feliz hoje."
+  },
+  {
+   "lemma": "sad",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A2",
+   "conc": "abstract",
+   "gloss": "triste",
+   "ex": "The child is sad.",
+   "ex_pt": "A criança está triste."
+  },
+  {
+   "lemma": "long",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "longo, comprido",
+   "ex": "The street is long.",
+   "ex_pt": "A rua é longa."
+  },
+  {
+   "lemma": "short",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "curto, baixo",
+   "ex": "My brother is short.",
+   "ex_pt": "Meu irmão é baixo."
+  },
+  {
+   "lemma": "easy",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "abstract",
+   "gloss": "fácil",
+   "ex": "This book is easy.",
+   "ex_pt": "Este livro é fácil."
+  },
+  {
+   "lemma": "difficult",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A2",
+   "conc": "abstract",
+   "gloss": "difícil",
+   "ex": "English is difficult for me.",
+   "ex_pt": "Inglês é difícil para mim."
+  },
+  {
+   "lemma": "free",
+   "pos": "adj",
+   "unit": 5,
+   "cefr": "A2",
+   "conc": "abstract",
+   "gloss": "livre, grátis",
+   "ex": "The water is free.",
+   "ex_pt": "A água é grátis."
+  },
+  {
+   "lemma": "very",
+   "pos": "adv",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "muito",
+   "ex": "The water is very cold.",
+   "ex_pt": "A água está muito fria."
+  },
+  {
+   "lemma": "never",
+   "pos": "adv",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "nunca",
+   "ex": "I never eat meat.",
+   "ex_pt": "Eu nunca como carne."
+  },
+  {
+   "lemma": "now",
+   "pos": "adv",
+   "unit": 5,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "agora",
+   "ex": "I want to eat now.",
+   "ex_pt": "Eu quero comer agora."
+  },
+  {
+   "lemma": "and",
+   "pos": "conj",
+   "unit": 6,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "e",
+   "ex": "I have a cat and a dog.",
+   "ex_pt": "Eu tenho um gato e um cachorro."
+  },
+  {
+   "lemma": "but",
+   "pos": "conj",
+   "unit": 6,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "mas",
+   "ex": "I like it, but it is small.",
+   "ex_pt": "Eu gosto, mas é pequeno."
+  },
+  {
+   "lemma": "or",
+   "pos": "conj",
+   "unit": 6,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "ou",
+   "ex": "Do you want water or milk?",
+   "ex_pt": "Você quer água ou leite?"
+  },
+  {
+   "lemma": "in",
+   "pos": "prep",
+   "unit": 6,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "em, dentro de",
+   "ex": "The book is in the room.",
+   "ex_pt": "O livro está no quarto."
+  },
+  {
+   "lemma": "on",
+   "pos": "prep",
+   "unit": 6,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "sobre, em cima de",
+   "ex": "The phone is on the table.",
+   "ex_pt": "O celular está sobre a mesa."
+  },
+  {
+   "lemma": "with",
+   "pos": "prep",
+   "unit": 6,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "com",
+   "ex": "I go with my friend.",
+   "ex_pt": "Eu vou com meu amigo."
+  },
+  {
+   "lemma": "for",
+   "pos": "prep",
+   "unit": 6,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "para, por",
+   "ex": "This book is for you.",
+   "ex_pt": "Este livro é para você."
+  },
+  {
+   "lemma": "to",
+   "pos": "prep",
+   "unit": 6,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "para, a",
+   "ex": "I go to school.",
+   "ex_pt": "Eu vou para a escola."
+  },
+  {
+   "lemma": "from",
+   "pos": "prep",
+   "unit": 6,
+   "cefr": "A1",
+   "conc": "function",
+   "gloss": "de (origem)",
+   "ex": "I am from Brazil.",
+   "ex_pt": "Eu sou do Brasil."
+  }
+ ],
+ "expressions": [
+  {
+   "text": "by the way",
+   "gloss": "a propósito",
+   "ex": "By the way, I like your book.",
+   "ex_pt": "A propósito, eu gosto do seu livro.",
+   "cefr": "A2"
+  },
+  {
+   "text": "a lot of",
+   "gloss": "muito(s), bastante",
+   "ex": "I have a lot of friends.",
+   "ex_pt": "Eu tenho muitos amigos.",
+   "cefr": "A1"
+  },
+  {
+   "text": "of course",
+   "gloss": "claro, é claro",
+   "ex": "Of course I like water.",
+   "ex_pt": "Claro que eu gosto de água.",
+   "cefr": "A1"
+  },
+  {
+   "text": "see you later",
+   "gloss": "até mais",
+   "ex": "See you later, my friend.",
+   "ex_pt": "Até mais, meu amigo.",
+   "cefr": "A1"
+  },
+  {
+   "text": "make a decision",
+   "gloss": "tomar uma decisão",
+   "ex": "It is hard to make a decision.",
+   "ex_pt": "É difícil tomar uma decisão.",
+   "cefr": "A2"
+  },
+  {
+   "text": "next to",
+   "gloss": "ao lado de",
+   "ex": "The dog is next to the house.",
+   "ex_pt": "O cachorro está ao lado da casa.",
+   "cefr": "A1"
+  },
+  {
+   "text": "nice to meet you",
+   "gloss": "prazer em conhecer você",
+   "ex": "Nice to meet you, Ana.",
+   "ex_pt": "Prazer em conhecer você, Ana.",
+   "cefr": "A1"
+  }
+ ],
+ "phrasal_verbs": [
+  {
+   "text": "give up",
+   "base": "give",
+   "gloss": "desistir",
+   "ex": "Don't give up!",
+   "ex_pt": "Não desista!",
+   "cefr": "A2"
+  },
+  {
+   "text": "look for",
+   "base": "look",
+   "gloss": "procurar",
+   "ex": "I look for my book.",
+   "ex_pt": "Eu procuro meu livro.",
+   "cefr": "A2"
+  },
+  {
+   "text": "turn on",
+   "base": "turn",
+   "gloss": "ligar, acender (aparelho)",
+   "ex": "Please turn on the light.",
+   "ex_pt": "Por favor, ligue a luz.",
+   "cefr": "A2"
+  }
+ ],
+ "sentences": [
+  {
+   "text": "I live in a hot country.",
+   "pt": "Eu moro em um país quente.",
+   "target": "hot"
+  },
+  {
+   "text": "The cat is between the dog and the book.",
+   "pt": "O gato está entre o cachorro e o livro.",
+   "target": "between"
+  },
+  {
+   "text": "I want to eat an apple.",
+   "pt": "Eu quero comer uma maçã.",
+   "target": "eat"
+  },
+  {
+   "text": "The water is cold.",
+   "pt": "A água está fria.",
+   "target": "cold"
+  },
+  {
+   "text": "My mother has a big house.",
+   "pt": "Minha mãe tem uma casa grande.",
+   "target": "big"
+  },
+  {
+   "text": "I always go to school by car.",
+   "pt": "Eu sempre vou para a escola de carro.",
+   "target": "always"
+  },
+  {
+   "text": "We are almost at school.",
+   "pt": "Estamos quase na escola.",
+   "target": "almost"
+  },
+  {
+   "text": "I like this book because it is good.",
+   "pt": "Eu gosto deste livro porque ele é bom.",
+   "target": "because"
+  },
+  {
+   "text": "Sort the books by size.",
+   "pt": "Separe os livros por tamanho.",
+   "target": "Sort"
+  },
+  {
+   "text": "What sort of book do you like?",
+   "pt": "Que tipo de livro você gosta?",
+   "target": "sort"
+  }
+ ],
+ "relations": [
+  {
+   "from": "word|hot|adj|1",
+   "to": "word|cold|adj|1",
+   "type": "antonym",
+   "weight": 0.9
+  },
+  {
+   "from": "word|big|adj|1",
+   "to": "word|small|adj|1",
+   "type": "antonym",
+   "weight": 0.9
+  },
+  {
+   "from": "word|big|adj|1",
+   "to": "word|house|noun|1",
+   "type": "collocation",
+   "weight": 0.6
+  },
+  {
+   "from": "word|cold|adj|1",
+   "to": "word|water|noun|1",
+   "type": "collocation",
+   "weight": 0.6
+  },
+  {
+   "from": "word|good|adj|1",
+   "to": "word|friend|noun|1",
+   "type": "collocation",
+   "weight": 0.7
+  },
+  {
+   "from": "word|hot|adj|1",
+   "to": "word|country|noun|1",
+   "type": "collocation",
+   "weight": 0.5
+  },
+  {
+   "from": "word|small|adj|1",
+   "to": "word|car|noun|1",
+   "type": "collocation",
+   "weight": 0.5
+  },
+  {
+   "from": "word|sort|noun|1",
+   "to": "word|sort|verb|1",
+   "type": "related",
+   "weight": 0.3
+  }
+ ],
+ "media": [
+  {
+   "item": "word|cat|noun|1",
+   "hexcode": "1F431"
+  },
+  {
+   "item": "word|dog|noun|1",
+   "hexcode": "1F436"
+  },
+  {
+   "item": "word|house|noun|1",
+   "hexcode": "1F3E0"
+  },
+  {
+   "item": "word|water|noun|1",
+   "hexcode": "1F4A7"
+  },
+  {
+   "item": "word|apple|noun|1",
+   "hexcode": "1F34E"
+  },
+  {
+   "item": "word|book|noun|1",
+   "hexcode": "1F4D6"
+  },
+  {
+   "item": "word|car|noun|1",
+   "hexcode": "1F697"
+  },
+  {
+   "item": "word|school|noun|1",
+   "hexcode": "1F3EB"
+  },
+  {
+   "item": "word|hot|adj|1",
+   "hexcode": "1F975"
+  },
+  {
+   "item": "word|cold|adj|1",
+   "hexcode": "1F976"
+  },
+  {
+   "item": "word|child|noun|1",
+   "hexcode": "1F9D2"
+  },
+  {
+   "item": "word|family|noun|1",
+   "hexcode": "1F46A"
+  },
+  {
+   "item": "word|door|noun|1",
+   "hexcode": "1F6AA"
+  },
+  {
+   "item": "word|bed|noun|1",
+   "hexcode": "1F6CF"
+  },
+  {
+   "item": "word|man|noun|1",
+   "hexcode": "1F468"
+  },
+  {
+   "item": "word|woman|noun|1",
+   "hexcode": "1F469"
+  },
+  {
+   "item": "word|bread|noun|1",
+   "hexcode": "1F35E"
+  },
+  {
+   "item": "word|milk|noun|1",
+   "hexcode": "1F95B"
+  },
+  {
+   "item": "word|coffee|noun|1",
+   "hexcode": "2615"
+  },
+  {
+   "item": "word|egg|noun|1",
+   "hexcode": "1F95A"
+  },
+  {
+   "item": "word|rice|noun|1",
+   "hexcode": "1F35A"
+  },
+  {
+   "item": "word|meat|noun|1",
+   "hexcode": "1F356"
+  },
+  {
+   "item": "word|fish|noun|1",
+   "hexcode": "1F41F"
+  },
+  {
+   "item": "word|fruit|noun|1",
+   "hexcode": "1F353"
+  },
+  {
+   "item": "word|cook|verb|1",
+   "hexcode": "1F373"
+  },
+  {
+   "item": "word|bird|noun|1",
+   "hexcode": "1F426"
+  },
+  {
+   "item": "word|horse|noun|1",
+   "hexcode": "1F434"
+  },
+  {
+   "item": "word|tree|noun|1",
+   "hexcode": "1F333"
+  },
+  {
+   "item": "word|sun|noun|1",
+   "hexcode": "2600"
+  },
+  {
+   "item": "word|city|noun|1",
+   "hexcode": "1F3D9"
+  },
+  {
+   "item": "word|phone|noun|1",
+   "hexcode": "1F4F1"
+  },
+  {
+   "item": "word|money|noun|1",
+   "hexcode": "1F4B5"
+  },
+  {
+   "item": "word|time|noun|1",
+   "hexcode": "23F0"
+  },
+  {
+   "item": "word|run|verb|1",
+   "hexcode": "1F3C3"
+  },
+  {
+   "item": "word|happy|adj|1",
+   "hexcode": "1F600"
+  },
+  {
+   "item": "word|sad|adj|1",
+   "hexcode": "1F622"
+  }
+ ]
+}

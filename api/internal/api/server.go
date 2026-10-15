@@ -23,7 +23,9 @@ type Server struct {
 	// DB e o banco real; sem ele a API nunca fica "pronta" (readiness 503).
 	DB Pinger
 	// Identity e o modulo de login (BFF); nulo = login indisponivel.
-	Identity    Identity
+	Identity Identity
+	// Catalog e o modulo de conteudo (somente leitura); nulo = catalogo indisponivel.
+	Catalog     Catalog
 	AuthLimiter *ratelimit.Limiter
 }
 
