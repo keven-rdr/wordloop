@@ -1,0 +1,15 @@
+Subject: Você já tem conta no wordloop
+
+Olá!
+
+Alguém (provavelmente você) tentou criar uma conta no wordloop com este e-mail, mas ele já está cadastrado.
+
+Para entrar, use: {{.LoginLink}}
+
+Se esqueceu a senha, defina uma nova neste link (vale por {{.Validity}} e só pode ser usado uma vez):
+
+{{.Link}}
+
+Se não foi você, ignore esta mensagem: nada mudou na sua conta.
+
+wordloop

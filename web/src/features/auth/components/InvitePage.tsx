@@ -1,7 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useFragmentSecret } from '../hooks/useFragmentSecret';
 import { useRegisterPasskey } from '../hooks/useRegisterPasskey';
 import { passkeyMessageKey } from '../passkey/errors';
 import { AuthShell } from './AuthShell';
@@ -11,7 +11,7 @@ import { ui } from './styles';
 
 export function InvitePage() {
   const { t, ready } = useTranslation('auth');
-  const invite = useInviteFromFragment();
+  const invite = useFragmentSecret();
   if (!ready || invite === undefined) return <div aria-busy="true" />;
   return (
     <AuthShell>
@@ -23,7 +23,7 @@ export function InvitePage() {
       ) : (
         <>
           <p {...stylex.props(ui.muted)}>{t('invite.explain')}</p>
-          <SetPasswordForm invite={invite} />
+          <SetPasswordForm token={invite} />
           <Divider label={t('invite.or')} />
           <PasskeyChoice invite={invite} />
         </>
@@ -54,18 +54,4 @@ function PasskeyChoice({ invite }: Readonly<{ invite: string }>) {
       )}
     </>
   );
-}
-
-function useInviteFromFragment(): string | undefined {
-  const [invite, setInvite] = useState<string | undefined>(undefined);
-  useEffect(() => {
-    const secret = window.location.hash.slice(1);
-    if (secret) {
-      setInvite(secret);
-      window.history.replaceState(null, '', window.location.pathname);
-    } else {
-      setInvite((previous) => previous ?? '');
-    }
-  }, []);
-  return invite;
 }

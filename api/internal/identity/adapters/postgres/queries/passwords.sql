@@ -16,11 +16,6 @@ RETURNING id;
 -- name: ResetPasswordFailures :exec
 UPDATE app_user SET failed_logins = 0, last_failed_at = NULL, locked_until = NULL WHERE id = $1;
 
--- name: PeekInviteOwner :one
-SELECT t.user_id, u.email
-FROM auth_token t JOIN app_user u ON u.id = t.user_id
-WHERE t.id_hash = $1 AND t.purpose = 'invite' AND t.used_at IS NULL AND t.expires_at > $2 AND u.deleted_at IS NULL;
-
 -- name: SetPasswordHash :exec
 UPDATE app_user
 SET password_hash = $2, failed_logins = 0, last_failed_at = NULL, locked_until = NULL

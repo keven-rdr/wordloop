@@ -4,7 +4,7 @@ import { setPassword } from '../../../api/generated/sdk.gen';
 import { ensurePasswordOk } from '../password/errors';
 import { csrfHeaders } from './csrf';
 
-type Input = { invite: string; password: string };
+type Input = { token: string; password: string };
 
 export function useSetPassword() {
   const queryClient = useQueryClient();

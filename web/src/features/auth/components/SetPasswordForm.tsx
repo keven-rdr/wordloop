@@ -11,7 +11,7 @@ import { ui } from './styles';
 
 const minLength = 12;
 
-export function SetPasswordForm({ invite }: Readonly<{ invite: string }>) {
+export function SetPasswordForm({ token }: Readonly<{ token: string }>) {
   const { t } = useTranslation('auth');
   const session = useSession();
   const setPassword = useSetPassword();
@@ -26,7 +26,7 @@ export function SetPasswordForm({ invite }: Readonly<{ invite: string }>) {
     if ([...password].length < minLength) return setProblem('password.tooShort');
     if (password !== again) return setProblem('password.mismatch');
     setProblem(undefined);
-    setPassword.mutate({ invite, password }, { onSuccess: () => setSaved(true) });
+    setPassword.mutate({ token, password }, { onSuccess: () => setSaved(true) });
   };
   const serverFailure = setPassword.isError ? passwordMessageKey(setPassword.error) : undefined;
   const failure = problem ?? serverFailure;

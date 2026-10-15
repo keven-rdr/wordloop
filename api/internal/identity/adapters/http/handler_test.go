@@ -16,6 +16,7 @@ import (
 	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
 	"github.com/keven-rdr/wordloop/api/internal/identity/identitytest"
 	"github.com/keven-rdr/wordloop/api/internal/identity/passwords"
+	"github.com/keven-rdr/wordloop/api/internal/identity/registration"
 	"github.com/keven-rdr/wordloop/api/internal/platform/seal"
 )
 
@@ -25,6 +26,8 @@ type fixture struct {
 	users    *identitytest.Users
 	sessions *identitytest.Sessions
 	pw       *identitytest.PasswordStore
+	reg      *identitytest.RegistrationStore
+	mailbox  *identitytest.MailBox
 }
 
 func newFixture(t *testing.T, enabled bool) fixture {
@@ -47,11 +50,14 @@ func newFixture(t *testing.T, enabled bool) fixture {
 		Login: passwords.Login{Store: pw, Hasher: hasher, Users: users, Opener: opener, DummyHash: "h:isca"},
 		Set:   passwords.SetPassword{Store: pw, Hasher: hasher, Users: users, Opener: opener},
 	}
+	reg, box := &identitytest.RegistrationStore{}, &identitytest.MailBox{}
+	issuer := registration.Issuer{Store: reg, Mail: box, PublicURL: "https://app.test"}
+	h.Registration = &httpapi.Registration{Register: registration.Register{Issuer: issuer}, Forgot: registration.Forgot{Issuer: issuer}}
 	if enabled {
 		h.Start = &app.StartLogin{Provider: provider, Sealer: sealer}
 		h.Finish = &app.FinishLogin{Provider: provider, Users: users, Sessions: sessions, Sealer: sealer}
 	}
-	return fixture{h: api.Handler(api.Server{Identity: h}), provider: provider, users: users, sessions: sessions, pw: pw}
+	return fixture{h: api.Handler(api.Server{Identity: h}), provider: provider, users: users, sessions: sessions, pw: pw, reg: reg, mailbox: box}
 }
 
 func newHandler(t *testing.T, enabled bool) http.Handler { return newFixture(t, enabled).h }

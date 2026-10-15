@@ -39,7 +39,7 @@ describe('Convite: definir a senha', () => {
     await openAndFill(strong, strong);
     expect(await screen.findByText('Olá, Maria!')).toBeInTheDocument();
     const set = calls.find((c) => c.path === '/auth/password/set');
-    expect(set?.body).toEqual({ invite: 'segredo-do-convite', password: strong });
+    expect(set?.body).toEqual({ token: 'segredo-do-convite', password: strong });
     expect(set?.headers.get('X-Requested-With')).toBe('XMLHttpRequest');
     expect(window.location.href).not.toContain('segredo-do-convite');
   });
@@ -62,7 +62,7 @@ describe('Convite: definir a senha', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Senha fraca');
     code = 401;
     fireEvent.click(screen.getByRole('button', { name: 'Definir senha e entrar' }));
-    expect(await screen.findByText(/O convite não vale mais/)).toBeInTheDocument();
+    expect(await screen.findByText(/O link não vale mais/)).toBeInTheDocument();
   });
 
   it('conta com 2FA: a senha é gravada sem sessão e a tela avisa para entrar com a passkey', async () => {

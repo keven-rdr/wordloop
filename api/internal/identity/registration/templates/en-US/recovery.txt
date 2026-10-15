@@ -1,0 +1,13 @@
+Subject: Reset your wordloop password
+
+Hello!
+
+We received a request to reset the password of your wordloop account. Use this link to choose a new password (valid for {{.Validity}}, single use):
+
+{{.Link}}
+
+When you change the password, the devices where you were signed in are signed out.
+
+If this was not you, ignore this message: your password stays the same.
+
+wordloop

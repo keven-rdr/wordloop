@@ -139,7 +139,7 @@ func TestAccountWithTwoFactorOnGets403AndNoCookieFromPasswordAlone(t *testing.T)
 }
 
 func setPassword(fx fixture, invite, password string) *http.Response {
-	return postJSON(fx.h, "/api/v1/auth/password/set", `{"invite":"`+invite+`","password":"`+password+`"}`, csrf)
+	return postJSON(fx.h, "/api/v1/auth/password/set", `{"token":"`+invite+`","password":"`+password+`"}`, csrf)
 }
 
 func pendingAdmin(t *testing.T, fx fixture) {
@@ -189,7 +189,7 @@ func TestInviteRefusesWeakPasswordsAndUnknownInvitesWithoutSpendingIt(t *testing
 func TestSetPasswordNeedsTheAntiCSRFHeader(t *testing.T) {
 	fx := newFixture(t, true)
 	pendingAdmin(t, fx)
-	body := `{"invite":"convite-secreto","password":"` + pwGood + `"}`
+	body := `{"token":"convite-secreto","password":"` + pwGood + `"}`
 	if res := postJSON(fx.h, "/api/v1/auth/password/set", body, nil); res.StatusCode != http.StatusBadRequest {
 		t.Fatalf("sem o cabecalho: esperava 400, veio %d", res.StatusCode)
 	}

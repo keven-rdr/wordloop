@@ -13,17 +13,18 @@ import (
 )
 
 type Handler struct {
-	Start     *app.StartLogin
-	Finish    *app.FinishLogin
-	Auth      app.Authenticate
-	Out       app.Logout
-	List      app.ListSessions
-	Revoke    app.RevokeSession
-	RevokeAll app.RevokeAllSessions
-	Passkeys  *Passkeys
-	Passwords *Passwords
-	TwoFactor accounts.TwoFactor
-	Secure    bool
+	Start        *app.StartLogin
+	Finish       *app.FinishLogin
+	Auth         app.Authenticate
+	Out          app.Logout
+	List         app.ListSessions
+	Revoke       app.RevokeSession
+	RevokeAll    app.RevokeAllSessions
+	Passkeys     *Passkeys
+	Passwords    *Passwords
+	Registration *Registration
+	TwoFactor    accounts.TwoFactor
+	Secure       bool
 }
 
 func (h Handler) cookies() cookies { return cookies{secure: h.Secure} }

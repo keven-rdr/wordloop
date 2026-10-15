@@ -16,7 +16,7 @@ O ADR 0028 escolheu entrar só por passkey. Na prática o dono não quer depende
 ## Consequências
 - O app volta a ter um segredo de usuário para proteger (o hash). Ele é útil a um atacante só com muito custo (Argon2id), e o bloqueio por tentativas limita o ataque online.
 - O bloqueio por conta permite que alguém trave de propósito a conta do admin por alguns minutos (negação de serviço leve). A saída é a passkey e, em último caso, o reset por SQL.
-- Sem recuperação por e-mail ainda: ela chega com o Brevo (PR 3).
+- Aluno recupera a senha por e-mail e se cadastra por e-mail, com confirmação ([cadastro por e-mail](../features/2026-10-16-cadastro-email.md)); admin só se recupera pelo servidor.
 
 ## Alternativas descartadas
 - **Manter só passkey:** é o que o dono recusou nesta data.

@@ -1,0 +1,11 @@
+Subject: Confirme o seu e-mail no wordloop
+
+Olá!
+
+Para concluir o seu cadastro no wordloop, confirme o e-mail e escolha uma senha neste link (vale por {{.Validity}} e só pode ser usado uma vez):
+
+{{.Link}}
+
+Se não foi você, ignore esta mensagem: nada é criado sem a confirmação.
+
+wordloop

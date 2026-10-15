@@ -51,7 +51,7 @@ func (h Handler) SetPassword(ctx context.Context, req gen.SetPasswordRequestObje
 		return statusReply{status: http.StatusBadRequest}, nil
 	}
 	opened, err := h.Passwords.Set.Run(ctx, passwords.SetInput{
-		Invite: req.Body.Invite, Password: req.Body.Password, UserAgent: httpx.UserAgent(ctx),
+		Token: req.Body.Token, Password: req.Body.Password, UserAgent: httpx.UserAgent(ctx),
 	})
 	switch {
 	case errors.Is(err, passwords.ErrUnauthorized):

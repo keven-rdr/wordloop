@@ -192,14 +192,14 @@ func invite(e env, until time.Time) []byte {
 func TestInviteSetsThePasswordConsumesItAndOpensTheSession(t *testing.T) {
 	e := newEnv(t, domain.RoleAdmin, false)
 	hash := invite(e, now.Add(10*time.Minute))
-	opened, err := e.set.Run(bg, passwords.SetInput{Invite: "segredo-do-convite", Password: secret, UserAgent: "ua"})
+	opened, err := e.set.Run(bg, passwords.SetInput{Token: "segredo-do-convite", Password: secret, UserAgent: "ua"})
 	if err != nil || opened == nil {
 		t.Fatalf("set: %+v %v", opened, err)
 	}
 	if stored, _ := e.store.Row(e.id); stored != "h:"+secret || !e.store.InviteUsed(hash) {
 		t.Fatalf("senha gravada e convite consumido: %q %v", stored, e.store.InviteUsed(hash))
 	}
-	if _, err := e.set.Run(bg, passwords.SetInput{Invite: "segredo-do-convite", Password: secret}); !errors.Is(err, passwords.ErrUnauthorized) {
+	if _, err := e.set.Run(bg, passwords.SetInput{Token: "segredo-do-convite", Password: secret}); !errors.Is(err, passwords.ErrUnauthorized) {
 		t.Fatalf("o convite vale uma vez so: %v", err)
 	}
 }
@@ -208,7 +208,7 @@ func TestInviteThatIsUnknownOrExpiredChangesNothing(t *testing.T) {
 	e := newEnv(t, domain.RoleAdmin, false)
 	invite(e, now.Add(-time.Minute))
 	for _, inv := range []string{"segredo-do-convite", "inventado", ""} {
-		if _, err := e.set.Run(bg, passwords.SetInput{Invite: inv, Password: secret}); !errors.Is(err, passwords.ErrUnauthorized) {
+		if _, err := e.set.Run(bg, passwords.SetInput{Token: inv, Password: secret}); !errors.Is(err, passwords.ErrUnauthorized) {
 			t.Errorf("convite %q: esperava ErrUnauthorized, veio %v", inv, err)
 		}
 	}
@@ -220,7 +220,7 @@ func TestInviteThatIsUnknownOrExpiredChangesNothing(t *testing.T) {
 func TestWeakPasswordKeepsTheInviteForAnotherTry(t *testing.T) {
 	e := newEnv(t, domain.RoleAdmin, false)
 	hash := invite(e, now.Add(10*time.Minute))
-	if _, err := e.set.Run(bg, passwords.SetInput{Invite: "segredo-do-convite", Password: "curta"}); !errors.Is(err, passwords.ErrWeak) {
+	if _, err := e.set.Run(bg, passwords.SetInput{Token: "segredo-do-convite", Password: "curta"}); !errors.Is(err, passwords.ErrWeak) {
 		t.Fatalf("esperava ErrWeak, veio %v", err)
 	}
 	if e.store.InviteUsed(hash) {
@@ -231,7 +231,7 @@ func TestWeakPasswordKeepsTheInviteForAnotherTry(t *testing.T) {
 func TestInviteForATwoFactorAccountSetsThePasswordButOpensNoSession(t *testing.T) {
 	e := newEnv(t, domain.RoleAdmin, true)
 	invite(e, now.Add(10*time.Minute))
-	opened, err := e.set.Run(bg, passwords.SetInput{Invite: "segredo-do-convite", Password: secret})
+	opened, err := e.set.Run(bg, passwords.SetInput{Token: "segredo-do-convite", Password: secret})
 	if err != nil || opened != nil || e.sessions.Len() != 0 {
 		t.Fatalf("esperava senha gravada e nenhuma sessao: %+v %v", opened, err)
 	}
@@ -246,7 +246,7 @@ func TestSetThenLoginWithTheRealArgon2idHasher(t *testing.T) {
 	e.set.Hasher, e.login.Hasher = argon, argon
 	e.login.DummyHash, _ = argon.Hash(bg, "isca")
 	invite(e, now.Add(10*time.Minute))
-	if _, err := e.set.Run(bg, passwords.SetInput{Invite: "segredo-do-convite", Password: secret}); err != nil {
+	if _, err := e.set.Run(bg, passwords.SetInput{Token: "segredo-do-convite", Password: secret}); err != nil {
 		t.Fatal(err)
 	}
 	stored, _ := e.store.Row(e.id)

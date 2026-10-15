@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/keven-rdr/wordloop/api/internal/identity/domain"
 	"github.com/keven-rdr/wordloop/api/internal/identity/passwords"
 )
 
@@ -33,6 +34,7 @@ type pwRow struct {
 	passwords.Account
 	Email    string
 	Attempts int
+	Verified bool
 }
 
 type pwInvite struct {
@@ -63,13 +65,23 @@ func (s *PasswordStore) Add(id uuid.UUID, email, hash string) {
 }
 
 func (s *PasswordStore) AddInvite(hash []byte, id uuid.UUID, email string, until time.Time) {
+	s.AddToken(hash, passwords.Owner{ID: id, Email: email, Role: domain.RoleUser, Purpose: domain.TokenInvite}, until)
+}
+
+func (s *PasswordStore) AddToken(hash []byte, owner passwords.Owner, until time.Time) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.init()
-	if _, ok := s.rows[id]; !ok {
-		s.rows[id] = &pwRow{Account: passwords.Account{ID: id}, Email: email}
+	if _, ok := s.rows[owner.ID]; !ok {
+		s.rows[owner.ID] = &pwRow{Account: passwords.Account{ID: owner.ID}, Email: owner.Email}
 	}
-	s.invites[string(hash)] = pwInvite{owner: passwords.Owner{ID: id, Email: email}, until: until}
+	s.invites[string(hash)] = pwInvite{owner: owner, until: until}
+}
+
+func (s *PasswordStore) Verified(id uuid.UUID) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.rows[id] != nil && s.rows[id].Verified
 }
 
 func (s *PasswordStore) Row(id uuid.UUID) (hash string, attempts int) {
@@ -120,7 +132,7 @@ func (s *PasswordStore) RegisterSuccess(_ context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (s *PasswordStore) PeekInvite(_ context.Context, hash []byte, now time.Time) (passwords.Owner, error) {
+func (s *PasswordStore) PeekToken(_ context.Context, hash []byte, now time.Time) (passwords.Owner, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	inv, ok := s.invites[string(hash)]
@@ -130,7 +142,7 @@ func (s *PasswordStore) PeekInvite(_ context.Context, hash []byte, now time.Time
 	return inv.owner, nil
 }
 
-func (s *PasswordStore) SetWithInvite(_ context.Context, hash []byte, userID uuid.UUID, encoded string, now time.Time) error {
+func (s *PasswordStore) SetWithToken(_ context.Context, hash []byte, userID uuid.UUID, encoded string, now time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	inv, ok := s.invites[string(hash)]
@@ -141,5 +153,8 @@ func (s *PasswordStore) SetWithInvite(_ context.Context, hash []byte, userID uui
 	s.invites[string(hash)] = inv
 	r := s.rows[userID]
 	r.Hash, r.Attempts, r.LockedUntil = encoded, 0, time.Time{}
+	if inv.owner.Purpose != domain.TokenInvite {
+		r.Verified = true
+	}
 	return nil
 }

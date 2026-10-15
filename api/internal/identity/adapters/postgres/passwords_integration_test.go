@@ -158,20 +158,20 @@ func TestInviteSetsThePasswordInOneTransactionAndOnlyOnce(t *testing.T) {
 	id := newAdmin(t, pool, "dono@exemplo.com")
 	hash := putInvite(t, pool, id, "convite", time.Now().Add(10*time.Minute))
 	store := postgres.NewPasswords(pool)
-	owner, err := store.PeekInvite(ctx, hash, time.Now())
+	owner, err := store.PeekToken(ctx, hash, time.Now())
 	if err != nil || owner.ID != id || owner.Email != "dono@exemplo.com" {
-		t.Fatalf("PeekInvite: %+v %v", owner, err)
+		t.Fatalf("PeekToken: %+v %v", owner, err)
 	}
-	if err := store.SetWithInvite(ctx, hash, id, "$argon2id$teste", time.Now()); err != nil {
+	if err := store.SetWithToken(ctx, hash, id, "$argon2id$teste", time.Now()); err != nil {
 		t.Fatal(err)
 	}
 	if acc, _ := store.FindByEmail(ctx, "dono@exemplo.com"); acc.Hash != "$argon2id$teste" {
 		t.Fatalf("hash gravado: %+v", acc)
 	}
-	if err := store.SetWithInvite(ctx, hash, id, "$argon2id$outro", time.Now()); !errors.Is(err, passwords.ErrUnauthorized) {
+	if err := store.SetWithToken(ctx, hash, id, "$argon2id$outro", time.Now()); !errors.Is(err, passwords.ErrUnauthorized) {
 		t.Fatalf("convite usado: esperava ErrUnauthorized, veio %v", err)
 	}
-	if _, err := store.PeekInvite(ctx, hash, time.Now()); !errors.Is(err, passwords.ErrNotFound) {
+	if _, err := store.PeekToken(ctx, hash, time.Now()); !errors.Is(err, passwords.ErrNotFound) {
 		t.Fatalf("convite usado nao aparece mais: %v", err)
 	}
 	if acc, _ := store.FindByEmail(ctx, "dono@exemplo.com"); acc.Hash != "$argon2id$teste" {
@@ -186,11 +186,11 @@ func TestExpiredInviteAndSomeoneElsesInviteChangeNothing(t *testing.T) {
 	other := newAdmin(t, pool, "outro@exemplo.com")
 	store := postgres.NewPasswords(pool)
 	expired := putInvite(t, pool, id, "vencido", time.Now().Add(-time.Minute))
-	if _, err := store.PeekInvite(ctx, expired, time.Now()); !errors.Is(err, passwords.ErrNotFound) {
+	if _, err := store.PeekToken(ctx, expired, time.Now()); !errors.Is(err, passwords.ErrNotFound) {
 		t.Fatalf("convite vencido: %v", err)
 	}
 	valid := putInvite(t, pool, other, "valido", time.Now().Add(time.Minute))
-	if err := store.SetWithInvite(ctx, valid, id, "$argon2id$x", time.Now()); !errors.Is(err, passwords.ErrUnauthorized) {
+	if err := store.SetWithToken(ctx, valid, id, "$argon2id$x", time.Now()); !errors.Is(err, passwords.ErrUnauthorized) {
 		t.Fatalf("convite de outra pessoa: %v", err)
 	}
 	if acc, _ := store.FindByEmail(ctx, "dono@exemplo.com"); acc.Hash != "" {
@@ -199,7 +199,7 @@ func TestExpiredInviteAndSomeoneElsesInviteChangeNothing(t *testing.T) {
 	if acc, _ := store.FindByEmail(ctx, "outro@exemplo.com"); acc.Hash != "" {
 		t.Fatal("o convite de outra pessoa nao pode ter sido consumido por engano")
 	}
-	if _, err := store.PeekInvite(ctx, valid, time.Now()); err != nil {
+	if _, err := store.PeekToken(ctx, valid, time.Now()); err != nil {
 		t.Fatalf("o convite valido segue valendo (a transacao desfez tudo): %v", err)
 	}
 }
@@ -216,7 +216,7 @@ func TestSimultaneousInviteUsesSetThePasswordExactlyOnce(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			results <- store.SetWithInvite(ctx, hash, id, "$argon2id$"+string(rune('a'+i)), time.Now())
+			results <- store.SetWithToken(ctx, hash, id, "$argon2id$"+string(rune('a'+i)), time.Now())
 		}()
 	}
 	wg.Wait()
@@ -241,7 +241,7 @@ func TestAccountWithAPasswordIsNoLongerAPendingAdmin(t *testing.T) {
 		t.Fatal("recem-criado, ainda sem como entrar")
 	}
 	hash := putInvite(t, pool, id, "convite", time.Now().Add(time.Minute))
-	if err := postgres.NewPasswords(pool).SetWithInvite(ctx, hash, id, "$argon2id$x", time.Now()); err != nil {
+	if err := postgres.NewPasswords(pool).SetWithToken(ctx, hash, id, "$argon2id$x", time.Now()); err != nil {
 		t.Fatal(err)
 	}
 	if acc, _ := accs.FindByEmail(ctx, "dono@exemplo.com"); !acc.HasCredentials {
@@ -260,7 +260,7 @@ func TestSettingThePasswordWithAnInviteEndsEveryOldSession(t *testing.T) {
 		t.Fatal(err)
 	}
 	hash := putInvite(t, pool, id, "convite", time.Now().Add(time.Minute))
-	if err := postgres.NewPasswords(pool).SetWithInvite(ctx, hash, id, "$argon2id$x", time.Now()); err != nil {
+	if err := postgres.NewPasswords(pool).SetWithToken(ctx, hash, id, "$argon2id$x", time.Now()); err != nil {
 		t.Fatal(err)
 	}
 	var sessions int

@@ -8,6 +8,7 @@ test.describe('idioma', () => {
       Object.defineProperty(navigator, 'languages', { get: () => ['pt-BR', 'pt', 'en-US', 'en'] }),
     );
     await page.route('**/api/v1/version', (route) => route.fulfill({ json: version }));
+    await page.route('**/api/v1/me', (route) => route.fulfill({ status: 401 }));
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible();
     await expect(page.locator('main aside p')).toContainText(/Vocabulário com repetição/);
@@ -23,6 +24,7 @@ test.describe('idioma', () => {
       }).observe(document, { childList: true, subtree: true, characterData: true });
     });
     await page.route('**/api/v1/version', (route) => route.fulfill({ json: version }));
+    await page.route('**/api/v1/me', (route) => route.fulfill({ status: 401 }));
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible();
     const raw = await page.evaluate(() => (window as unknown as { __raw: string[] }).__raw);

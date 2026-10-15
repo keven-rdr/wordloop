@@ -44,18 +44,18 @@ func (s faultyStore) RegisterSuccess(ctx context.Context, id uuid.UUID) error {
 	return s.Store.RegisterSuccess(ctx, id)
 }
 
-func (s faultyStore) PeekInvite(ctx context.Context, h []byte, now time.Time) (passwords.Owner, error) {
+func (s faultyStore) PeekToken(ctx context.Context, h []byte, now time.Time) (passwords.Owner, error) {
 	if s.peek != nil {
 		return passwords.Owner{}, s.peek
 	}
-	return s.Store.PeekInvite(ctx, h, now)
+	return s.Store.PeekToken(ctx, h, now)
 }
 
-func (s faultyStore) SetWithInvite(ctx context.Context, h []byte, id uuid.UUID, hash string, now time.Time) error {
+func (s faultyStore) SetWithToken(ctx context.Context, h []byte, id uuid.UUID, hash string, now time.Time) error {
 	if s.set != nil {
 		return s.set
 	}
-	return s.Store.SetWithInvite(ctx, h, id, hash, now)
+	return s.Store.SetWithToken(ctx, h, id, hash, now)
 }
 
 type faultyHasher struct {
@@ -144,7 +144,7 @@ func TestSetPasswordReportsInfrastructureFailures(t *testing.T) {
 		hash := invite(e, now.Add(10*time.Minute))
 		s := e.set
 		inject(&s)
-		opened, err := s.Run(bg, passwords.SetInput{Invite: "segredo-do-convite", Password: secret})
+		opened, err := s.Run(bg, passwords.SetInput{Token: "segredo-do-convite", Password: secret})
 		if !errors.Is(err, errBoom) || opened != nil || errors.Is(err, passwords.ErrUnauthorized) {
 			t.Errorf("%s: esperava o erro da infraestrutura, veio %v (%+v)", name, err, opened)
 		}
@@ -166,7 +166,7 @@ func TestPasswordIsKeptWhenTheSessionCannotBeOpenedAfterwards(t *testing.T) {
 		invite(e, now.Add(10*time.Minute))
 		s := e.set
 		inject(&s)
-		opened, err := s.Run(bg, passwords.SetInput{Invite: "segredo-do-convite", Password: secret})
+		opened, err := s.Run(bg, passwords.SetInput{Token: "segredo-do-convite", Password: secret})
 		if err != nil || opened != nil {
 			t.Errorf("%s: esperava sucesso sem sessao, veio %+v %v", name, opened, err)
 		}

@@ -1,0 +1,13 @@
+Subject: Redefina a sua senha do wordloop
+
+Olá!
+
+Recebemos um pedido para redefinir a senha da sua conta no wordloop. Use este link para escolher uma nova senha (vale por {{.Validity}} e só pode ser usado uma vez):
+
+{{.Link}}
+
+Ao trocar a senha, os aparelhos em que você estava conectado saem da conta.
+
+Se não foi você, ignore esta mensagem: a sua senha continua a mesma.
+
+wordloop

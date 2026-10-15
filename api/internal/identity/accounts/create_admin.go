@@ -33,7 +33,7 @@ type Invite struct {
 }
 
 func (u CreateAdmin) Run(ctx context.Context, email, name string) (Invite, error) {
-	base, err := publicBase(u.PublicURL)
+	base, err := PublicBase(u.PublicURL)
 	if err != nil {
 		return Invite{}, err
 	}
@@ -102,7 +102,7 @@ func displayName(name, email string) string {
 	return local
 }
 
-func publicBase(raw string) (string, error) {
+func PublicBase(raw string) (string, error) {
 	u, err := url.Parse(strings.TrimRight(strings.TrimSpace(raw), "/"))
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || u.Path != "" || u.Fragment != "" || u.RawQuery != "" {
 		return "", ErrInvalidURL

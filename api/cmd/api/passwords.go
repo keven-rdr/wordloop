@@ -26,6 +26,9 @@ func buildLocalLogin(h *httpapi.Handler, pool *pgxpool.Pool, users app.Users, se
 	if err := buildPasswords(h, pool, users, sessions); err != nil {
 		return err
 	}
+	if err := buildRegistration(h, pool); err != nil {
+		return err
+	}
 	h.Secure = h.Secure || strings.HasPrefix(strings.TrimSpace(os.Getenv("APP_PUBLIC_URL")), "https://")
 	return nil
 }
