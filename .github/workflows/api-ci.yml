@@ -68,7 +68,16 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with: { go-version: "${{ env.GO_VERSION }}", cache-dependency-path: api/go.mod }
       - run: go generate ./...
-      - run: go test -tags=integration -count=1 -coverprofile=coverage-int.out -coverpkg=./cmd/...,./internal/... ./...
+      # -p 1: um pacote por vez. Varios pacotes sobem um Keycloak cada (e o Argon2id pesa); em paralelo, no runner
+      # de 2 CPUs, eles disputam CPU e memoria e estouram os tempos-limite de partida. Sequencial e deterministico.
+      - name: Testes de integracao (Postgres e Keycloak reais)
+        run: |
+          set -o pipefail
+          go test -tags=integration -count=1 -p 1 -timeout 25m -coverprofile=coverage-int.out -coverpkg=./cmd/...,./internal/... ./... 2>&1 | tee test-int.log
+      - name: Mostra qual teste falhou (anotacao do job)
+        if: failure()
+        run: |
+          grep -E '^(--- FAIL|FAIL|panic:)|_test\.go:[0-9]+' test-int.log | head -30 | while IFS= read -r linha; do echo "::error::${linha}"; done
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with: { name: api-coverage-int, path: api/coverage-int.out }
 
