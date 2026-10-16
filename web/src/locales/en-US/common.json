@@ -16,5 +16,11 @@
   "theme": {
     "toLight": "Use light theme",
     "toDark": "Use dark theme"
+  },
+  "nav": {
+    "label": "Main menu",
+    "profile": "Profile",
+    "home": "Home",
+    "words": "Words"
   }
 }

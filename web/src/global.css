@@ -1,11 +1,11 @@
-@import "@fontsource-variable/nunito/wght.css";
+@import "@fontsource-variable/baloo-2/wght.css";
 
 :root {
   color-scheme: light dark;
 }
 body {
   margin: 0;
-  font-family: "Nunito Variable", system-ui, sans-serif;
+  font-family: "Baloo 2 Variable", system-ui, sans-serif;
 }
 button,
 input,

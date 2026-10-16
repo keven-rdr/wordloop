@@ -95,13 +95,16 @@ describe('LoginPage: entrar', () => {
 });
 
 describe('Início: com sessão', () => {
-  it('com sessão mostra Olá, o atalho para as passkeys e Sair', async () => {
+  it('com sessão mostra Olá, o atalho para Palavras e o menu, sem passkeys nem Sair', async () => {
     loginApi({ 'GET /me': () => json(me) });
     stubWebAuthn();
     renderApp('/');
     expect(await screen.findByText('Olá, Maria!')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Minhas passkeys' })).toHaveAttribute('href', '/passkeys');
-    expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument();
+    for (const link of screen.getAllByRole('link', { name: /Palavras/ }))
+      expect(link).toHaveAttribute('href', '/words');
+    expect(screen.getByRole('navigation', { name: 'Menu principal' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Minhas passkeys' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Entrar com passkey' })).not.toBeInTheDocument();
   });
 
@@ -110,6 +113,7 @@ describe('Início: com sessão', () => {
     stubWebAuthn();
     renderApp('/');
     fireEvent.click(await screen.findByRole('button', { name: 'Entrar com passkey' }));
+    fireEvent.click(await screen.findByRole('link', { name: 'Perfil' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Sair' }));
     expect(await screen.findByRole('button', { name: 'Entrar com passkey' })).toBeInTheDocument();
     const logout = calls.find((c) => c.path === '/auth/logout');
@@ -120,10 +124,10 @@ describe('Início: com sessão', () => {
   it('falha ao sair mostra aviso e mantém a pessoa logada', async () => {
     loginApi({ 'GET /me': () => json(me), 'POST /auth/logout': () => status(500) });
     stubWebAuthn();
-    renderApp('/');
+    renderApp('/settings');
     fireEvent.click(await screen.findByRole('button', { name: 'Sair' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível sair');
-    expect(screen.getByText('Olá, Maria!')).toBeInTheDocument();
+    expect(screen.getByText('Maria')).toBeInTheDocument();
   });
 
   it('enquanto carrega não mostra nenhum botão', () => {

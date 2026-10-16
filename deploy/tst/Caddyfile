@@ -3,7 +3,7 @@
 
 # CSP estrita do app e da API: sem script nem estilo inline.
 (csp_estrita) {
-	header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
+	header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: https://lh3.googleusercontent.com https://avatars.githubusercontent.com; connect-src 'self'; frame-ancestors 'none'"
 }
 
 {$TST_DOMAIN} {
