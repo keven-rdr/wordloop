@@ -3,5 +3,6 @@ import { listCreditsOptions } from '../../../api/generated/@tanstack/react-query
 
 export function useCredits() {
   const { data, isPending, isError, refetch } = useQuery({ ...listCreditsOptions(), retry: false });
-  return { credits: data ?? [], loading: isPending, failed: isError, retry: refetch };
+  const credits = data ?? [];
+  return { credits, loading: isPending, failed: isError, retry: refetch };
 }
