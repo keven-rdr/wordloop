@@ -41,6 +41,14 @@ func publish(t *testing.T, pool *pgxpool.Pool, naturalKey string) {
 	}
 }
 
+// pendingMedia volta as imagens a "pending", como antes da migracao que as aprova.
+func pendingMedia(t *testing.T, pool *pgxpool.Pool) {
+	t.Helper()
+	if _, err := pool.Exec(context.Background(), `UPDATE media SET status = 'pending'`); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func list(t *testing.T, c *postgres.Catalog, q domain.Query) domain.Page {
 	t.Helper()
 	if q.Page == 0 {
@@ -67,6 +75,11 @@ func TestTheSeedStartsAsDraftAndOnlyAdminsSeeIt(t *testing.T) {
 	if got.Total != 1 || got.Items[0].Term != "house" || got.Items[0].Gloss != "casa" || got.Items[0].CEFR != "A1" {
 		t.Fatalf("depois de publicar: %+v", got)
 	}
+	if got.Items[0].ImageKey != "openmoji/1F3E0.svg" {
+		t.Fatalf("a imagem aprovada aparece para o aluno: %q", got.Items[0].ImageKey)
+	}
+	pendingMedia(t, pool)
+	got = list(t, c, domain.Query{})
 	if got.Items[0].ImageKey != "" {
 		t.Fatalf("imagem pendente nao aparece para o aluno: %q", got.Items[0].ImageKey)
 	}
@@ -135,6 +148,7 @@ func TestItemDetailHasExamplesRelatedAndCredit(t *testing.T) {
 		}
 	}
 	publish(t, pool, "word|hot|adj|1")
+	pendingMedia(t, pool)
 	if d, err = c.Item(ctx, id, "pt-BR", false); err != nil || len(d.Related) != 0 || len(d.Images) != 0 {
 		t.Fatalf("relacionado em rascunho e imagem pendente nao vazam para o aluno: %+v %v", d, err)
 	}
