@@ -91,6 +91,7 @@ test('entrar com passkey: o aparelho assina o desafio e o servidor recebe a asse
     state.signedIn = false;
     return route.fulfill({ status: 204 });
   });
+  await page.getByRole('link', { name: 'Perfil' }).click();
   await page.getByRole('button', { name: 'Sair' }).click();
   await expect(page.getByRole('button', { name: 'Entrar com passkey' })).toBeVisible();
   await page.getByRole('button', { name: 'Entrar com passkey' }).click();
@@ -103,7 +104,7 @@ test('entrar com passkey: o aparelho assina o desafio e o servidor recebe a asse
   expect(finish.credential.response.userHandle.length).toBeGreaterThan(10);
 });
 
-test('sem sessão: Entrar com passkey; com sessão: Olá, passkeys e Sair', async ({ page }) => {
+test('sem sessão: Entrar com passkey; com sessão: Olá e, em Configurações, passkeys e Sair', async ({ page }) => {
   const state: State = { signedIn: false, bodies: {}, csrf: [] };
   await mockApi(page, state);
   await page.goto('/');
@@ -112,7 +113,8 @@ test('sem sessão: Entrar com passkey; com sessão: Olá, passkeys e Sair', asyn
   await page.reload();
   await expect(page.getByText('Olá, Maria!')).toBeVisible();
   await expect(page.getByTestId('version-footer')).toContainText('API v0.1.0 · tst');
-  await page.getByRole('link', { name: 'Minhas passkeys' }).click();
+  await page.getByRole('link', { name: 'Perfil' }).click();
+  await page.getByRole('link', { name: /Minhas passkeys/ }).click();
   await expect(page).toHaveURL(/\/passkeys$/);
 });
 
@@ -125,7 +127,7 @@ test('Sair manda o cabeçalho anti-CSRF e volta para Entrar com passkey', async 
     state.signedIn = false;
     return route.fulfill({ status: 204 });
   });
-  await page.goto('/');
+  await page.goto('/settings');
   await page.getByRole('button', { name: 'Sair' }).click();
   await expect(page.getByRole('button', { name: 'Entrar com passkey' })).toBeVisible();
 });

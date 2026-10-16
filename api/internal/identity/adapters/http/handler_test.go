@@ -184,3 +184,20 @@ func TestSessionCookieIsNotSecureOverPlainHTTP(t *testing.T) {
 		t.Fatalf("Location = %q", res.Header.Get("Location"))
 	}
 }
+
+func TestMeReturnsThePictureOnlyWhenThereIsOne(t *testing.T) {
+	f := newFixture(t, true)
+	session := loginFlow(t, f.h)
+	var body map[string]any
+	_ = json.NewDecoder(do(f.h, http.MethodGet, "/api/v1/me", nil, session).Body).Decode(&body)
+	if _, has := body["picture_url"]; has {
+		t.Fatalf("sem foto o campo nao aparece: %v", body)
+	}
+	f.provider.Identity.PictureURL = "https://lh3.googleusercontent.com/a/x"
+	session = loginFlow(t, f.h)
+	body = nil
+	_ = json.NewDecoder(do(f.h, http.MethodGet, "/api/v1/me", nil, session).Body).Decode(&body)
+	if body["picture_url"] != "https://lh3.googleusercontent.com/a/x" {
+		t.Fatalf("com foto: %v", body)
+	}
+}

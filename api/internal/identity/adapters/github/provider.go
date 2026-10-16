@@ -59,9 +59,10 @@ func (p *Provider) Exchange(ctx context.Context, code, verifier, _ string) (app.
 	}
 	client := p.oauth.Client(ctx, tok)
 	var user struct {
-		ID    int64  `json:"id"`
-		Login string `json:"login"`
-		Name  string `json:"name"`
+		ID     int64  `json:"id"`
+		Login  string `json:"login"`
+		Name   string `json:"name"`
+		Avatar string `json:"avatar_url"`
 	}
 	if err := p.get(ctx, client, "/user", &user); err != nil {
 		return app.Tokens{}, err
@@ -81,7 +82,7 @@ func (p *Provider) Exchange(ctx context.Context, code, verifier, _ string) (app.
 	if name == "" {
 		name = user.Login
 	}
-	identity := domain.Identity{Issuer: "github", Subject: strconv.FormatInt(user.ID, 10), DisplayName: name, AuthTime: time.Now().UTC()}
+	identity := domain.Identity{Issuer: "github", Subject: strconv.FormatInt(user.ID, 10), DisplayName: name, PictureURL: user.Avatar, AuthTime: time.Now().UTC()}
 	for _, e := range emails {
 		if e.Verified && (identity.Email == "" || e.Primary) {
 			identity.Email, identity.EmailVerified = e.Email, true

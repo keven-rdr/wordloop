@@ -139,3 +139,26 @@ func TestAnEmailHeldByADeletedAccountFailsCleanlyWithoutLooping(t *testing.T) {
 		t.Fatal("conta apagada segura o e-mail: o login social nao pode passar")
 	}
 }
+
+func TestThePictureIsSavedAndNotErasedByALoginWithoutOne(t *testing.T) {
+	pool := setupPool(t)
+	ctx := context.Background()
+	users := postgres.NewUsers(pool)
+	id := socialIdentity("google", "g-7", "ana@exemplo.com", true)
+	id.PictureURL = "https://lh3.googleusercontent.com/a/x"
+	first, err := users.Upsert(ctx, id)
+	if err != nil || first.PictureURL != id.PictureURL {
+		t.Fatalf("a foto fica no perfil: %+v %v", first, err)
+	}
+	id.PictureURL = ""
+	if again, err := users.Upsert(ctx, id); err != nil || again.PictureURL != "https://lh3.googleusercontent.com/a/x" {
+		t.Fatalf("login sem foto nao apaga a anterior: %+v %v", again, err)
+	}
+	id.PictureURL = "http://inseguro.test/a.png"
+	if again, err := users.Upsert(ctx, id); err != nil || again.PictureURL != "https://lh3.googleusercontent.com/a/x" {
+		t.Fatalf("so https e aceito: %+v %v", again, err)
+	}
+	if got, err := users.Get(ctx, first.ID); err != nil || got.PictureURL != first.PictureURL {
+		t.Fatalf("Get devolve a foto: %+v %v", got, err)
+	}
+}

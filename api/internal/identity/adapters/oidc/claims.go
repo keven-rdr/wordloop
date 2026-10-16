@@ -14,6 +14,7 @@ import (
 func identityFrom(idt *gooidc.IDToken) (domain.Identity, error) {
 	var claims struct {
 		Name              string `json:"name"`
+		Picture           string `json:"picture"`
 		PreferredUsername string `json:"preferred_username"`
 		Email             string `json:"email"`
 		EmailVerified     any    `json:"email_verified"`
@@ -28,7 +29,7 @@ func identityFrom(idt *gooidc.IDToken) (domain.Identity, error) {
 		name = claims.PreferredUsername
 	}
 	return domain.Identity{
-		Issuer: idt.Issuer, Subject: idt.Subject, DisplayName: name,
+		Issuer: idt.Issuer, Subject: idt.Subject, DisplayName: name, PictureURL: claims.Picture,
 		Email: claims.Email, EmailVerified: truthy(claims.EmailVerified),
 		AuthTime: unixTime(claims.AuthTime), MFA: hasMFA(methods(claims.AMR)),
 	}, nil

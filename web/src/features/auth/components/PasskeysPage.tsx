@@ -56,8 +56,8 @@ function PasskeysList() {
             {t(passkeyMessageKey(add.error))}
           </p>
         )}
-        <Link to="/" {...stylex.props(ui.button, ui.secondary)}>
-          {t('passkeys.home')}
+        <Link to="/settings" {...stylex.props(ui.button, ui.secondary)}>
+          {t('passkeys.back')}
         </Link>
       </div>
     </AppPage>
