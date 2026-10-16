@@ -142,3 +142,12 @@ func TestExchangeFailuresAreReported(t *testing.T) {
 		t.Fatal("JSON invalido deve falhar")
 	}
 }
+
+func TestLoginReadsTheAvatar(t *testing.T) {
+	f, p := newFake(t)
+	f.user = `{"id": 7, "login": "ana", "name": "Ana", "avatar_url": "https://avatars.githubusercontent.com/u/7"}`
+	tokens, err := p.Exchange(context.Background(), "c", "verificador-pkce-bem-longo-0123456789012345678901", "")
+	if err != nil || tokens.Identity.PictureURL != "https://avatars.githubusercontent.com/u/7" {
+		t.Fatalf("%+v %v", tokens.Identity, err)
+	}
+}

@@ -70,7 +70,7 @@ func (u *Users) Upsert(_ context.Context, id domain.Identity) (domain.User, erro
 		uid = uuid.New()
 		u.ids[key] = uid
 	}
-	user := domain.User{ID: uid, DisplayName: id.DisplayName, Role: domain.RoleUser}
+	user := domain.User{ID: uid, DisplayName: id.DisplayName, PictureURL: domain.CleanPictureURL(id.PictureURL), Role: domain.RoleUser}
 	if old, ok := u.byID[uid]; ok {
 		user.Role, user.MFARequired = old.Role, old.MFARequired
 	}

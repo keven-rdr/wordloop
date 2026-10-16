@@ -96,9 +96,13 @@ func (h Handler) GetMe(ctx context.Context, _ gen.GetMeRequestObject) (gen.GetMe
 	if err != nil {
 		return nil, err
 	}
-	return gen.GetMe200JSONResponse{
+	me := gen.GetMe200JSONResponse{
 		Id: who.User.ID, DisplayName: who.User.DisplayName, Role: gen.MeRole(who.User.Role), TwoFactorEnabled: who.User.MFARequired,
-	}, nil
+	}
+	if who.User.PictureURL != "" {
+		me.PictureUrl = &who.User.PictureURL
+	}
+	return me, nil
 }
 
 func deref(s *string) string {

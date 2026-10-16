@@ -447,6 +447,7 @@ components:
       properties:
         id: { type: string, format: uuid }
         display_name: { type: string }
+        picture_url: { type: string, format: uri, description: "foto de perfil do login social (https); ausente quando nao ha" }
         two_factor_enabled: { type: boolean, description: "se a conta exige 2 fatores para entrar (desligado por padrao)" }
         role: { type: string, enum: [user, admin], description: "so informativo para a interface; a API confere o papel no banco a cada pedido" }
     PasswordLoginRequest:

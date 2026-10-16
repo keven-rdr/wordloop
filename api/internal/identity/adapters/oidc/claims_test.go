@@ -123,3 +123,10 @@ func TestIdentityFromReadsTheEmailAndOnlyTrustsAnExplicitlyVerifiedOne(t *testin
 		}
 	}
 }
+
+func TestIdentityFromReadsThePicture(t *testing.T) {
+	got, err := identityFrom(idToken(t, map[string]any{"name": "Maria", "picture": "https://lh3.googleusercontent.com/a/x"}))
+	if err != nil || got.PictureURL != "https://lh3.googleusercontent.com/a/x" {
+		t.Fatalf("%+v %v", got, err)
+	}
+}

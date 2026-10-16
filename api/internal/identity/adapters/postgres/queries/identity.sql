@@ -24,12 +24,13 @@ SELECT id FROM u;
 -- name: TouchUser :one
 UPDATE app_user
 SET last_seen_at = now(),
-    display_name = COALESCE(NULLIF(sqlc.arg(display_name)::text, ''), display_name)
+    display_name = COALESCE(NULLIF(sqlc.arg(display_name)::text, ''), display_name),
+    picture_url = COALESCE(NULLIF(sqlc.arg(picture_url)::text, ''), picture_url)
 WHERE id = sqlc.arg(id)
-RETURNING id, display_name, role, mfa_required;
+RETURNING id, display_name, role, mfa_required, picture_url;
 
 -- name: GetUser :one
-SELECT id, display_name, role, mfa_required FROM app_user WHERE id = $1 AND deleted_at IS NULL;
+SELECT id, display_name, role, mfa_required, picture_url FROM app_user WHERE id = $1 AND deleted_at IS NULL;
 
 -- name: CreateSession :exec
 INSERT INTO auth_session (id_hash, user_id, refresh_token_enc, created_at, last_used_at, expires_at, authenticated_at, mfa, user_agent)
