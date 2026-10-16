@@ -37,10 +37,10 @@ Ponto de partida já existente (rascunho, nunca executado em PostgreSQL): [`docs
 - [x] Seed v0 gerado e conferido (125 itens, toda linha com fonte e licença, idempotente)
 - [x] Web: rotas `/words` e `/words/$unit`, busca, baralho com cartão que vira, textos `pt-BR`/`en-US`, tokens StyleX, testes Vitest
 - [x] Spec Playwright mockado escrito (`web/e2e/words`); **não rodou aqui** (navegador do Playwright não instalado)
-- [ ] Imagens (OpenMoji) servidas pelo web e telas de créditos: pendente de aprovação para baixar os SVGs
+- [x] Imagens (OpenMoji): 36 SVGs em `web/public/media/openmoji`, aprovadas na migração `00010` com o hash; cartão mostra a imagem e a tela `/words/credits` lista as licenças
 - [ ] Filtro por unidade e nível na tela de busca (a API já filtra)
 - [x] `npm run check` verde
-- [ ] PR aberta (com aprovação do usuário)
+- [x] PR #26 e #27 mergeadas na `develop`
 
 ## Verificação
 - `npm run check` verde (Go, web, estrutura, linhas alteradas).

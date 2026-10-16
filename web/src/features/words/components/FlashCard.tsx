@@ -36,6 +36,7 @@ export function FlashCard({ item, shown, onToggle }: Props) {
           <Back item={item} />
         ) : (
           <>
+            {item.image_url && <img src={item.image_url} alt="" {...stylex.props(w.picture)} />}
             <span {...stylex.props(w.term)}>{item.term}</span>
             <span {...stylex.props(w.hint)}>{t('deck.tap')}</span>
           </>

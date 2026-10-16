@@ -38,5 +38,11 @@
   "error": {
     "load": "Could not load right now.",
     "retry": "Try again"
+  },
+  "credits": {
+    "link": "Credits and licenses",
+    "title": "Credits",
+    "subtitle": "Where the words and images come from",
+    "back": "Back to words"
   }
 }
