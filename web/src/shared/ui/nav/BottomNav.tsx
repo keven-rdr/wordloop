@@ -31,6 +31,7 @@ const styles = stylex.create({
     boxSizing: 'border-box',
   },
   item: {
+    position: 'relative',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -44,14 +45,25 @@ const styles = stylex.create({
     fontSize: '0.8rem',
     fontWeight: 700,
     textDecoration: 'none',
-    transitionProperty: 'color, background-color',
+    transitionProperty: 'color',
     transitionDuration: { default: '150ms', [bp.reduceMotion]: '0s' },
     outlineStyle: { default: 'none', ':focus-visible': 'solid' },
     outlineWidth: 3,
     outlineColor: brand.yellow,
     outlineOffset: -3,
   },
-  active: { color: color.link, backgroundColor: color.bg },
+  active: {
+    color: color.link,
+    '::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      insetInline: space.md,
+      height: '3px',
+      borderRadius: radius.full,
+      backgroundColor: color.link,
+    },
+  },
   icon: { width: '1.5rem', height: '1.5rem' },
 });
 
