@@ -1,5 +1,5 @@
 import * as stylex from '@stylexjs/stylex';
-import { Navigate } from '@tanstack/react-router';
+import { Link, Navigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWho } from '../hooks/useWho';
@@ -28,6 +28,9 @@ export function WordsPage() {
   return (
     <WordsShell title={t('title')} subtitle={t('subtitle')} extra={search}>
       {text.trim() === '' ? <UnitList /> : <SearchResults text={text} />}
+      <Link to="/words/credits" {...stylex.props(w.creditsLink)}>
+        {t('credits.link')}
+      </Link>
     </WordsShell>
   );
 }

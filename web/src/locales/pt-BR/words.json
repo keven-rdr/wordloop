@@ -38,5 +38,11 @@
   "error": {
     "load": "Não foi possível carregar agora.",
     "retry": "Tentar de novo"
+  },
+  "credits": {
+    "link": "Créditos e licenças",
+    "title": "Créditos",
+    "subtitle": "De onde vêm as palavras e as imagens",
+    "back": "Voltar às palavras"
   }
 }
