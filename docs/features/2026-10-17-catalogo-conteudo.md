@@ -1,6 +1,6 @@
 # Catálogo e conteúdo (Sprint 2)
 
-> Arquivo: `docs/features/2026-10-17-catalogo-conteudo.md` · Issue: #__ · Branch: `feat/catalogo-conteudo` · Estado: VERIFY
+> Arquivo: `docs/features/2026-10-17-catalogo-conteudo.md` · Issue: #__ · Branch: `feat/catalogo-conteudo` · Estado: DONE
 
 ## Contexto
 O login está completo e ativo em tst. Falta o que faz do wordloop um app de vocabulário: **o conteúdo**. O Sprint 2 do [roadmap](../fase-6/06-roadmap-backlog.md) entrega o esquema de conteúdo no banco, um seed v0 (~100 palavras), a API do catálogo (C-03), a tela **Palavras**, mídia servida e créditos. Não depende de nenhuma conta externa: tudo roda em tst.
@@ -48,8 +48,8 @@ Ponto de partida já existente (rascunho, nunca executado em PostgreSQL): [`docs
 - Visual conferido no navegador do app com API simulada: cabeçalho roxo, lista de unidades, cartão branco com cartões atrás, barra de progresso e botão de virar.
 - Filtros: 6 testes Vitest novos (unidade, nível, texto junto, uma letra com filtro, voltar às unidades); 128 testes no web.
 - PRs seguintes na `develop`: #28 (imagens e créditos), #29 (menu inferior, configurações, foto, fonte, animação), #30 (aba ativa).
-- Falta ver em tst depois do deploy: o admin enxerga os itens em rascunho com o selo, imagens carregam, `/words/credits` abre e os filtros funcionam.
-- **Aceite pendente:** você aprovar (ou não) o estilo OpenMoji.
+- Conferido em tst pelo usuário (19/10/2026): itens em rascunho com o selo para o admin, imagens carregando, `/words/credits` e filtros funcionando.
+- **Estilo OpenMoji aprovado pelo usuário (19/10/2026).** Sprint 2 concluído.
 
 ## Adiado para a carga v1 (Sprint 8)
 - Ranking NGSL e `coverage_share` (roadmap, decisão 9): a coluna existe, o seed v0 não a preenche.
