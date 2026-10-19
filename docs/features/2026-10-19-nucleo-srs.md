@@ -1,0 +1,40 @@
+# Núcleo do SRS e módulo de aprendizado (Sprint 3)
+
+> Arquivo: `docs/features/2026-10-19-nucleo-srs.md` · Issue: #__ · Branch: `feat/srs-learning` · Estado: BUILD
+
+## Contexto
+O catálogo está pronto (Sprint 2). Falta o que transforma palavras em aprendizado: o **agendador** (quando revisar cada cartão), o **estado do usuário** no banco e a **API de estudo**. O Sprint 3 do [roadmap](../fase-6/06-roadmap-backlog.md) entrega `internal/srs` (biblioteca pura) com `simple_v1`, golden vectors, testes de propriedade e simulador; e o módulo `learning` (cartões, plano da sessão, envio idempotente de revisões, `review_log` só-INSERT). A especificação está em [fase-1/01-srs.md](../fase-1/01-srs.md) e o esquema rascunhado em [fase-3/schema-learning.sql](../fase-3/schema-learning.sql) e [openapi-sketch.yaml](../fase-3/openapi-sketch.yaml). A tela de estudo é o Sprint 4; geradores de exercício (L-05) ficam para o 3/4.
+
+## Perguntas e respostas dos requisitos
+| # | Pergunta | Recomendação | Resposta |
+|---|---|---|---|
+| 1 | Como dividir o sprint em PRs? | 3 PRs em ordem: `srs` → simulador → `learning` | Recomendação aceita (19/10/2026) |
+| 2 | "Foi distração" / erro de digitação vale Hard sem lapso? | Sim (≤ 1 letra, palavras ≥ 5 letras) | Recomendação aceita (19/10/2026) |
+| 3 | "Dominado" = S ≥ 90 dias sem lapso nas 2 últimas revisões? | Sim | Recomendação aceita (19/10/2026) |
+| 4 | Easy só vale em exercício de produção? | Sim; em múltipla escolha conta como Good | Recomendação aceita (19/10/2026) |
+| 5 | Palavras novas por dia no início | minutos ÷ 5, teto inicial 8 (A1), zero novos se a fila passar de 2× a meta | Recomendação aceita (19/10/2026) |
+
+## Definições confirmadas
+- **PR 1 — `internal/srs`:** `Scheduler` (`Name`, `Next` pura, `Retrievability`), `simple_v1` (1º acerto 1/2/4 d; acerto `S' = (S + 0,5·atraso)·m` com m = 1,2/2,0/3,0; erro `max(1, 0,25·S)`, lapso +1; S ≤ 365; fuzz determinístico por `hash(card_id, n)`), curva `R(t,S) = (1 + F·t/S)^−0,1542`, domínio `ln(1+S)/ln(181)`, mapeamento de nota (errou → Again; Difícil/Médio/Fácil → Hard/Good/Easy; dica/explicação/imagem antes limitam a Hard), `replay(log) → CardState`. Testes: golden vectors conferidos com `docs/fase-1/srs_reference.py`, propriedades, determinismo, replay = incremental.
+- **PR 2 — simulador:** alunos virtuais com esquecimento próprio (verdade ≠ modelo); mede retenção real × alvo, revisões/dia, itens com R ≥ 0,9 no dia 30/90 e calibração; roda como teste/comando, não em produção.
+- **PR 3 — `learning`:** migrações aditivas (`user_settings`, `device`, `card`, `study_session`, `review_log` + gatilho append-only, `review_void`); `POST /study/plan` (pacote de cartões por minutos: 5/15/30/60; novos = minutos ÷ 5 com teto inicial 8; revisões por menor R; irmãos receptivo × produtivo); `POST /study/reviews` em lote com UUID do cliente (reenvio não muda nada; o servidor refaz correção, nota e estado); dia lógico vira às 04:00 no fuso do usuário; erros em Problem Details.
+- Estratégia padrão `simple_v1`; `fsrs6` fica para depois, mesma interface.
+
+## Decisões
+| Tema | Decisão | Alternativa descartada / motivo |
+|---|---|---|
+| Biblioteca | `internal/srs` sem I/O e sem dependências de módulos | agendador dentro de `learning`: não testável isolado |
+| Estado | derivado do `review_log` (replay); `card` guarda o estado atual como cache | só o estado: impede trocar de estratégia |
+| Migrações | aditivas, uma por funcionalidade (`00012…`) | uma migração grande: difícil de revisar |
+| Correção | o servidor refaz a correção e a nota | confiar no cliente: nota viesada e adulterável |
+
+## Checklist de progresso
+- [x] PR 1: `internal/srs` com `simple_v1`, golden vectors, propriedades, determinismo e replay (cobertura 100%)
+- [ ] PR 2: simulador de alunos virtuais e relatório de calibração
+- [ ] PR 3: contrato (`openapi.yaml` + `npm run gen`), migrações, SQL (`sqlc`), casos de uso, handlers, testes de unidade e integração
+- [ ] Documentação: este arquivo e o roadmap
+- [ ] `npm run check` verde em cada PR
+- [ ] PRs abertas (com aprovação do usuário)
+
+## Verificação
+(a preencher)
