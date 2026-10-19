@@ -44,5 +44,11 @@
     "title": "Créditos",
     "subtitle": "De onde vêm as palavras e as imagens",
     "back": "Voltar às palavras"
+  },
+  "filter": {
+    "unit": "Filtrar por unidade",
+    "level": "Filtrar por nível",
+    "allUnits": "Todas as unidades",
+    "allLevels": "Todos os níveis"
   }
 }

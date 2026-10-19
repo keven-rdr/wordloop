@@ -1,7 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { useTranslation } from 'react-i18next';
 import type { ItemSummary } from '../../../api/generated/types.gen';
-import { useWordSearch } from '../hooks/useWordSearch';
+import { type SearchFilters, useWordSearch } from '../hooks/useWordSearch';
 import { w } from './styles';
 
 function Row({ item }: Readonly<{ item: ItemSummary }>) {
@@ -20,9 +20,9 @@ function Row({ item }: Readonly<{ item: ItemSummary }>) {
   );
 }
 
-export function SearchResults({ text }: Readonly<{ text: string }>) {
+export function SearchResults({ text, filters }: Readonly<{ text: string; filters: SearchFilters }>) {
   const { t } = useTranslation('words');
-  const search = useWordSearch(text);
+  const search = useWordSearch(text, filters);
   if (!search.active) return <p {...stylex.props(w.muted)}>{t('search.short')}</p>;
   if (search.failed)
     return (
