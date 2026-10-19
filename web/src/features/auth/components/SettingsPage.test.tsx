@@ -35,6 +35,13 @@ describe('Configurações', () => {
     expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument();
   });
 
+  it('mostra o selo da versão', async () => {
+    api();
+    renderApp('/settings');
+    const badge = await screen.findByTestId('version-badge');
+    await waitFor(() => expect(badge).toHaveTextContent('API v0.1.0'));
+  });
+
   it('Minhas passkeys leva à lista e ela volta para as configurações', async () => {
     api();
     const { router } = renderApp('/settings');

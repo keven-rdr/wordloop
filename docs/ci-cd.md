@@ -2,6 +2,10 @@
 
 > Estado em 07/10/2026, na branch `feat/esqueleto-sprint-1`. O que já roda, o que é opcional e o que depende da VM e das contas. O desenho completo está em `docs/fase-4/04-engenharia.md`.
 
+## Versão do app (automática)
+
+A versão é `MAJOR.MINOR` do arquivo `VERSION` (editado à mão, hoje `1.0`) + o número de merges na `develop` (`git rev-list --count --first-parent`), calculada por `scripts/app-version.sh` no job da imagem de `api-ci` e `web-ci`. Cada merge soma 1 sozinho (ex.: `v1.0.162`), sem commit de bump e sem push direto na `develop`; o mesmo commit tem a mesma versão em dev, tst e prd. O web mostra a versão (e a da API só quando difere, pois a imagem de um componente só é refeita quando ele muda) na tela **Configurações**. Para subir minor/major, edite `VERSION`. O release-please segue desligado e não define a versão exibida.
+
 ## Workflows (`.github/workflows/`)
 
 | Workflow | Quando | O que faz | Check obrigatório |

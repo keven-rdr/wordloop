@@ -1,3 +1,2 @@
-// Preenchidos pelo Vite (`define`) a partir de VERSION e COMMIT do CI.
+// Preenchidos pelo Vite (`define`) a partir de VERSION do CI (ver scripts/app-version.sh).
 export const webVersion: string = __APP_VERSION__;
-export const webCommit: string = __APP_COMMIT__;

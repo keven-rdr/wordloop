@@ -5,7 +5,6 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 const version = process.env.VERSION ?? 'dev';
-const commit = (process.env.COMMIT ?? 'local').slice(0, 7);
 const apiTarget = process.env.API_PROXY_TARGET || 'http://localhost:8080';
 const compiler = process.env.VITEST ? [] : [babel({ presets: [reactCompilerPreset()] })]; // React Compiler 1.0 (validado com StyleX no Sprint 0a); fora dos testes, para a cobertura medir o nosso código e não o cache de memoização gerado
 
@@ -18,7 +17,6 @@ export default defineConfig({
   ],
   define: {
     __APP_VERSION__: JSON.stringify(version),
-    __APP_COMMIT__: JSON.stringify(commit),
   },
   server: { proxy: { '/api': apiTarget } },
   test: {
