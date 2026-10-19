@@ -31,4 +31,5 @@ export const radius = stylex.defineVars({
 export const size = stylex.defineVars({
   touch: '48px',
   card: '420px',
+  nav: '4.5rem',
 });

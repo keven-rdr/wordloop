@@ -12,35 +12,36 @@ const styles = stylex.create({
     position: 'sticky',
     bottom: 0,
     zIndex: 10,
+    display: 'flex',
+    flexDirection: 'column',
+    boxSizing: 'border-box',
+    height: `calc(${size.nav} + env(safe-area-inset-bottom))`,
+    paddingBottom: 'env(safe-area-inset-bottom)',
     backgroundColor: color.surface,
     borderTopWidth: 1,
     borderTopStyle: 'solid',
     borderTopColor: color.border,
-    paddingBottom: 'env(safe-area-inset-bottom)',
   },
   list: {
     listStyle: 'none',
     margin: 0,
-    padding: space.sm,
+    padding: 0,
     display: 'flex',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    gap: space.sm,
+    flexGrow: 1,
+    width: '100%',
     maxWidth: '40rem',
     marginInline: 'auto',
     boxSizing: 'border-box',
   },
+  cell: { flexGrow: 1, flexBasis: 0, display: 'flex' },
   item: {
     position: 'relative',
+    flexGrow: 1,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     gap: space.xs,
-    minWidth: size.touch,
-    minHeight: size.touch,
-    paddingInline: space.md,
-    borderRadius: radius.md,
     color: color.textMuted,
     fontSize: '0.8rem',
     fontWeight: 700,
@@ -58,12 +59,14 @@ const styles = stylex.create({
       content: '""',
       position: 'absolute',
       top: 0,
-      insetInline: space.md,
+      insetInline: space.lg,
       height: '3px',
-      borderRadius: radius.full,
+      borderBottomLeftRadius: radius.full,
+      borderBottomRightRadius: radius.full,
       backgroundColor: color.link,
     },
   },
+  slot: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.25rem', height: '2.25rem' },
   icon: { width: '1.5rem', height: '1.5rem' },
 });
 
@@ -79,33 +82,39 @@ export function BottomNav({ name, pictureUrl }: Props) {
   return (
     <nav aria-label={t('nav.label')} {...stylex.props(styles.bar)}>
       <ul {...stylex.props(styles.list)}>
-        <li>
+        <li {...stylex.props(styles.cell)}>
           <Link
             to="/settings"
             aria-current={onSettings ? 'page' : undefined}
             {...stylex.props(styles.item, onSettings && styles.active)}
           >
-            <Avatar name={name} pictureUrl={pictureUrl} />
+            <span {...stylex.props(styles.slot)}>
+              <Avatar name={name} pictureUrl={pictureUrl} />
+            </span>
             {t('nav.profile')}
           </Link>
         </li>
-        <li>
+        <li {...stylex.props(styles.cell)}>
           <Link
             to="/"
             aria-current={path === '/' ? 'page' : undefined}
             {...stylex.props(styles.item, path === '/' && styles.active)}
           >
-            <HomeIcon {...stylex.props(styles.icon)} />
+            <span {...stylex.props(styles.slot)}>
+              <HomeIcon {...stylex.props(styles.icon)} />
+            </span>
             {t('nav.home')}
           </Link>
         </li>
-        <li>
+        <li {...stylex.props(styles.cell)}>
           <Link
             to="/words"
             aria-current={onWords ? 'page' : undefined}
             {...stylex.props(styles.item, onWords && styles.active)}
           >
-            <CardsIcon {...stylex.props(styles.icon)} />
+            <span {...stylex.props(styles.slot)}>
+              <CardsIcon {...stylex.props(styles.icon)} />
+            </span>
             {t('nav.words')}
           </Link>
         </li>
