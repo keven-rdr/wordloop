@@ -1,6 +1,6 @@
 # Núcleo do SRS e módulo de aprendizado (Sprint 3)
 
-> Arquivo: `docs/features/2026-10-19-nucleo-srs.md` · Issue: #__ · Branch: `feat/srs-learning` · Estado: DOC
+> Arquivo: `docs/features/2026-10-19-nucleo-srs.md` · Issue: #__ · Branch: `feat/srs-learning` · Estado: BUILD
 
 ## Contexto
 O catálogo está pronto (Sprint 2). Falta o que transforma palavras em aprendizado: o **agendador** (quando revisar cada cartão), o **estado do usuário** no banco e a **API de estudo**. O Sprint 3 do [roadmap](../fase-6/06-roadmap-backlog.md) entrega `internal/srs` (biblioteca pura) com `simple_v1`, golden vectors, testes de propriedade e simulador; e o módulo `learning` (cartões, plano da sessão, envio idempotente de revisões, `review_log` só-INSERT). A especificação está em [fase-1/01-srs.md](../fase-1/01-srs.md) e o esquema rascunhado em [fase-3/schema-learning.sql](../fase-3/schema-learning.sql) e [openapi-sketch.yaml](../fase-3/openapi-sketch.yaml). A tela de estudo é o Sprint 4; geradores de exercício (L-05) ficam para o 3/4.
@@ -29,7 +29,7 @@ O catálogo está pronto (Sprint 2). Falta o que transforma palavras em aprendiz
 | Correção | o servidor refaz a correção e a nota | confiar no cliente: nota viesada e adulterável |
 
 ## Checklist de progresso
-- [ ] PR 1: `internal/srs` com `simple_v1`, golden vectors, propriedades, determinismo e replay
+- [x] PR 1: `internal/srs` com `simple_v1`, golden vectors, propriedades, determinismo e replay (cobertura 100%)
 - [ ] PR 2: simulador de alunos virtuais e relatório de calibração
 - [ ] PR 3: contrato (`openapi.yaml` + `npm run gen`), migrações, SQL (`sqlc`), casos de uso, handlers, testes de unidade e integração
 - [ ] Documentação: este arquivo e o roadmap
