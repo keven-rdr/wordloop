@@ -3,7 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { configureApi } from './api';
 import { setupI18n } from './i18n';
-import { VersionFooter } from './VersionFooter';
+import { VersionBadge } from './VersionBadge';
 
 // O web e compilado com VERSION e COMMIT; aqui cada teste escolhe o seu.
 const web = vi.hoisted(() => ({ version: '0.1.0', commit: 'abc1234' }));
@@ -30,40 +30,50 @@ afterEach(() => {
   web.commit = 'abc1234';
 });
 
-function stubVersion(body: object) {
+function stubVersion(body: object, signedIn = false) {
   vi.stubGlobal(
     'fetch',
-    vi.fn(async () => new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } })),
+    vi.fn(async (input: Request | string) => {
+      const url = input instanceof Request ? input.url : input;
+      if (url.endsWith('/me')) {
+        return signedIn
+          ? new Response(JSON.stringify({ id: 'x', display_name: 'Ana', role: 'user', two_factor_enabled: false }), {
+              headers: { 'content-type': 'application/json' },
+            })
+          : new Response(null, { status: 401 });
+      }
+      return new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
+    }),
   );
 }
 
-function renderFooter() {
+function renderBadge() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={client}>
-      <VersionFooter />
+      <VersionBadge />
     </QueryClientProvider>,
   );
 }
 
-describe('VersionFooter', () => {
+describe('VersionBadge', () => {
   it('release: mostra versoes, ambiente e UM commit quando o do web e prefixo do commit completo da API', async () => {
     stubVersion({ api: '0.1.0', commit: FULL, env: 'tst' });
-    renderFooter();
+    renderBadge();
     expect(await screen.findByText('v0.1.0 · API v0.1.0 · tst · abc1234')).toBeInTheDocument();
   });
 
   it('release: mostra os dois commits quando web e API vem de commits diferentes', async () => {
     stubVersion({ api: '0.1.0', commit: 'fffffff0000', env: 'tst' });
-    renderFooter();
+    renderBadge();
     expect(await screen.findByText('v0.1.0 · API v0.1.0 · tst · abc1234/fffffff')).toBeInTheDocument();
   });
 
-  it('build comum: mostra o commit curto no lugar da versao, sem repetir o hash', async () => {
+  it('sem release: mostra v0.0.0 e o commit', async () => {
     web.version = 'abc1234';
     stubVersion({ api: 'abc1234', commit: FULL, env: 'tst' });
-    renderFooter();
-    expect(await screen.findByText('web abc1234 · API abc1234 · tst')).toBeInTheDocument();
+    renderBadge();
+    expect(await screen.findByText('v0.0.0 · API v0.0.0 · tst · abc1234')).toBeInTheDocument();
   });
 
   it('mostra so o web quando a API falha', async () => {
@@ -71,18 +81,31 @@ describe('VersionFooter', () => {
       'fetch',
       vi.fn(async () => new Response('erro', { status: 500 })),
     );
-    renderFooter();
+    renderBadge();
     expect(await screen.findByText('v0.1.0 · abc1234')).toBeInTheDocument();
-    expect(screen.getByTestId('version-footer')).not.toHaveTextContent('API');
+    expect(screen.getByTestId('version-badge')).not.toHaveTextContent('API');
   });
 
-  it('build comum com a API fora do ar: so o commit do web', async () => {
+  it('sem release e com a API fora do ar: so o web', async () => {
     web.version = 'abc1234';
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response('erro', { status: 500 })),
     );
-    renderFooter();
-    expect(await screen.findByText('web abc1234')).toBeInTheDocument();
+    renderBadge();
+    expect(await screen.findByText('v0.0.0 · abc1234')).toBeInTheDocument();
+  });
+
+  it('com sessao o selo sobe acima do menu e sem sessao fica no canto', async () => {
+    stubVersion({ api: '0.1.0', commit: FULL, env: 'tst' }, false);
+    renderBadge();
+    await screen.findByText(/API v0.1.0/);
+    const corner = screen.getByTestId('version-badge').className;
+    cleanup();
+
+    stubVersion({ api: '0.1.0', commit: FULL, env: 'tst' }, true);
+    renderBadge();
+    await screen.findByText(/API v0.1.0/);
+    await vi.waitFor(() => expect(screen.getByTestId('version-badge').className).not.toBe(corner));
   });
 });

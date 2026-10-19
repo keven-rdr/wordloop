@@ -5,9 +5,7 @@
   },
   "footer": {
     "version": "{{web}} · API {{api}} · {{env}} · {{commit}}",
-    "versionWebOnly": "{{web}} · {{commit}}",
-    "build": "web {{web}} · API {{api}} · {{env}}",
-    "buildWebOnly": "web {{web}}"
+    "versionWebOnly": "{{web}} · {{commit}}"
   },
   "notFound": {
     "title": "Página não encontrada",
