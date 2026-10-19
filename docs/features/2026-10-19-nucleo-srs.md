@@ -30,11 +30,20 @@ O catálogo está pronto (Sprint 2). Falta o que transforma palavras em aprendiz
 
 ## Checklist de progresso
 - [x] PR 1: `internal/srs` com `simple_v1`, golden vectors, propriedades, determinismo e replay (cobertura 100%)
-- [ ] PR 2: simulador de alunos virtuais e relatório de calibração
+- [x] PR 2: simulador de alunos virtuais e relatório de calibração (`go run ./cmd/srs-sim`)
 - [ ] PR 3: contrato (`openapi.yaml` + `npm run gen`), migrações, SQL (`sqlc`), casos de uso, handlers, testes de unidade e integração
 - [ ] Documentação: este arquivo e o roadmap
 - [ ] `npm run check` verde em cada PR
 - [ ] PRs abertas (com aprovação do usuário)
 
 ## Verificação
-(a preencher)
+- PR 1 (#35): `internal/srs` com cobertura de 100%, `check:all` verde.
+- PR 2: `internal/srs/sim` (cobertura de 100%) e `cmd/srs-sim`. Cenário de referência (90 dias, 8 novas/dia, até 60 revisões/dia, semente 1), `simple_v1` × escada fixa (1-3-7-14-30-60-120 d):
+
+| aluno | estratégia | retenção | lapsos | sabidas d90 |
+|---|---|---|---|---|
+| cuidadoso | simple_v1 / escada | 0,943 / 0,944 | 139 / 169 | 652 / 647 |
+| mediano | simple_v1 / escada | 0,888 / 0,869 | 294 / 320 | 465 / 365 |
+| irregular | simple_v1 / escada | 0,740 / 0,688 | 477 / 505 | 45 / 48 |
+
+- Leitura: o `simple_v1` retém mais que a escada fixa quando o aluno estuda menos ou erra a autoavaliação; com aluno cuidadoso empatam. **Calibração:** com R previsto de 0,9–1,0 o observado foi 0,945 (cuidadoso), 0,906 (mediano) e 0,861 (irregular); em 0,8–0,9 o aluno irregular acertou só 0,732. Ou seja, o modelo é bem calibrado para quem estuda direito e **otimista para quem estuda pouco**: é o risco "calibragem dos multiplicadores" do roadmap, a revisar com dados reais (decisão 8). Os alunos virtuais usam uma curva de esquecimento exponencial própria (verdade ≠ modelo).
