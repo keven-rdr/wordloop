@@ -12,6 +12,7 @@ components:
   apigen:   { in: api/gen }
   platform: { in: [platform/httpx, platform/seal, platform/token, platform/ratelimit, platform/password, platform/mail, platform/db, platform/db/dbtest, platform/version] }
   srs:      { in: srs }   # biblioteca pura de repeticao espacada: so a biblioteca padrao
+  srs-sim:  { in: srs/sim }   # simulador de alunos virtuais: so para testes e relatorios
   contract: { in: ../openapi }   # openapi.yaml embutido (go:embed so alcanca a propria pasta)
   id-domain:   { in: identity/domain }
   id-app:      { in: identity/app }
@@ -32,6 +33,7 @@ deps:
   apigen:   { anyVendorDeps: true }
   platform: { anyVendorDeps: true }
   contract: { anyVendorDeps: true }
+  srs-sim:  { mayDependOn: [srs], anyVendorDeps: true }
   srs:      { anyVendorDeps: true }   # so importa a biblioteca padrao (a regra de componentes impede importar modulos)
   id-domain:   { anyVendorDeps: true }
   id-app:      { mayDependOn: [id-domain, platform], anyVendorDeps: true }
