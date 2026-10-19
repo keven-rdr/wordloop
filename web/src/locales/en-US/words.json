@@ -44,5 +44,11 @@
     "title": "Credits",
     "subtitle": "Where the words and images come from",
     "back": "Back to words"
+  },
+  "filter": {
+    "unit": "Filter by unit",
+    "level": "Filter by level",
+    "allUnits": "All units",
+    "allLevels": "All levels"
   }
 }
