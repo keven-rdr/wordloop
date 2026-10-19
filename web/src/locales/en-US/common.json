@@ -4,8 +4,8 @@
     "tagline": "Grow your English vocabulary with spaced repetition."
   },
   "footer": {
-    "version": "{{web}} · API {{api}} · {{env}} · {{commit}}",
-    "versionWebOnly": "{{web}} · {{commit}}"
+    "version": "{{web}}",
+    "versionWithApi": "{{web}} · API {{api}}"
   },
   "notFound": {
     "title": "Page not found",

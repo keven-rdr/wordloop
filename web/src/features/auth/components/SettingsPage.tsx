@@ -2,6 +2,7 @@ import * as stylex from '@stylexjs/stylex';
 import { Link, Navigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '../../../core/theme/ThemeToggle';
+import { VersionBadge } from '../../../core/VersionBadge';
 import { BrandScreen } from '../../../shared/ui/BrandScreen';
 import { Avatar } from '../../../shared/ui/nav/Avatar';
 import { useSession } from '../hooks/useSession';
@@ -64,6 +65,7 @@ export function SettingsPage() {
           {t('signOutError')}
         </p>
       )}
+      <VersionBadge />
     </BrandScreen>
   );
 }

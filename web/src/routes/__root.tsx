@@ -2,7 +2,6 @@ import * as stylex from '@stylexjs/stylex';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { NotFound } from '../core/NotFound';
 import { useThemeChoice } from '../core/theme/useTheme';
-import { VersionBadge } from '../core/VersionBadge';
 import { color } from '../shared/ui/tokens/color.stylex';
 import { darkTheme, lightTheme } from '../shared/ui/tokens/themes.stylex';
 
@@ -28,7 +27,6 @@ function RootLayout() {
       <main {...stylex.props(styles.main)}>
         <Outlet />
       </main>
-      <VersionBadge />
     </div>
   );
 }

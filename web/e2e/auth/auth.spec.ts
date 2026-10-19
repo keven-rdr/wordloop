@@ -112,8 +112,8 @@ test('sem sessão: Entrar com passkey; com sessão: Olá e, em Configurações, 
   state.signedIn = true;
   await page.reload();
   await expect(page.getByText('Olá, Maria!')).toBeVisible();
-  await expect(page.getByTestId('version-badge')).toContainText('API v0.1.0 · tst');
   await page.getByRole('link', { name: 'Perfil' }).click();
+  await expect(page.getByTestId('version-badge')).toContainText('API v0.1.0');
   await page.getByRole('link', { name: /Minhas passkeys/ }).click();
   await expect(page).toHaveURL(/\/passkeys$/);
 });

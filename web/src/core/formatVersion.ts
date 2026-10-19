@@ -1,42 +1,23 @@
 // Formatacao do selo de versao: pura e sem textos de interface (os textos vem das chaves de i18n).
+// A versao vem do CI (VERSION + numero de merges na develop, ex.: 1.0.162); em dev local e `dev`.
 
 const SEMVER = /^\d+\.\d+\.\d+/;
-const SHORT = 7;
-// Enquanto nao existe release (sem tag `web-v*`/`api-v*`), `git describe` devolve so o hash.
-const NO_RELEASE = '0.0.0';
-
-export interface Build {
-  version: string;
-  commit: string;
-}
 
 export interface BadgeParts {
   /** Chave do texto em `common`: `footer.<kind>`. */
-  kind: 'version' | 'versionWebOnly';
+  kind: 'version' | 'versionWithApi';
   web: string;
-  commit: string;
   api?: string;
-  env?: string;
 }
 
-const shortCommit = (commit: string) => commit.slice(0, SHORT);
-/** Release vira `v0.1.0`; sem release (a "versao" e so o hash) mostra `v0.0.0`, e o commit vem a parte. */
-const label = ({ version }: Build) => `v${SEMVER.test(version) ? version : NO_RELEASE}`;
+/** Versao do CI vira `v1.0.162`; fora do CI (dev local) o texto fica como veio, sem o `v`. */
+const label = (version: string) => (SEMVER.test(version) ? `v${version}` : version);
 
-/** O commit curto do web e o completo da API sao o mesmo commit quando um e prefixo do outro. */
-function commitLabel(web: string, api: string): string {
-  const w = shortCommit(web);
-  const a = shortCommit(api);
-  return w === a ? w : `${w}/${a}`;
-}
-
-export function badgeParts(web: Build, api?: Build & { env: string }): BadgeParts {
-  if (!api) return { kind: 'versionWebOnly', web: label(web), commit: shortCommit(web.commit) };
-  return {
-    kind: 'version',
-    web: label(web),
-    api: label(api),
-    env: api.env,
-    commit: commitLabel(web.commit, api.commit),
-  };
+/**
+ * So a versao do web quando web e API estao iguais (mesmo commit); se a API esta em outra versao
+ * (ex.: um merge so do web nao reconstroi a API), mostra as duas para ver que ambiente esta desatualizado.
+ */
+export function badgeParts(web: string, api?: string): BadgeParts {
+  if (!api || label(api) === label(web)) return { kind: 'version', web: label(web) };
+  return { kind: 'versionWithApi', web: label(web), api: label(api) };
 }
