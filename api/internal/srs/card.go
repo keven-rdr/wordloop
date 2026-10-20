@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// State e o estado do cartao no ciclo de aprendizado.
 type State string
 
 const (
@@ -15,7 +14,6 @@ const (
 	StateRelearning State = "relearning"
 )
 
-// Difficulty e a dificuldade que a pessoa informa ao acertar.
 type Difficulty string
 
 const (
@@ -24,41 +22,37 @@ const (
 	DifficultyEasy   Difficulty = "easy"
 )
 
-// ErrorKind e o que a pessoa diz depois de errar ("Como foi?").
 type ErrorKind string
 
 const (
 	ErrorNone   ErrorKind = ""
-	ErrorNoIdea ErrorKind = "no_idea" // Nao sabia
-	ErrorAlmost ErrorKind = "almost"  // Quase lembrei
-	ErrorSlip   ErrorKind = "slip"    // Foi distracao
+	ErrorNoIdea ErrorKind = "no_idea"
+	ErrorAlmost ErrorKind = "almost"
+	ErrorSlip   ErrorKind = "slip"
 )
 
-// CardState e o estado agendado de um cartao (usuario, item, direcao). Stability (S) e em dias.
 type CardState struct {
-	ID           string // semente do fuzz; o id do cartao
+	ID           string
 	State        State
 	Stability    float64
 	Reps         int
 	Lapses       int
-	SinceLapse   int // revisoes desde o ultimo lapso (para "dominado")
+	SinceLapse   int
 	LastReviewAt time.Time
 	DueAt        time.Time
 }
 
-// Review e uma resposta ja corrigida pelo servidor.
 type Review struct {
 	Correct     bool
-	Difficulty  Difficulty // so vale quando Correct
-	ErrorKind   ErrorKind  // so vale quando !Correct
-	Typo        bool       // erro de digitacao com distancia de edicao <= 1 (palavra >= 5 letras)
-	Production  bool       // digitar/ouvir->digitar; so a producao aceita Easy
+	Difficulty  Difficulty
+	ErrorKind   ErrorKind
+	Typo        bool
+	Production  bool
 	Hint        bool
 	Explained   bool
 	ImageBefore bool
 }
 
-// Scheduler e a estrategia de agendamento. Next e pura: mesma entrada, mesma saida.
 type Scheduler interface {
 	Name() string
 	Next(c CardState, r Review, now time.Time) (CardState, error)

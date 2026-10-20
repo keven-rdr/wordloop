@@ -11,6 +11,11 @@ components:
   api:      { in: api }
   apigen:   { in: api/gen }
   platform: { in: [platform/httpx, platform/seal, platform/token, platform/ratelimit, platform/password, platform/mail, platform/db, platform/db/dbtest, platform/version] }
+  lrn-domain:   { in: learning/domain }
+  lrn-app:      { in: learning/app }
+  lrn-adapters: { in: [learning/adapters/http, learning/adapters/postgres] }
+  lrn-sqlc:     { in: learning/adapters/postgres/db }   # gerado pelo sqlc
+  lrn-test:     { in: learning/learningtest }           # fakes em memoria, so para testes
   srs:      { in: srs }   # biblioteca pura de repeticao espacada: so a biblioteca padrao
   srs-sim:  { in: srs/sim }   # simulador de alunos virtuais: so para testes e relatorios
   contract: { in: ../openapi }   # openapi.yaml embutido (go:embed so alcanca a propria pasta)
@@ -33,6 +38,11 @@ deps:
   apigen:   { anyVendorDeps: true }
   platform: { anyVendorDeps: true }
   contract: { anyVendorDeps: true }
+  lrn-domain:   { mayDependOn: [srs], anyVendorDeps: true }
+  lrn-app:      { mayDependOn: [lrn-domain, srs, platform], anyVendorDeps: true }
+  lrn-adapters: { mayDependOn: [lrn-domain, lrn-app, lrn-sqlc, srs, apigen, platform], anyVendorDeps: true }
+  lrn-sqlc:     { anyVendorDeps: true }
+  lrn-test:     { mayDependOn: [lrn-domain, lrn-app, srs], anyVendorDeps: true }
   srs-sim:  { mayDependOn: [srs], anyVendorDeps: true }
   srs:      { anyVendorDeps: true }   # so importa a biblioteca padrao (a regra de componentes impede importar modulos)
   id-domain:   { anyVendorDeps: true }

@@ -1,4 +1,3 @@
-// Package db abre o pool do PostgreSQL e aplica as migracoes (goose). Sem ORM: o SQL e escrito a mao (ADR 0007).
 package db
 
 import (
@@ -11,10 +10,8 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-// maxConns e baixo de proposito: o Neon free limita conexoes e a VM de tst tem 1 GB de RAM.
 const maxConns = 5
 
-// Open abre o pool e confirma que o banco responde. A URL vem de DATABASE_URL; nunca a registre em log.
 func Open(ctx context.Context, url string) (*pgxpool.Pool, error) {
 	cfg, err := pgxpool.ParseConfig(url)
 	if err != nil {
@@ -32,8 +29,6 @@ func Open(ctx context.Context, url string) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
-// Migrate aplica as migracoes pendentes do diretorio raiz de migrations. Idempotente.
-// Politica expand/contract: uma versao so adiciona; remover coluna ou tabela vem em versao posterior.
 func Migrate(ctx context.Context, pool *pgxpool.Pool, migrations fs.FS) error {
 	conn := stdlib.OpenDBFromPool(pool)
 	defer func() { _ = conn.Close() }()

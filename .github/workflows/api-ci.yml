@@ -115,7 +115,7 @@ jobs:
             -Dsonar.projectKey=keven-rdr_wordloop-api
             -Dsonar.organization=keven-rdr
             -Dsonar.go.coverage.reportPaths=coverage-unit.out,coverage-int.out
-            -Dsonar.exclusions=**/gen/**,**/adapters/postgres/db/**,**/dbtest/**,**/identitytest/**,**/catalogtest/**,**/*_test.go
+            -Dsonar.exclusions=**/gen/**,**/adapters/postgres/db/**,**/dbtest/**,**/identitytest/**,**/catalogtest/**,**/learningtest/**,**/*_test.go
             -Dsonar.cpd.exclusions=migrations/**
             -Dsonar.qualitygate.wait=true
             -Dsonar.qualitygate.timeout=300

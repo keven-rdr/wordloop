@@ -11,6 +11,7 @@ tags:
   - name: meta
   - name: identity
   - name: catalog
+  - name: learning
 paths:
   /version:
     get:
@@ -425,6 +426,53 @@ paths:
           content:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/Credit" } }
+  /study/plan:
+    post:
+      tags: [learning]
+      operationId: planSession
+      description: >
+        Monta a sessao de estudo para "quanto tempo hoje?": as revisoes vencidas (menor retencao primeiro, ate o
+        limite do tempo) e as palavras novas (minutos / 5, ate 8; nenhuma se a fila de revisoes passar de 2x o
+        limite). Palavras novas ganham o cartao receptivo aqui; o produtivo nasce quando o receptivo chega a S >= 7 d.
+        Itens em rascunho so entram para administradores. O pacote traz o conteudo, para estudar sem rede.
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlanRequest" }
+      responses:
+        "200":
+          description: o pacote de cartoes da sessao
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StudyPack" }
+        "400": { description: cabecalho de protecao ausente ou corpo invalido }
+        "401": { description: sem sessao valida }
+  /study/reviews:
+    post:
+      tags: [learning]
+      operationId: submitReviews
+      description: >
+        Envia respostas em lote (ate 200). Cada uma traz um UUID gerado no cliente: reenviar o mesmo UUID nao muda
+        nada (status duplicate). O servidor refaz a correcao (digitar: compara com o termo; escolher: confere o item),
+        calcula a nota e o novo estado do cartao e grava no log imutavel; o client_correct do cliente so e registrado.
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewBatch" }
+      responses:
+        "200":
+          description: resultado de cada resposta, na mesma ordem
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReviewBatchResult" }
+        "400": { description: cabecalho de protecao ausente, lote vazio ou grande demais, ou corpo invalido }
+        "401": { description: sem sessao valida }
 components:
   responses:
     TooManyRequests:
@@ -590,6 +638,103 @@ components:
         examples: { type: array, items: { $ref: "#/components/schemas/ItemExample" } }
         images: { type: array, items: { $ref: "#/components/schemas/ItemImage" } }
         related: { type: array, items: { $ref: "#/components/schemas/RelatedItem" } }
+    PlanRequest:
+      type: object
+      required: [minutes]
+      properties:
+        minutes: { type: integer, enum: [5, 15, 30, 60] }
+        mode: { type: string, enum: [review, learn, mixed], default: mixed }
+        tz: { type: string, description: "fuso IANA do aparelho (ex.: America/Sao_Paulo); o primeiro valido fica guardado" }
+        locale: { type: string, enum: [pt-BR, en-US], default: pt-BR, description: "idioma da traducao" }
+    StudyPack:
+      type: object
+      required: [session_id, cards, new_limit, review_limit, expires_at]
+      properties:
+        session_id: { type: string, format: uuid }
+        cards: { type: array, items: { $ref: "#/components/schemas/StudyCard" } }
+        new_limit: { type: integer, description: "quantas palavras novas cabem hoje" }
+        review_limit: { type: integer }
+        expires_at: { type: string, format: date-time }
+    StudyCard:
+      type: object
+      required: [id, item_id, direction, state, exercise, term, gloss, mastery]
+      properties:
+        id: { type: string, format: uuid }
+        item_id: { type: string, format: uuid }
+        direction: { type: string, enum: [receptive, productive] }
+        state: { type: string, enum: [new, learning, review, relearning] }
+        exercise: { type: string, enum: [choose, type], description: "escolher (receptivo) ou digitar (produtivo)" }
+        term: { type: string, description: "o termo em ingles; no exercicio de digitar nao deve aparecer antes da resposta" }
+        gloss: { type: string }
+        example: { $ref: "#/components/schemas/ItemExample" }
+        image_url: { type: string }
+        options: { type: array, items: { $ref: "#/components/schemas/ChoiceOption" }, description: "so para escolher: a resposta certa e distratores, em ordem fixa" }
+        mastery: { type: number, minimum: 0, maximum: 1, description: "dominio do item (0 a 1)" }
+    ChoiceOption:
+      type: object
+      required: [item_id, gloss]
+      properties:
+        item_id: { type: string, format: uuid }
+        gloss: { type: string }
+    ReviewBatch:
+      type: object
+      required: [reviews]
+      properties:
+        reviews:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items: { $ref: "#/components/schemas/ReviewInput" }
+    ReviewInput:
+      type: object
+      required: [id, card_id, exercise, shown_at, answered_at]
+      properties:
+        id: { type: string, format: uuid, description: "gerado no cliente; garante a idempotencia" }
+        card_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        exercise: { type: string, enum: [choose, type] }
+        source: { type: string, enum: [session, notification, placement, reading], default: session }
+        shown_at: { type: string, format: date-time }
+        answered_at: { type: string, format: date-time }
+        response_ms: { type: integer, minimum: 0 }
+        answer: { type: string, maxLength: 200, description: "o que foi digitado (exercicio type)" }
+        chosen_item_id: { type: string, format: uuid, description: "o item escolhido (exercicio choose)" }
+        client_correct: { type: boolean, description: "o que o app mostrou; so registrado" }
+        hint_used: { type: boolean }
+        explanation_viewed: { type: boolean }
+        image_before_answer: { type: boolean }
+        difficulty_suggested: { type: string, enum: [hard, medium, easy] }
+        difficulty: { type: string, enum: [hard, medium, easy], description: "so vale quando acertou" }
+        error_kind: { type: string, enum: [no_idea, almost, slip], description: "so vale quando errou" }
+        device_id: { type: string, format: uuid }
+        client_seq: { type: integer }
+    ReviewBatchResult:
+      type: object
+      required: [results]
+      properties:
+        results: { type: array, items: { $ref: "#/components/schemas/ReviewResult" } }
+    ReviewResult:
+      type: object
+      required: [id, status]
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [applied, duplicate, rejected] }
+        reason: { type: string, enum: [card_not_found, invalid_answer, invalid_time], description: "so quando rejected" }
+        correct: { type: boolean, description: "a correcao do servidor" }
+        typo: { type: boolean }
+        grade: { type: integer, minimum: 1, maximum: 4 }
+        card: { $ref: "#/components/schemas/CardProgress" }
+    CardProgress:
+      type: object
+      required: [id, state, stability, due_at, lapses, mastery]
+      properties:
+        id: { type: string, format: uuid }
+        state: { type: string, enum: [new, learning, review, relearning] }
+        stability: { type: number }
+        due_at: { type: string, format: date-time }
+        lapses: { type: integer }
+        mastery: { type: number }
+        leech: { type: boolean }
     Credit:
       type: object
       required: [code, name, license, notice]

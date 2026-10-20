@@ -6,8 +6,6 @@ import (
 	"github.com/keven-rdr/wordloop/api/internal/srs"
 )
 
-// Ladder e a estrategia de comparacao: intervalos fixos (1, 3, 7, 14, 30, 60, 120 dias), sem usar a nota
-// de dificuldade; errar volta ao primeiro degrau. Serve de referencia para ver o que o simple_v1 ganha.
 type Ladder struct{}
 
 var _ srs.Scheduler = Ladder{}
@@ -45,7 +43,6 @@ func (Ladder) Next(c srs.CardState, r srs.Review, now time.Time) (srs.CardState,
 	return next, nil
 }
 
-// rungAfter e o proximo degrau acima do intervalo atual (o ultimo se ja esta no topo).
 func rungAfter(current float64) float64 {
 	for _, r := range rungs {
 		if r > current {
@@ -55,7 +52,6 @@ func rungAfter(current float64) float64 {
 	return rungs[len(rungs)-1]
 }
 
-// Profiles sao os alunos virtuais do relatorio: cuidadoso, mediano e irregular (estuda pouco e erra a autoavaliacao).
 func Profiles() []Profile {
 	return []Profile{
 		{Name: "cuidadoso", Base: 2.5, Gain: 2.6, Diligence: 0.95, Noise: 0.05},
@@ -64,7 +60,6 @@ func Profiles() []Profile {
 	}
 }
 
-// Compare roda cada estrategia com cada aluno virtual, com a mesma semente (mesmo acaso de partida).
 func Compare(cfg Config, scheds []srs.Scheduler) []Result {
 	var out []Result
 	for _, p := range Profiles() {
