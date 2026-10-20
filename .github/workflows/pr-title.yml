@@ -1,4 +1,4 @@
-# O merge e por squash: o TITULO da PR vira a mensagem do commit na develop e e o que o release-please le.
+# O merge e por squash: o TITULO da PR vira a mensagem do commit na develop e fica no historico da develop (o bump de versao nao le o titulo).
 # Por isso o titulo precisa ser Conventional Commits. Check obrigatorio: "pr-title".
 name: pr-title
 on:

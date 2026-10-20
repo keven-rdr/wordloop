@@ -21,7 +21,7 @@ Os 27 primeiros foram gerados por `gen_adrs.py` em 2026-10-06 (**não rode de no
 | 0015 | [i18n por namespace carregado sob demanda, com tipos gerados](0015-i18n-por-namespace-carregado-sob-demanda-com.md) | `fase-3/03-arquitetura-features.md` |
 | 0016 | [PWA offline com fila idempotente e pacote de estudo local](0016-pwa-offline-com-fila-idempotente-e-pacote-de.md) | `fase-3/03-arquitetura-features.md` |
 | 0017 | [Monorepo público; `develop` e `main`; merge por squash](0017-monorepo-publico-develop-e-main-merge-por-squash.md) | `fase-4/04-engenharia.md` |
-| 0018 | [release-please por componente; build uma vez e promoção por re-etiqueta](0018-release-please-por-componente-build-uma-vez-e.md) | `fase-4/04-engenharia.md` |
+| 0018 | [release-please por componente; build uma vez e promoção por re-etiqueta](0018-release-please-por-componente-build-uma-vez-e.md) (versionamento substituído pelo 0030) | `fase-4/04-engenharia.md` |
 | 0019 | [Deploy por SSH com comando forçado e GitHub Environments](0019-deploy-por-ssh-com-comando-forcado-e-github.md) | `fase-4/04-engenharia.md; fase-4/deploy/deploy-skeleton.md` |
 | 0020 | [Docker Compose em uma VM Contabo: três projetos, um Postgres, Caddy](0020-docker-compose-em-uma-vm-contabo-tres-projetos-um.md) | `fase-4/deploy/deploy-skeleton.md` |
 | 0021 | [SonarQube Cloud Free com `develop` como branch principal](0021-sonarqube-cloud-free-com-develop-como-branch.md) | `fase-4/04-engenharia.md` |
@@ -33,3 +33,4 @@ Os 27 primeiros foram gerados por `gen_adrs.py` em 2026-10-06 (**não rode de no
 | 0027 | [TypeScript 7 nativo (`tsc`) com alias TS 6 para as ferramentas](0027-typescript-7-nativo-tsc-com-alias-ts-6-para-as.md) | `sprint-0a/spike-report.md` |
 | 0028 | [Contas próprias sem senha: passkeys, depois Google e GitHub vinculados](0028-contas-proprias-sem-senha-passkeys-depois-google-github.md) (revisada em parte pelo 0029) | `features/2026-10-14-contas-proprias.md` |
 | 0029 | [Senha guardada só como hash Argon2id, ao lado da passkey](0029-senha-como-hash-argon2id-ao-lado-da-passkey.md) | `features/2026-10-16-senha-do-admin.md` |
+| 0030 | [Versão automática por componente, com bump de patch gravado na `develop`](0030-versao-automatica-por-componente-com-bump-na-develop.md) | `ci-cd.md` |

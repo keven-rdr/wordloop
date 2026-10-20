@@ -2,9 +2,16 @@
 
 > Estado em 07/10/2026, na branch `feat/esqueleto-sprint-1`. O que já roda, o que é opcional e o que depende da VM e das contas. O desenho completo está em `docs/fase-4/04-engenharia.md`.
 
-## Versão do app (automática)
+## Versão do app (automática, por componente)
 
-A versão é `MAJOR.MINOR` do arquivo `VERSION` (editado à mão, hoje `1.0`) + o número de merges na `develop` (`git rev-list --count --first-parent`), calculada por `scripts/app-version.sh` no job da imagem de `api-ci` e `web-ci`. Cada merge soma 1 sozinho (ex.: `v1.0.162`), sem commit de bump e sem push direto na `develop`; o mesmo commit tem a mesma versão em dev, tst e prd. O web mostra a versão (e a da API só quando difere, pois a imagem de um componente só é refeita quando ele muda) na tela **Configurações**. Para subir minor/major, edite `VERSION`. O release-please segue desligado e não define a versão exibida.
+Cada componente tem a sua contagem de versão, em `api/VERSION` e `web/VERSION` (`MAJOR.MINOR.PATCH`, hoje `1.0.0`). A cada merge na `develop` que muda o componente, o job `image` de `api-ci` e `web-ci` roda `scripts/bump-version.sh`: sobe o **patch** (+1), grava o número num commit `chore(release): atualizar versao de <componente> para X.Y.Z [skip ci]` na `develop` e usa esse número como `VERSION` da imagem. Merge que não toca o componente não sobe a versão dele. O app mostra as duas na tela **Configurações** (`v1.0.12 · API v1.0.31`), então dá para ver quando um ambiente está para trás. Para subir minor ou major, edite o arquivo `VERSION` na própria PR.
+
+O commit de bump sai de um worktree separado (a imagem é construída do commit do merge) e repete até 5 vezes se outro bump gravar antes. O release-please foi removido: a versão não vem mais de tags.
+
+**Configuração (uma vez), porque o bump comita direto na `develop`, que exige PR:**
+1. Crie um *fine-grained personal access token* (seu usuário, só este repositório, permissão **Contents: Read and write**) e guarde como secret `RELEASE_PUSH_TOKEN` (Settings → Secrets and variables → Actions → Secrets).
+2. No ruleset `develop` (Settings → Rules → Rulesets), em **Bypass list** adicione o papel **Repository admin** com modo *Always* (o `.github/rulesets/develop.json` já traz isso, para quem reimportar).
+3. Crie a variável de repositório `VERSION_BUMP_ENABLED=true`. Sem ela (ou sem o token) o CI não sobe versão: usa o número que estiver no arquivo e nada quebra.
 
 ## Workflows (`.github/workflows/`)
 
@@ -14,7 +21,6 @@ A versão é `MAJOR.MINOR` do arquivo `VERSION` (editado à mão, hoje `1.0`) + 
 | `web-ci` | PR e push em `develop` | `gen:api`, Biome, ESLint (StyleX), `tsc` 7, i18n, estrutura, Vitest com cobertura, **Playwright**. No push com mudança no web: imagem `wordloop-web:sha-<commit>` (amd64 + arm64). Sonar opcional | `web-gate` |
 | `pr-title` | PR | Título em Conventional Commits (o merge é por squash: o título vira o commit) | `pr-title` |
 | `security` | PR, push e toda segunda | CodeQL (Go e TypeScript), gitleaks no histórico, revisão de dependências novas (só PR) | não |
-| `release` | push em `develop` | release-please por componente (`api-vX`, `web-vX`). **Desligado** até `RELEASE_PLEASE_ENABLED=true` | não |
 
 Cada workflow filtra por caminho **dentro** dele; o job `*-gate` sempre roda e passa quando tudo foi OK **ou pulado**. Por isso a PR que só mexe em `docs/` não fica presa esperando check. Todas as actions de terceiros estão **fixadas por SHA** (conferido contra a tag).
 
@@ -24,7 +30,6 @@ Cada workflow filtra por caminho **dentro** dele; o job `*-gate` sempre roda e p
 |---|---|---|
 | **Importar o ruleset** `.github/rulesets/develop.json` | Settings → Rules → Rulesets → New ruleset → *Import a ruleset* | Exige PR, merge por **squash**, `api-gate`, `web-gate` e `pr-title`; bloqueia exclusão e *force push* da `develop`. **Importe só depois do primeiro CI verde**, para conferir que os nomes dos checks batem: um nome errado como obrigatório trava toda PR |
 | Permitir só squash e apagar branch ao mergear | Settings → General → Pull Requests | Mesma regra do ruleset |
-| Permitir que Actions criem PRs | Settings → Actions → General → *Allow GitHub Actions to create and approve pull requests* | Necessário ao release-please |
 | Instalar o app **Renovate** no repositório, **depois de mergear a PR do esqueleto** | github.com/apps/renovate → Install → *Select repositories* → `wordloop` | Lê o `renovate.json` **da branch padrão (`develop`)**. Instalado antes do merge, ele não acha a configuração e abre uma PR "Configure Renovate" com a configuração padrão dele |
 | Conferir que o *Dependency graph* está ligado (em repositório público costuma vir ligado) | Settings → Code security (pode aparecer como *Advanced Security*) | A revisão de dependências do workflow `security` usa |
 | **NÃO ligar o CodeQL *Default setup*** | Settings → Code security → Code scanning | O CodeQL já roda pelo workflow `security.yml` (*advanced setup*). Ligar o *default setup* **desativa esse workflow** e bloqueia os uploads dele ([documentação](https://docs.github.com/en/code-security/code-scanning/enabling-code-scanning/configuring-default-setup-for-code-scanning)). Os alertas aparecem sozinhos em Security → Code scanning |
@@ -42,7 +47,7 @@ O gate é o padrão "Sonar way" do plano gratuito, aplicado ao **código novo** 
 | Recurso | Como ligar |
 |---|---|
 | **Sonar** | Crie os projetos `keven-rdr_wordloop-api` e `keven-rdr_wordloop-web` no SonarQube Cloud (plano gratuito; `develop` como branch principal). No repositório: secrets `SONAR_TOKEN_API` e `SONAR_TOKEN_WEB` e variável `SONAR_ENABLED=true`. Desative a *Automatic Analysis* no Sonar (a análise vem do CI, com cobertura) |
-| **release-please** | Variável de repositório `RELEASE_PLEASE_ENABLED=true` (depois das permissões acima). Ele abre a PR de release a partir dos commits convencionais |
+| **Bump de versão** | Secret `RELEASE_PUSH_TOKEN`, bypass do ruleset e variável `VERSION_BUMP_ENABLED=true` (ver a seção *Versão do app* acima) |
 
 ## Imagens
 
@@ -69,7 +74,7 @@ O gate é o padrão "Sonar way" do plano gratuito, aplicado ao **código novo** 
 
 ## Ainda não existe
 
-Deploy em prd, promoção por re-etiqueta com release-please, Keycloak fora do dev, backup. Os esqueletos estão em `docs/fase-4/`.
+Deploy em prd, promoção por re-etiqueta da imagem, Keycloak fora do dev, backup. Os esqueletos estão em `docs/fase-4/`.
 
 ## Hooks locais (lefthook + commitlint)
 

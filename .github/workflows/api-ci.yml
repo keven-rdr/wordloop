@@ -24,8 +24,6 @@ jobs:
             api:
               - 'api/**'
               - '.github/workflows/api-ci.yml'
-              - 'VERSION' # a base da versao muda: reconstroi
-              - 'scripts/app-version.sh'
 
   lint:
     needs: changes
@@ -124,12 +122,19 @@ jobs:
     if: github.event_name == 'push' && needs.changes.outputs.run == 'true'
     needs: [changes, lint, test-unit, vuln]
     runs-on: ubuntu-latest
-    permissions: { contents: read, packages: write }
+    permissions: { contents: write, packages: write } # contents: write grava o bump de versao
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0
+          # O bump comita direto na develop (protegida): precisa de um token que o ruleset deixe passar (docs/ci-cd.md).
+          token: "${{ secrets.RELEASE_PUSH_TOKEN || github.token }}"
       - id: v
-        run: echo "version=$(sh scripts/app-version.sh)" >> "$GITHUB_OUTPUT"
+        env: { BUMP: "${{ vars.VERSION_BUMP_ENABLED }}" }
+        run: |
+          # Com o bump ligado, cada merge que muda o componente sobe o patch e grava api/VERSION na develop.
+          if [ "$BUMP" = "true" ]; then v=$(sh scripts/bump-version.sh api); else v=$(tr -d '[:space:]' < api/VERSION); fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
