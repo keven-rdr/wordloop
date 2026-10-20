@@ -1,6 +1,6 @@
 # ADR 0018 — release-please por componente; build uma vez e promoção por re-etiqueta
 
-**Status:** aceita (2026-10-06)
+**Status:** aceita (2026-10-06); o versionamento foi substituído pelo [ADR 0030](0030-versao-automatica-por-componente-com-bump-na-develop.md) (2026-10-20). Segue valendo: imagem `sha-<commit>` construída uma vez e promovida por re-etiqueta.
 
 ## Contexto
 O que foi testado em tst deve ser o que roda em prd; sem commit de bot em laço.

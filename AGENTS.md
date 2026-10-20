@@ -46,6 +46,6 @@ O Compose de dev (Postgres, Mailpit, Keycloak) ainda **não existe**: entra junt
 
 1. Issue → documento vivo `docs/features/AAAA-MM-DD-slug.md` (requisitos confirmados **antes** de codar).
 2. Branch → implementação → `npm run check` → PR (template em `.github/`).
-3. CI (lint, testes, Sonar) → merge em `develop` → deploy automático em **tst** → release (PR do release-please) → **prd** com aprovação.
+3. CI (lint, testes, Sonar) → merge em `develop` → deploy automático em **tst** → versão automática por componente → **prd** com aprovação.
 
 Skill de apoio: `/wl-flow <issue>`.
