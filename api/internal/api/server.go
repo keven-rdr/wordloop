@@ -25,7 +25,9 @@ type Server struct {
 	// Identity e o modulo de login (BFF); nulo = login indisponivel.
 	Identity Identity
 	// Catalog e o modulo de conteudo (somente leitura); nulo = catalogo indisponivel.
-	Catalog     Catalog
+	Catalog Catalog
+	// Learning e o modulo de estudo; nulo = estudo indisponivel.
+	Learning    Learning
 	AuthLimiter *ratelimit.Limiter
 }
 
