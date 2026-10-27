@@ -1,5 +1,5 @@
 # CI do web: lint, testes, E2E, Sonar (opcional) e imagem. O check obrigatorio e o job "web-gate".
-# Lighthouse entra depois. Sonar: variavel SONAR_ENABLED=true + secret SONAR_TOKEN_WEB; SONAR_REQUIRED=true faz o web-gate FALHAR sem o quality gate aprovado. Deploy em tst: job deploy-tst (deploy.yml), automatico a cada push na develop.
+# Lighthouse: job proprio, bloqueia o web-gate. Sonar: variavel SONAR_ENABLED=true + secret SONAR_TOKEN_WEB; SONAR_REQUIRED=true faz o web-gate FALHAR sem o quality gate aprovado. Deploy em tst: job deploy-tst (deploy.yml), automatico a cada push na develop.
 name: web-ci
 on:
   pull_request: { branches: [develop] }
@@ -75,6 +75,30 @@ jobs:
         if: failure()
         with: { name: playwright-report, path: web/playwright-report }
 
+  lighthouse: # qualidade medida no navegador (mobile): acessibilidade, boas praticas e SEO >= 90; desempenho >= 60 (runner lento)
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version-file: web/.nvmrc, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npm run gen
+      - run: npm run build
+      - name: Lighthouse nas telas publicas (login e cadastro)
+        run: |
+          npx vite preview --port 4173 --strictPort > preview.log 2>&1 &
+          for i in $(seq 1 30); do curl -fs -o /dev/null http://localhost:4173/login && break; sleep 1; done
+          for page in login signup; do
+            npx --yes lighthouse@13.5.0 "http://localhost:4173/$page" --output=json --output-path="lh-$page.json"               --chrome-flags="--headless=new --no-sandbox" --quiet
+          done
+          node scripts/check-lighthouse.mjs lh-login.json lh-signup.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with: { name: lighthouse, path: "web/lh-*.json" }
+
   sonar: # opcional: so roda com SONAR_ENABLED=true (variavel do repositorio) e SONAR_TOKEN_WEB (secret)
     needs: [changes, test-unit]
     if: vars.SONAR_ENABLED == 'true' && needs.changes.outputs.run == 'true'
@@ -144,7 +168,7 @@ jobs:
   web-gate:
     name: web-gate
     if: always()
-    needs: [changes, lint, test-unit, e2e, sonar]
+    needs: [changes, lint, test-unit, e2e, lighthouse, sonar]
     runs-on: ubuntu-latest
     steps:
       - run: |
