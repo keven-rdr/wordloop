@@ -20,7 +20,7 @@ O commit de bump sai de um worktree separado (a imagem é construída do commit 
 | `api-ci` | PR e push em `develop` | `go generate`, `gofmt`, `go vet`, `golangci-lint` v2.14, `check-structure`, `go-arch-lint`, testes com `-race` e cobertura, `govulncheck`. No push com mudança na API: **imagem** `ghcr.io/<dono>/wordloop-api:sha-<commit>` (amd64 + arm64). Sonar opcional | `api-gate` |
 | `web-ci` | PR e push em `develop` | `gen:api`, Biome, ESLint (StyleX), `tsc` 7, i18n, estrutura, Vitest com cobertura, **Playwright**. No push com mudança no web: imagem `wordloop-web:sha-<commit>` (amd64 + arm64). Sonar opcional | `web-gate` |
 | `pr-title` | PR | Título em Conventional Commits (o merge é por squash: o título vira o commit) | `pr-title` |
-| `security` | PR, push e toda segunda | CodeQL (Go e TypeScript), gitleaks no histórico, revisão de dependências novas (só PR) | não |
+| `security` | PR, push e toda segunda | CodeQL (Go e TypeScript), gitleaks no histórico, revisão de dependências novas (só PR), **Trivy** nas imagens | não |
 
 Cada workflow filtra por caminho **dentro** dele; o job `*-gate` sempre roda e passa quando tudo foi OK **ou pulado**. Por isso a PR que só mexe em `docs/` não fica presa esperando check. Todas as actions de terceiros estão **fixadas por SHA** (conferido contra a tag).
 
@@ -48,6 +48,14 @@ O gate é o padrão "Sonar way" do plano gratuito, aplicado ao **código novo** 
 |---|---|
 | **Sonar** | Crie os projetos `keven-rdr_wordloop-api` e `keven-rdr_wordloop-web` no SonarQube Cloud (plano gratuito; `develop` como branch principal). No repositório: secrets `SONAR_TOKEN_API` e `SONAR_TOKEN_WEB` e variável `SONAR_ENABLED=true`. Desative a *Automatic Analysis* no Sonar (a análise vem do CI, com cobertura) |
 | **Bump de versão** | Secret `RELEASE_PUSH_TOKEN`, bypass do ruleset e variável `VERSION_BUMP_ENABLED=true` (ver a seção *Versão do app* acima) |
+
+### Trivy (`security`)
+
+Constrói as duas imagens (a partir do cache do job `image`) e escaneia com o Trivy: **reprova com CVE alta ou crítica que já tenha correção** (`ignore-unfixed`). Roda em PR/push quando algo que entra nas imagens muda e **toda segunda-feira** (CVE nova aparece sem commit novo). Não é check obrigatório do ruleset: aparece vermelho na PR e em *Security*; para bloquear o merge, adicione o job `trivy` aos checks obrigatórios.
+
+Exceções ficam em `.trivyignore`, **cada uma com validade** (`exp:`); vencida, o Trivy volta a reprovar. Para escanear local: `docker run --rm aquasec/trivy:0.70.0 image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed <imagem>`.
+
+Achado que originou isto (27/10/2026): a imagem do web usava a tag `nginx-unprivileged:1.28-alpine`, **abandonada** desde fev/2026, com 72 CVEs altas/críticas já corrigidas no Alpine. Passou para `1.30-alpine` (a linha estável mantida): restam 3 (`curl`, `libcurl`, `brotli-libs`, da imagem base, que o nginx não usa), com exceção até 27/11/2026. A API (`distroless`) está limpa.
 
 ## Imagens
 

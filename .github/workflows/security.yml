@@ -1,4 +1,4 @@
-# Seguranca: CodeQL (Go e TypeScript), segredos no historico (gitleaks) e dependencias novas (so em PR).
+# Seguranca: CodeQL (Go e TypeScript), segredos no historico (gitleaks), dependencias novas (so em PR) e Trivy nas imagens.
 # Roda em PR, em push na develop e toda segunda-feira. NAO e check obrigatorio (alertas aparecem em Security).
 name: security
 on:
@@ -48,3 +48,49 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         with: { fail-on-severity: high }
+
+  changes: # as imagens so sao construidas e escaneadas se algo que entra nelas mudou (e sempre no agendamento semanal)
+    runs-on: ubuntu-latest
+    outputs: { images: "${{ github.event_name == 'schedule' && 'true' || steps.f.outputs.images }}" }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: github.event_name != 'schedule'
+      - id: f
+        if: github.event_name != 'schedule'
+        uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
+        with:
+          filters: |
+            images:
+              - 'api/**'
+              - 'web/**'
+              - '.trivyignore'
+              - '.github/workflows/security.yml'
+
+  trivy: # varre as imagens que vao para o ar: reprova com CVE ALTA ou CRITICA que ja tem correcao (excecoes em .trivyignore, com validade)
+    needs: changes
+    if: needs.changes.outputs.images == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: api, context: api, file: api/Dockerfile }
+          - { name: web, context: ".", file: web/Dockerfile }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          load: true # fica so no runner; nada e publicado aqui
+          tags: wordloop-${{ matrix.name }}:scan
+          cache-from: type=gha,scope=${{ matrix.name }} # o mesmo cache do job image (api-ci e web-ci)
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: wordloop-${{ matrix.name }}:scan
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          trivyignores: .trivyignore

@@ -1,0 +1,5 @@
+# Excecoes do Trivy, cada uma com validade (exp:). Venceu, o Trivy volta a reprovar e alguem decide de novo.
+# Imagem do web (nginx 1.30-alpine): curl, libcurl e brotli-libs vem da imagem base e o nginx nao os usa em
+# execucao. A correcao ja existe no Alpine (curl 8.23.0-r0, brotli 1.2.1-r0); a imagem ainda nao foi republicada.
+CVE-2026-92392 exp:2026-11-27
+CVE-2026-111497 exp:2026-11-27

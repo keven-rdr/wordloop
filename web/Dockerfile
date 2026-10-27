@@ -13,7 +13,9 @@ COPY web web
 RUN cd web && npm run gen && VERSION=$VERSION COMMIT=$COMMIT npm run build
 
 # O estagio final so COPIA arquivos estaticos: o mesmo build serve amd64 e arm64.
-FROM nginxinc/nginx-unprivileged:1.28-alpine
+# 1.30 e a linha estavel mantida do nginx; a tag 1.28-alpine foi abandonada (ultima imagem de fev/2026, 72 CVEs altas
+# ou criticas ja corrigidas no Alpine). Atualize a linha quando o nginx publicar a proxima estavel.
+FROM nginxinc/nginx-unprivileged:1.30-alpine
 COPY web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /repo/web/dist /usr/share/nginx/html
 EXPOSE 8080
