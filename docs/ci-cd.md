@@ -18,7 +18,7 @@ O commit de bump sai de um worktree separado (a imagem é construída do commit 
 | Workflow | Quando | O que faz | Check obrigatório |
 |---|---|---|---|
 | `api-ci` | PR e push em `develop` | `go generate`, `gofmt`, `go vet`, `golangci-lint` v2.14, `check-structure`, `go-arch-lint`, testes com `-race` e cobertura, `govulncheck`. No push com mudança na API: **imagem** `ghcr.io/<dono>/wordloop-api:sha-<commit>` (amd64 + arm64). Sonar opcional | `api-gate` |
-| `web-ci` | PR e push em `develop` | `gen:api`, Biome, ESLint (StyleX), `tsc` 7, i18n, estrutura, Vitest com cobertura, **Playwright**. No push com mudança no web: imagem `wordloop-web:sha-<commit>` (amd64 + arm64). Sonar opcional | `web-gate` |
+| `web-ci` | PR e push em `develop` | `gen:api`, Biome, ESLint (StyleX), `tsc` 7, i18n, estrutura, Vitest com cobertura, **Playwright**, **Lighthouse** (mobile, nas telas públicas de login e cadastro). No push com mudança no web: imagem `wordloop-web:sha-<commit>` (amd64 + arm64). Sonar opcional | `web-gate` |
 | `pr-title` | PR | Título em Conventional Commits (o merge é por squash: o título vira o commit) | `pr-title` |
 | `security` | PR, push e toda segunda | CodeQL (Go e TypeScript), gitleaks no histórico, revisão de dependências novas (só PR) | não |
 
@@ -48,6 +48,12 @@ O gate é o padrão "Sonar way" do plano gratuito, aplicado ao **código novo** 
 |---|---|
 | **Sonar** | Crie os projetos `keven-rdr_wordloop-api` e `keven-rdr_wordloop-web` no SonarQube Cloud (plano gratuito; `develop` como branch principal). No repositório: secrets `SONAR_TOKEN_API` e `SONAR_TOKEN_WEB` e variável `SONAR_ENABLED=true`. Desative a *Automatic Analysis* no Sonar (a análise vem do CI, com cobertura) |
 | **Bump de versão** | Secret `RELEASE_PUSH_TOKEN`, bypass do ruleset e variável `VERSION_BUMP_ENABLED=true` (ver a seção *Versão do app* acima) |
+
+### Lighthouse (`web-ci`)
+
+Job próprio, **bloqueia o `web-gate`**: sobe o build com `vite preview` e mede `/login` e `/signup` no Chrome do runner (mobile, o padrão do Lighthouse 13). Limites (`web/scripts/check-lighthouse.mjs`): acessibilidade, boas práticas e SEO **≥ 90**; desempenho **≥ 60** (o runner é mais lento que uma máquina de dev). Medido em 26/10/2026: desempenho 81–83, acessibilidade 100, boas práticas 96, SEO 100. O JSON de cada medição fica como artefato do job. Para medir local: `cd web && npm run build && npx vite preview --port 4173`, e em outro terminal `npx lighthouse@13.5.0 http://localhost:4173/login --view`.
+
+Achado em aberto: **CLS 0,39 na tela de login** (a página "pula" enquanto carrega, provavelmente fonte e painel da marca). Não derruba o limite de desempenho, mas está acima do recomendado (0,1) e merece uma correção própria.
 
 ## Imagens
 
