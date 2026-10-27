@@ -72,6 +72,14 @@ O gate é o padrão "Sonar way" do plano gratuito, aplicado ao **código novo** 
 - **Concorrência:** os dois CIs podem chamar o deploy ao mesmo tempo; o `deploy.yml` os serializa. Um push na `develop` nunca cancela o CI (e o deploy) em andamento; só PR cancela execução antiga.
 - Preparo único da VM: `deploy/scripts/bootstrap-vm.sh`. Arquivos de tst em `deploy/tst/` (`versions.env` real fica só na VM).
 
+### Rollback (testado em 26/10/2026)
+
+Como fazer: *Actions → deploy → Run workflow*, `action = rollback`. O `deploy.sh` volta às tags de `versions.env.prev`, que guarda **a versão imediatamente anterior** (um passo só; cada deploy sobrescreve). Para avançar de novo, rode o mesmo workflow com `action = deploy` e as tags desejadas (`sha-<commit>`), ou deixe o próximo push na `develop` fazer isso.
+
+O que se garante: troca só as imagens e **nunca desfaz migração** (expand/contract: a versão anterior continua funcionando com o banco já migrado). O rollback não roda `api migrate`.
+
+Evidência: no tst real, pelo mesmo caminho do CI (chave de deploy com comando forçado), o rollback levou **20 s** (API de `2fdaa31` para `beeb14b`, `/health/ready` 200, web intacto) e o avanço de volta, **9 s**; o smoke test passou na versão restaurada.
+
 ## Ainda não existe
 
 Deploy em prd, promoção por re-etiqueta da imagem, Keycloak fora do dev, backup. Os esqueletos estão em `docs/fase-4/`.
