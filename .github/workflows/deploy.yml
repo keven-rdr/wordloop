@@ -102,3 +102,28 @@ jobs:
             echo "::error title=deploy falhou (codigo $codigo)::$(printf '%s' "$saida" | tail -n 8 | tr '\n' ' ')"
           fi
           exit "$codigo"
+      # Smoke test: o deploy so conta como feito se o que foi implantado esta MESMO no ar e respondendo.
+      - name: Smoke test em tst
+        env:
+          URL: https://tst.wordloop.com.br
+          API_TAG: ${{ inputs.api_tag || '-' }}
+        run: |
+          fail() { echo "::error title=smoke test falhou::$1"; exit 1; }
+          get() { curl -fsS --max-time 15 "$@"; }
+          ok=0
+          for i in $(seq 1 24); do # o contêiner da API reinicia no deploy: espera ate 2 min
+            [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$URL/api/v1/health/ready")" = "200" ] && { ok=1; break; }
+            sleep 5
+          done
+          [ "$ok" = 1 ] || fail "GET /api/v1/health/ready nao respondeu 200 em 2 min"
+          version="$(get "$URL/api/v1/version")" || fail "GET /api/v1/version falhou"
+          echo "no ar: $version"
+          case "$API_TAG" in
+            sha-*) # este deploy trocou a API: o commit servido tem que ser o da tag
+              want="${API_TAG#sha-}"; got="$(printf '%s' "$version" | grep -o '"commit":"[^"]*"' | cut -d'"' -f4)"
+              [ -n "$got" ] || fail "nao consegui ler o commit em /api/v1/version: $version"
+              [ "$got" = "$want" ] || fail "a API serve o commit $got, esperava $want" ;;
+          esac
+          get "$URL/" | grep -q 'id="root"' || fail "GET / nao devolveu a pagina do app (#root)"
+          for path in /favicon.svg /api/v1/docs/; do get -o /dev/null "$URL$path" || fail "GET $path falhou"; done
+          echo "smoke test ok"
