@@ -225,7 +225,7 @@ func TestProductiveCardAppearsAfterTheReceptiveGetsStrong(t *testing.T) {
 	// as variantes lacuna e imagem tambem entram no log (o CHECK de exercise_type foi alargado na 00014)
 	for i, ex := range []domain.Exercise{domain.Cloze, domain.Image} {
 		a := domain.Answer{ID: uuid.New(), CardID: prod.ID, Exercise: ex, Text: "house",
-			ShownAt: now.Add(-20 * time.Second), AnsweredAt: now.Add(time.Duration(-10+i) * time.Second)}
+			ShownAt: now.Add(-20 * time.Second), AnsweredAt: now.Add(time.Duration(-10+i) * time.Second), Difficulty: srs.DifficultyMedium}
 		res, err := f.submit.Run(ctx, []domain.Answer{a})
 		if err != nil || res[0].Status != domain.Applied || !res[0].Correct {
 			t.Fatalf("%s: %+v %v", ex, res, err)
