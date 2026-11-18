@@ -1,5 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { type Call, json, me, renderApp, stubApi, version } from '../../../test-support';
+import { setStoreForTests } from '../offline/store';
 
 // Cartões e atalhos compartilhados pelos testes da sessão de estudo.
 export const house = {
@@ -43,6 +44,7 @@ export const accepted = (req: Request) =>
     );
 
 export function api(cards: unknown[], reviews: (req: Request) => Response | Promise<Response> = accepted) {
+  setStoreForTests(); // cada teste começa com a fila do aparelho vazia
   return stubApi({
     'GET /version': () => json(version),
     'GET /me': () => json(me),

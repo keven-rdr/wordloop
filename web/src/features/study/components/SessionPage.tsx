@@ -1,31 +1,47 @@
 import * as stylex from '@stylexjs/stylex';
-import { useQueryClient } from '@tanstack/react-query';
 import { Navigate } from '@tanstack/react-router';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { StudyPack } from '../../../api/generated/types.gen';
-import { sessionReducer, startSession } from '../hooks/sessionReducer';
-import { packKey } from '../hooks/summary';
+import { sessionReducer } from '../hooks/sessionReducer';
 import { type Destination, useFinishSession } from '../hooks/useFinishSession';
+import { useOfflineQueue } from '../hooks/useOfflineQueue';
+import { useResume } from '../hooks/useResume';
+import { saveReviews } from '../offline/queue';
+import { type Resume, resumeSession } from '../offline/resume';
 import { ExerciseScreen } from './ExerciseScreen';
 import { ExitDialog } from './ExitDialog';
+import { OfflineBanner } from './OfflineBanner';
 import { SendingPanel } from './SendingPanel';
 import { SessionTop } from './SessionTop';
 import { s } from './styles';
 
-function ActiveSession({ pack }: Readonly<{ pack: StudyPack }>) {
-  const [state, dispatch] = useReducer(sessionReducer, undefined, () =>
-    startSession(pack.session_id, pack.cards, Date.now()),
-  );
+const FLUSH_EVERY = 10;
+
+function ActiveSession({ resume }: Readonly<{ resume: Resume }>) {
+  const { pack } = resume;
+  const [state, dispatch] = useReducer(sessionReducer, undefined, () => resumeSession(resume, Date.now()));
   const [leaving, setLeaving] = useState(false);
   const destination = useRef<Destination | undefined>(undefined);
-  const { finish, sending, failed } = useFinishSession(pack);
+  const { online, pending, flush, refresh } = useOfflineQueue();
+  const { finish, sending } = useFinishSession(pack, flush);
   const card = state.queue[0];
 
   const end = (to: Destination) => {
     destination.current = to;
     void finish(state.reviews, to);
   };
+
+  // Cada resposta vai para o aparelho na hora (nada se perde sem rede); a cada 10, tenta enviar.
+  const answered = state.reviews.length;
+  useEffect(() => {
+    if (answered === 0) return;
+    void saveReviews(pack.session_id, state.reviews.slice(-1))
+      .then(async () => {
+        if (answered % FLUSH_EVERY === 0) await flush();
+        else await refresh();
+      })
+      .catch(() => undefined);
+  }, [answered, state.reviews, pack.session_id, flush, refresh]);
 
   useEffect(() => {
     if (!card && !destination.current) end('summary');
@@ -37,18 +53,19 @@ function ActiveSession({ pack }: Readonly<{ pack: StudyPack }>) {
     return () => window.removeEventListener('keydown', onEscape);
   }, []);
 
-  if (!card || sending || failed) {
+  if (!card || sending) {
     return (
       <div {...stylex.props(s.screen)}>
-        <SendingPanel failed={failed} onRetry={() => end(destination.current ?? 'summary')} />
+        <SendingPanel />
       </div>
     );
   }
   return (
     <div {...stylex.props(s.screen)}>
-      <SessionTop done={state.reviews.length} left={state.queue.length} onClose={() => setLeaving(true)} />
+      <SessionTop done={answered} left={state.queue.length} onClose={() => setLeaving(true)} />
+      <OfflineBanner online={online} pending={pending} />
       <ExerciseScreen
-        key={`${card.id}-${state.reviews.length}`}
+        key={`${card.id}-${answered}`}
         card={card}
         checked={state.checked}
         hintUsed={state.hintUsed}
@@ -61,11 +78,11 @@ function ActiveSession({ pack }: Readonly<{ pack: StudyPack }>) {
   );
 }
 
-// O pacote da sessão vive no cache do app: sem ele (página recarregada), volta para o plano.
+// A sessão vem da memória do app ou do aparelho (página recarregada): sem nenhuma das duas, volta para o plano.
 export function SessionPage({ sessionId }: Readonly<{ sessionId: string }>) {
   const { ready } = useTranslation('study');
-  const pack = useQueryClient().getQueryData<StudyPack>(packKey(sessionId));
-  if (!pack) return <Navigate to="/study" replace />;
-  if (!ready) return <div aria-busy="true" />;
-  return <ActiveSession pack={pack} />;
+  const resume = useResume(sessionId);
+  if (resume === 'missing') return <Navigate to="/study" replace />;
+  if (!ready || resume === 'loading') return <div aria-busy="true" />;
+  return <ActiveSession resume={resume} />;
 }

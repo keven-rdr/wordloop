@@ -159,3 +159,34 @@ test('exercício de imagem → palavra: só a imagem como pergunta e dica da 1ª
   await expect(page.getByText('Sessão concluída')).toBeVisible();
   expect(sent[0]?.reviews[0]).toMatchObject({ exercise: 'image', hint_used: true, difficulty: 'hard' });
 });
+
+test('sem conexão: a sessão continua, termina com resumo provisório e reenvia ao voltar', async ({ page, context }) => {
+  const sent = await mockApi(page, [choose]);
+  let down = false;
+  // Registrada depois, vale primeiro: sem rede, o envio de respostas é interrompido; com rede, cai no mock acima.
+  await page.route('**/api/v1/study/reviews', (route) =>
+    down ? route.abort('internetdisconnected') : route.fallback(),
+  );
+  await page.goto('/study');
+  await page.getByRole('button', { name: 'Começar' }).click();
+  await expect(page.getByRole('heading', { name: 'house' })).toBeVisible();
+
+  down = true;
+  await context.setOffline(true);
+  await expect(page.getByText('Sem conexão. Suas respostas ficam salvas e são enviadas depois.')).toBeVisible();
+  await page.getByRole('button', { name: /casa/ }).click();
+  await page.getByRole('button', { name: 'Verificar' }).click();
+  await page.getByRole('button', { name: 'Médio' }).click();
+
+  await expect(page.getByText('Sessão concluída')).toBeVisible();
+  await expect(page.getByText('1 resposta será confirmada quando a conexão voltar.')).toBeVisible();
+  await page.screenshot({ path: 'test-results/study-offline.png' });
+  expect(sent).toHaveLength(0);
+
+  down = false;
+  await context.setOffline(false);
+  await page.getByRole('link', { name: 'Estudar mais' }).click();
+  await expect.poll(() => sent.length).toBe(1);
+  expect(sent[0]?.reviews[0]).toMatchObject({ card_id: 'c1', difficulty: 'medium' });
+  await expect(page.getByText(/aguardando envio/)).toHaveCount(0);
+});

@@ -101,4 +101,17 @@ export const p = stylex.create({
   statLabel: { color: color.textMuted, fontSize: '0.9rem', textAlign: 'center' },
   gain: { margin: 0, fontSize: '1.25rem', fontWeight: 800 },
   error: { margin: 0, color: color.danger, fontWeight: 600 },
+  banner: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: space.xs,
+    width: '100%',
+    maxWidth: '40rem',
+    marginInline: 'auto',
+    padding: space.sm,
+    borderRadius: radius.md,
+    backgroundColor: color.surface,
+    boxSizing: 'border-box',
+  },
+  bannerText: { margin: 0, color: color.textMuted, fontSize: '0.9rem', textAlign: 'center' },
 });
