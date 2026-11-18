@@ -1,0 +1,70 @@
+{
+  "title": "Study",
+  "lead": "How long do you want to study today?",
+  "minutes_one": "{{count}} minute",
+  "minutes_other": "{{count}} minutes",
+  "plan": {
+    "start": "Start",
+    "loading": "Building your session…",
+    "failed": "I couldn't build the session right now. Try again.",
+    "empty": "There is nothing to study right now. Come back later."
+  },
+  "session": {
+    "close": "Leave the session",
+    "progress": "Session progress"
+  },
+  "exit": {
+    "title": "Leave the session?",
+    "text": "What you have already answered is saved.",
+    "stay": "Keep studying",
+    "leave": "Leave"
+  },
+  "choose": {
+    "prompt": "What does it mean?",
+    "options": "Choose the translation"
+  },
+  "type": {
+    "prompt": "How do you say it in English?",
+    "label": "Your answer in English",
+    "hint": "Hint",
+    "hintShown": "Starts with “{{letter}}”",
+    "unknown": "I don't know"
+  },
+  "verify": "Check",
+  "next": "Continue",
+  "feedback": {
+    "right": "Correct!",
+    "typo": "Almost!",
+    "wrong": "Almost!",
+    "answer": "The answer is"
+  },
+  "difficulty": {
+    "question": "Was it easy, medium or hard to remember?",
+    "hard": "Hard",
+    "medium": "Medium",
+    "easy": "Easy",
+    "suggested": "suggested"
+  },
+  "errorKind": {
+    "question": "How did it go?",
+    "no_idea": "I had no idea",
+    "almost": "Almost remembered",
+    "slip": "It was a slip"
+  },
+  "sending": {
+    "busy": "Saving your answers…",
+    "failed": "I couldn't save your answers right now. They are still here.",
+    "retry": "Try again"
+  },
+  "summary": {
+    "title": "Session complete",
+    "gain_one": "+{{count}} known word",
+    "gain_other": "+{{count}} known words",
+    "noGain": "Nice! You reinforced what you already knew.",
+    "answered": "Answers",
+    "correct": "Correct",
+    "newWords": "New words",
+    "more": "Study more",
+    "home": "Back to home"
+  }
+}

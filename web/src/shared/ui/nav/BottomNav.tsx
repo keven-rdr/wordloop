@@ -1,11 +1,12 @@
 import * as stylex from '@stylexjs/stylex';
 import { Link, useRouterState } from '@tanstack/react-router';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { brand } from '../tokens/brand.stylex';
 import { color, radius, size, space } from '../tokens/color.stylex';
 import { bp } from '../tokens/media.stylex';
 import { Avatar } from './Avatar';
-import { CardsIcon, HomeIcon } from './Icons';
+import { CardsIcon, HomeIcon, StudyIcon } from './Icons';
 
 const styles = stylex.create({
   bar: {
@@ -74,50 +75,43 @@ type Props = Readonly<{ name: string; pictureUrl?: string }>;
 
 const inside = (path: string, base: string) => path === base || path.startsWith(`${base}/`);
 
+type TabProps = Readonly<{
+  to: '/' | '/settings' | '/study' | '/words';
+  active: boolean;
+  label: string;
+  children: ReactNode;
+}>;
+
+function NavTab({ to, active, label, children }: TabProps) {
+  return (
+    <li {...stylex.props(styles.cell)}>
+      <Link to={to} aria-current={active ? 'page' : undefined} {...stylex.props(styles.item, active && styles.active)}>
+        <span {...stylex.props(styles.slot)}>{children}</span>
+        {label}
+      </Link>
+    </li>
+  );
+}
+
 export function BottomNav({ name, pictureUrl }: Props) {
   const { t } = useTranslation('common');
   const path = useRouterState({ select: (state) => state.location.pathname });
   const onSettings = inside(path, '/settings') || inside(path, '/passkeys');
-  const onWords = inside(path, '/words');
   return (
     <nav aria-label={t('nav.label')} {...stylex.props(styles.bar)}>
       <ul {...stylex.props(styles.list)}>
-        <li {...stylex.props(styles.cell)}>
-          <Link
-            to="/settings"
-            aria-current={onSettings ? 'page' : undefined}
-            {...stylex.props(styles.item, onSettings && styles.active)}
-          >
-            <span {...stylex.props(styles.slot)}>
-              <Avatar name={name} pictureUrl={pictureUrl} />
-            </span>
-            {t('nav.profile')}
-          </Link>
-        </li>
-        <li {...stylex.props(styles.cell)}>
-          <Link
-            to="/"
-            aria-current={path === '/' ? 'page' : undefined}
-            {...stylex.props(styles.item, path === '/' && styles.active)}
-          >
-            <span {...stylex.props(styles.slot)}>
-              <HomeIcon {...stylex.props(styles.icon)} />
-            </span>
-            {t('nav.home')}
-          </Link>
-        </li>
-        <li {...stylex.props(styles.cell)}>
-          <Link
-            to="/words"
-            aria-current={onWords ? 'page' : undefined}
-            {...stylex.props(styles.item, onWords && styles.active)}
-          >
-            <span {...stylex.props(styles.slot)}>
-              <CardsIcon {...stylex.props(styles.icon)} />
-            </span>
-            {t('nav.words')}
-          </Link>
-        </li>
+        <NavTab to="/settings" active={onSettings} label={t('nav.profile')}>
+          <Avatar name={name} pictureUrl={pictureUrl} />
+        </NavTab>
+        <NavTab to="/" active={path === '/'} label={t('nav.home')}>
+          <HomeIcon {...stylex.props(styles.icon)} />
+        </NavTab>
+        <NavTab to="/study" active={inside(path, '/study')} label={t('nav.study')}>
+          <StudyIcon {...stylex.props(styles.icon)} />
+        </NavTab>
+        <NavTab to="/words" active={inside(path, '/words')} label={t('nav.words')}>
+          <CardsIcon {...stylex.props(styles.icon)} />
+        </NavTab>
       </ul>
     </nav>
   );
