@@ -245,7 +245,7 @@ func TestSubmitRequiresASessionAndAValidBatch(t *testing.T) {
 }
 
 func TestSubmitPropagatesRepositoryFailuresAndRollsBack(t *testing.T) {
-	for _, method := range []string{"LockCard", "ExpectedTerm", "Settings", "InsertReview", "SaveCard", "CardLog"} {
+	for _, method := range []string{"LockCard", "ExpectedTerm", "Settings", "InsertReview", "SaveCard", "BumpDay", "CardLog"} {
 		s := store("house", "cat")
 		c := newCard(s, domain.Productive)
 		// um cartao ja respondido, para a resposta antiga forcar o CardLog (replay)
@@ -256,7 +256,7 @@ func TestSubmitPropagatesRepositoryFailuresAndRollsBack(t *testing.T) {
 		if !errors.Is(err, learningtest.ErrBoom) {
 			t.Errorf("falha em %s deveria subir: %v", method, err)
 		}
-		if *s.Cards[c.ID] != before || len(s.Log) != 0 {
+		if *s.Cards[c.ID] != before || len(s.Log) != 0 || len(s.Days) != 0 {
 			t.Errorf("falha em %s: nada fica gravado", method)
 		}
 	}

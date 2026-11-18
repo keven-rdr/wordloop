@@ -27,7 +27,9 @@ type Server struct {
 	// Catalog e o modulo de conteudo (somente leitura); nulo = catalogo indisponivel.
 	Catalog Catalog
 	// Learning e o modulo de estudo; nulo = estudo indisponivel.
-	Learning    Learning
+	Learning Learning
+	// Progress e o modulo de progresso (painel e heatmap); nulo = progresso indisponivel.
+	Progress    Progress
 	AuthLimiter *ratelimit.Limiter
 }
 

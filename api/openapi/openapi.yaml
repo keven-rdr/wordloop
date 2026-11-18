@@ -12,6 +12,7 @@ tags:
   - name: identity
   - name: catalog
   - name: learning
+  - name: progress
 paths:
   /version:
     get:
@@ -473,6 +474,41 @@ paths:
               schema: { $ref: "#/components/schemas/ReviewBatchResult" }
         "400": { description: cabecalho de protecao ausente, lote vazio ou grande demais, ou corpo invalido }
         "401": { description: sem sessao valida }
+  /progress/dashboard:
+    get:
+      tags: [progress]
+      operationId: getDashboard
+      description: >
+        Painel de progresso da pessoa: sequencia de dias, acertos dos ultimos 7 dias, o que ja fez hoje, previsao
+        de revisoes dos proximos 7 dias, palavras conhecidas e as mais erradas do ultimo mes. O dia de estudo
+        segue o fuso e o corte de hora da pessoa; "estudou no dia" e ter respondido ao menos 1 vez.
+      parameters:
+        - { name: locale, in: query, description: "idioma da traducao das palavras", schema: { type: string, enum: [pt-BR, en-US], default: pt-BR } }
+      responses:
+        "200":
+          description: o painel
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Dashboard" }
+        "401": { description: sem sessao valida }
+  /progress/heatmap:
+    get:
+      tags: [progress]
+      operationId: getHeatmap
+      description: >
+        Dias em que a pessoa estudou, com respostas e acertos (dias sem estudo nao aparecem). Sem from e to, traz as
+        ultimas 12 semanas ate hoje. O intervalo vai ate 400 dias.
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: dias com estudo
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Heatmap" }
+        "400": { description: intervalo invalido (de depois de ate, ou maior que 400 dias) }
+        "401": { description: sem sessao valida }
 components:
   responses:
     TooManyRequests:
@@ -757,3 +793,51 @@ components:
         api: { type: string, example: "0.1.0" }
         commit: { type: string, example: "a1b2c3d" }
         env: { type: string, example: "tst" }
+    Dashboard:
+      type: object
+      required: [today, streak, studied_today, today_stats, forecast, known_words, most_missed]
+      properties:
+        today: { type: string, format: date, description: "dia de estudo de hoje (fuso e corte da pessoa)" }
+        streak: { type: integer, minimum: 0, description: "dias seguidos com estudo; se hoje ainda nao estudou, ontem nao quebra a sequencia" }
+        studied_today: { type: boolean }
+        accuracy_7d: { type: number, minimum: 0, maximum: 1, description: "acertos sobre respostas dos ultimos 7 dias; ausente se nao houve resposta" }
+        today_stats: { $ref: "#/components/schemas/DayStats" }
+        forecast: { type: array, description: "7 dias a partir de hoje; atrasadas contam em hoje", items: { $ref: "#/components/schemas/ForecastDay" } }
+        known_words: { type: integer, minimum: 0, description: "lemas com cartao receptivo em revisao e estabilidade de 7 dias ou mais" }
+        most_missed: { type: array, items: { $ref: "#/components/schemas/MissedItem" } }
+    DayStats:
+      type: object
+      required: [reviews, correct, new_items, active_seconds]
+      properties:
+        reviews: { type: integer }
+        correct: { type: integer }
+        new_items: { type: integer, description: "palavras vistas pela 1a vez" }
+        active_seconds: { type: integer }
+    ForecastDay:
+      type: object
+      required: [date, due]
+      properties:
+        date: { type: string, format: date }
+        due: { type: integer, description: "cartoes que vencem no dia" }
+    MissedItem:
+      type: object
+      required: [item_id, term, gloss, misses]
+      properties:
+        item_id: { type: string, format: uuid }
+        term: { type: string }
+        gloss: { type: string }
+        misses: { type: integer, description: "erros nos ultimos 30 dias (erro de digitacao de 1 letra nao conta)" }
+    Heatmap:
+      type: object
+      required: [from, to, days]
+      properties:
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+        days: { type: array, items: { $ref: "#/components/schemas/HeatmapDay" } }
+    HeatmapDay:
+      type: object
+      required: [date, reviews, correct]
+      properties:
+        date: { type: string, format: date }
+        reviews: { type: integer }
+        correct: { type: integer }

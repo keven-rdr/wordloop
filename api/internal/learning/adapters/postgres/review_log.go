@@ -56,3 +56,16 @@ func params(r domain.LogRow) db.InsertReviewParams {
 	}
 	return p
 }
+
+// BumpDay soma a resposta no dia de estudo (study_day); known_lexemes vira a foto depois do cartao salvo.
+func (t *txn) BumpDay(ctx context.Context, r domain.LogRow) error {
+	d := r.DayDelta()
+	err := t.q.BumpStudyDay(ctx, db.BumpStudyDayParams{
+		UserID: r.UserID, LocalDate: pgtype.Date{Time: r.LocalDate, Valid: true},
+		ActiveMs: d.ActiveMS, Correct: int32(d.Correct), Lapses: int32(d.Lapses), NewItems: int32(d.NewItems), //nolint:gosec // 0 ou 1
+	})
+	if err != nil {
+		return fmt.Errorf("somar no dia: %w", err)
+	}
+	return nil
+}
