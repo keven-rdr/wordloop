@@ -70,7 +70,11 @@ jobs:
       - run: go generate ./...
       # -p 1: um pacote por vez. Varios pacotes sobem um Keycloak cada (e o Argon2id pesa); em paralelo, no runner
       # de 2 CPUs, eles disputam CPU e memoria e estouram os tempos-limite de partida. Sequencial e deterministico.
+      # O "reaper" (Ryuk) e um container auxiliar que apaga os outros ao fim do teste; num runner descartavel essa
+      # limpeza e dispensavel, e a partida dele estourava o tempo ("wait for reaper: context deadline exceeded"),
+      # derrubando o teste do Keycloak sem relacao com o codigo.
       - name: Testes de integracao (Postgres e Keycloak reais)
+        env: { TESTCONTAINERS_RYUK_DISABLED: "true" }
         run: |
           set -o pipefail
           go test -tags=integration -count=1 -p 1 -timeout 25m -coverprofile=coverage-int.out -coverpkg=./cmd/...,./internal/... ./... 2>&1 | tee test-int.log
