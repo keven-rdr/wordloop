@@ -15,13 +15,14 @@ import (
 	"github.com/keven-rdr/wordloop/api/migrations"
 )
 
-// Segredos de mentira, plantados nas colunas sensiveis: se um deles aparecer na exportacao, o teste falha.
+// Canarios: valores falsos plantados nas colunas sensiveis. Se um deles aparecer na exportacao, o teste falha.
+// (Os nomes e valores evitam parecer chave de API, para o gitleaks nao confundir o canario com um segredo.)
 const (
-	secretPasswordHash = "argon2id-SEGREDO-DA-SENHA"
-	secretRefreshToken = "REFRESH-TOKEN-SEGREDO"
-	secretPublicKey    = "CHAVE-PUBLICA-SEGREDO"
-	secretSessionHash  = "HASH-DE-SESSAO-SEGREDO"
-	secretTokenHash    = "HASH-DE-TOKEN-SEGREDO"
+	canaryPasswordHash = "canario-coluna-senha"
+	canaryRefreshToken = "canario-coluna-refresh"
+	canaryPublicKey    = "canario-coluna-chave"
+	canarySessionHash  = "canario-coluna-sessao"
+	canaryTokenHash    = "canario-coluna-token"
 )
 
 type fixture struct {
@@ -67,17 +68,17 @@ func (f fixture) person(t *testing.T, name, email string) uuid.UUID {
 	ctx := context.Background()
 	var id uuid.UUID
 	err := f.pool.QueryRow(ctx, `INSERT INTO app_user (display_name, email, email_verified_at, password_hash)
-		VALUES ($1, $2, now(), $3) RETURNING id`, name, email, secretPasswordHash).Scan(&id)
+		VALUES ($1, $2, now(), $3) RETURNING id`, name, email, canaryPasswordHash).Scan(&id)
 	if err != nil {
 		t.Fatal(err)
 	}
 	f.exec(t, `INSERT INTO auth_identity (user_id, provider, subject) VALUES ($1, 'google', $2)`, id, "sub-"+name)
 	f.exec(t, `INSERT INTO passkey_credential (user_id, credential_id, public_key, name, created_at)
-		VALUES ($1, $2, $3, 'Meu celular', now())`, id, []byte("cred-"+name), []byte(secretPublicKey))
+		VALUES ($1, $2, $3, 'Meu celular', now())`, id, []byte("cred-"+name), []byte(canaryPublicKey))
 	f.exec(t, `INSERT INTO auth_session (id_hash, user_id, refresh_token_enc, expires_at, user_agent)
-		VALUES ($1, $2, $3, now() + interval '1 day', 'Firefox')`, []byte(secretSessionHash+name), id, secretRefreshToken)
+		VALUES ($1, $2, $3, now() + interval '1 day', 'Firefox')`, []byte(canarySessionHash+name), id, canaryRefreshToken)
 	f.exec(t, `INSERT INTO auth_token (id_hash, user_id, purpose, expires_at) VALUES ($1, $2, 'recovery', now() + interval '1 hour')`,
-		[]byte(secretTokenHash+name), id)
+		[]byte(canaryTokenHash+name), id)
 	f.exec(t, `INSERT INTO user_settings (user_id, theme) VALUES ($1, 'dark')`, id)
 	f.exec(t, `INSERT INTO goal_cycle (user_id, period_start, period_end, daily_minutes, days_target) VALUES ($1, '2026-11-10', '2026-11-16', 10, 5)`, id)
 	f.exec(t, `INSERT INTO study_day (user_id, local_date, reviews, correct) VALUES ($1, '2026-11-12', 2, 1)`, id)

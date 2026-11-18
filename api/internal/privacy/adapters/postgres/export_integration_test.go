@@ -67,7 +67,7 @@ func TestExportNeverLeaksASecret(t *testing.T) {
 			t.Errorf("coluna sensivel %q na exportacao", key)
 		}
 	}
-	for _, secret := range []string{secretPasswordHash, secretRefreshToken, secretPublicKey, secretSessionHash, secretTokenHash} {
+	for _, secret := range []string{canaryPasswordHash, canaryRefreshToken, canaryPublicKey, canarySessionHash, canaryTokenHash} {
 		if strings.Contains(text, secret) || strings.Contains(text, hex.EncodeToString([]byte(secret))) {
 			t.Errorf("valor secreto %q na exportacao", secret)
 		}

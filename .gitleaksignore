@@ -1,0 +1,3 @@
+# Falso positivo: valor falso plantado de proposito num teste de integracao (canario) para provar que a exportacao
+# de dados nao vaza segredo. Esta linha aponta o commit que ja existe na PR; o codigo atual nao tem mais o padrao.
+6cae33b6d67417508c2c90c778bda82df35e1a61:api/internal/privacy/adapters/postgres/fixture_integration_test.go:generic-api-key:20
