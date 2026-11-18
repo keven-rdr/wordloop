@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	ErrNoSession    = errors.New("sem sessao valida")
-	ErrInvalidRange = errors.New("intervalo invalido")
+	ErrNoSession    = errors.New("progresso: pedido sem sessao")
+	ErrInvalidRange = errors.New("progresso: intervalo fora do permitido")
 )
 
 // Reader e o que os casos de uso precisam do banco. Declarada aqui, pelo consumidor.
@@ -29,28 +29,27 @@ type Reader interface {
 	MostMissed(ctx context.Context, user uuid.UUID, since time.Time, locale string, limit int) ([]domain.Missed, error)
 }
 
-// Viewers descobre quem pergunta a partir da sessao; sem sessao devolve ErrNoSession.
-type Viewers interface {
-	Viewer(ctx context.Context) (domain.Viewer, error)
+// Identity diz quem esta perguntando, pela sessao; sem sessao devolve ErrNoSession.
+type Identity interface {
+	Who(ctx context.Context) (domain.Viewer, error)
 }
 
-// Clock e a fonte de tempo (trocavel nos testes).
+// Clock e a fonte de tempo dos casos de uso (trocavel nos testes); nulo usa o relogio do sistema.
 type Clock func() time.Time
 
 func (c Clock) now() time.Time {
-	if c == nil {
-		return time.Now().UTC()
+	read := time.Now
+	if c != nil {
+		read = c
 	}
-	return c().UTC()
+	return read().UTC()
 }
 
-func signedIn(ctx context.Context, viewers Viewers) (domain.Viewer, error) {
-	v, err := viewers.Viewer(ctx)
-	if err != nil {
-		return domain.Viewer{}, err
+// asker resolve quem pergunta; uma identidade sem usuario tambem e "sem sessao".
+func asker(ctx context.Context, id Identity) (domain.Viewer, error) {
+	who, err := id.Who(ctx)
+	if err == nil && who.UserID == uuid.Nil {
+		err = ErrNoSession
 	}
-	if v.UserID == uuid.Nil {
-		return domain.Viewer{}, ErrNoSession
-	}
-	return v, nil
+	return who, err
 }

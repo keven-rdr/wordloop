@@ -20,7 +20,7 @@ type progressViewers struct {
 	who func(context.Context) (identitydomain.Principal, error)
 }
 
-func (v progressViewers) Viewer(ctx context.Context) (progressdomain.Viewer, error) {
+func (v progressViewers) Who(ctx context.Context) (progressdomain.Viewer, error) {
 	p, err := v.who(ctx)
 	if errors.Is(err, identity.ErrNoSession) {
 		return progressdomain.Viewer{}, progress.ErrNoSession
@@ -33,9 +33,9 @@ func (v progressViewers) Viewer(ctx context.Context) (progressdomain.Viewer, err
 
 func buildProgress(pool *pgxpool.Pool, who identityhttp.Handler) progresshttp.Handler {
 	reader := progresspg.NewStore(pool)
-	viewers := progressViewers{who: who.Principal}
+	identity := progressViewers{who: who.Principal}
 	return progresshttp.Handler{
-		Dashboard: progress.GetDashboard{Viewers: viewers, Reader: reader},
-		Heatmap:   progress.GetHeatmap{Viewers: viewers, Reader: reader},
+		Dashboard: progress.GetDashboard{Identity: identity, Reader: reader},
+		Heatmap:   progress.GetHeatmap{Identity: identity, Reader: reader},
 	}
 }

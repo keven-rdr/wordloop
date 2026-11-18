@@ -11,22 +11,22 @@ import (
 	"github.com/keven-rdr/wordloop/api/internal/progress/domain"
 )
 
-// Viewers devolve sempre o mesmo Viewer (ou o erro configurado).
-type Viewers struct {
-	Who domain.Viewer
+// Identity devolve sempre o mesmo Viewer (ou o erro configurado).
+type Identity struct {
+	Is  domain.Viewer
 	Err error
 }
 
-var _ app.Viewers = (*Viewers)(nil)
+var _ app.Identity = (*Identity)(nil)
 
-func (v *Viewers) Viewer(context.Context) (domain.Viewer, error) {
+func (v *Identity) Who(context.Context) (domain.Viewer, error) {
 	if v.Err != nil {
 		return domain.Viewer{}, v.Err
 	}
-	if v.Who.UserID == uuid.Nil {
+	if v.Is.UserID == uuid.Nil {
 		return domain.Viewer{}, app.ErrNoSession
 	}
-	return v.Who, nil
+	return v.Is, nil
 }
 
 // Store e um leitor em memoria: o que o estudo gravou para uma pessoa.

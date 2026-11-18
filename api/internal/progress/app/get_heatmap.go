@@ -15,15 +15,15 @@ const (
 
 // GetHeatmap lista os dias em que a pessoa estudou num intervalo (padrao: as ultimas 12 semanas).
 type GetHeatmap struct {
-	Viewers Viewers
-	Reader  Reader
-	Now     Clock
+	Identity Identity
+	Reader   Reader
+	Now      Clock
 }
 
 // Run devolve os dias entre from e to; datas nulas usam o padrao. Intervalo invertido ou maior que 400 dias
 // e ErrInvalidRange.
 func (u GetHeatmap) Run(ctx context.Context, from, to *time.Time) (domain.Heatmap, error) {
-	v, err := signedIn(ctx, u.Viewers)
+	v, err := asker(ctx, u.Identity)
 	if err != nil {
 		return domain.Heatmap{}, err
 	}
