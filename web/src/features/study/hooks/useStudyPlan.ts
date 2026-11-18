@@ -16,6 +16,7 @@ export function useStudyPlan() {
   const { i18n } = useTranslation();
   const mutation = useMutation({
     ...planSessionMutation(),
+    networkMode: 'always', // sem rede falha na hora (e mostra o aviso) em vez de ficar pausada para sempre
     onSuccess: (pack) => {
       if (pack.cards.length === 0) return;
       queryClient.setQueryData(packKey(pack.session_id), pack);

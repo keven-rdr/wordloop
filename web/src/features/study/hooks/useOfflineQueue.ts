@@ -28,7 +28,9 @@ export const useOnline = () =>
 export function useOfflineQueue() {
   const online = useOnline();
   const [pending, setPending] = useState(0);
-  const { mutateAsync } = useMutation(submitReviewsMutation());
+  // 'always': sem rede o TanStack pausaria a mutação para sempre e o fim da sessão travaria.
+  // Aqui a falha é esperada e tratada: a resposta fica na fila.
+  const { mutateAsync } = useMutation({ ...submitReviewsMutation(), networkMode: 'always' });
 
   const refresh = useCallback(async () => {
     setPending((await pendingReviews().catch(() => [])).length);
