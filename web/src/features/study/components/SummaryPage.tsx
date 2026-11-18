@@ -32,6 +32,11 @@ export function SummaryPage({ sessionId }: Readonly<{ sessionId: string }>) {
         <Stat value={summary.correct} label={t('summary.correct')} />
         <Stat value={summary.newWords} label={t('summary.newWords')} />
       </ul>
+      {summary.pending > 0 && (
+        <p role="status" {...stylex.props(p.bannerText)}>
+          {t('summary.pending', { count: summary.pending })}
+        </p>
+      )}
       <Link to="/study" {...stylex.props(s.action, s.linkButton)}>
         {t('summary.more')}
       </Link>

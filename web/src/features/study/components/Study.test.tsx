@@ -166,7 +166,7 @@ describe('sair e falhar ao salvar', () => {
     expect(calls.some((call) => call.path === '/study/reviews')).toBe(false);
   });
 
-  it('se o envio falhar, mantém as respostas e tenta de novo com os mesmos UUIDs', async () => {
+  it('se o envio falhar, a sessão termina com o resumo provisório e a resposta segue na fila', async () => {
     let attempts = 0;
     const calls = api([house], (req) => {
       attempts += 1;
@@ -177,13 +177,13 @@ describe('sair e falhar ao salvar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Verificar' }));
     fireEvent.click(await screen.findByRole('button', { name: /Fácil/ }));
 
-    expect(await screen.findByText(/Não consegui salvar suas respostas/)).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));
     expect(await screen.findByText('Sessão concluída')).toBeTruthy();
+    expect(screen.getByText('1 resposta será confirmada quando a conexão voltar.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('link', { name: 'Estudar mais' }));
 
-    const bodies = calls.filter((call) => call.path === '/study/reviews').map((call) => call.body);
-    expect(bodies).toHaveLength(2);
-    expect(bodies[0]).toEqual(bodies[1]);
+    const bodies = () => calls.filter((call) => call.path === '/study/reviews').map((call) => call.body);
+    await waitFor(() => expect(bodies()).toHaveLength(2));
+    expect(bodies()[0]).toEqual(bodies()[1]);
   });
 
   it('sem o pacote na memória (página recarregada), volta ao plano', async () => {

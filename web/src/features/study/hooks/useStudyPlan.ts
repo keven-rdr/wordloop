@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { planSessionMutation } from '../../../api/generated/@tanstack/react-query.gen';
+import { savePack } from '../offline/queue';
 import { csrfHeaders } from './csrf';
 import { packKey } from './summary';
 
@@ -18,6 +19,7 @@ export function useStudyPlan() {
     onSuccess: (pack) => {
       if (pack.cards.length === 0) return;
       queryClient.setQueryData(packKey(pack.session_id), pack);
+      void savePack(pack).catch(() => undefined); // no aparelho: a sessão sobrevive a recarregar a página e a ficar sem rede
       void navigate({ to: '/study/session/$id', params: { id: pack.session_id } });
     },
   });
