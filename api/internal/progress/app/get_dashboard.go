@@ -17,13 +17,13 @@ const (
 
 // GetDashboard monta o painel da pessoa: tudo calculado a partir do que o estudo ja gravou.
 type GetDashboard struct {
-	Viewers Viewers
-	Reader  Reader
-	Now     Clock
+	Identity Identity
+	Reader   Reader
+	Now      Clock
 }
 
 func (u GetDashboard) Run(ctx context.Context, locale string) (domain.Dashboard, error) {
-	v, err := signedIn(ctx, u.Viewers)
+	v, err := asker(ctx, u.Identity)
 	if err != nil {
 		return domain.Dashboard{}, err
 	}

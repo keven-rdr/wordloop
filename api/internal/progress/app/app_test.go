@@ -28,11 +28,11 @@ func date(s string) time.Time {
 }
 
 func dashboard(s *progresstest.Store) app.GetDashboard {
-	return app.GetDashboard{Viewers: &progresstest.Viewers{Who: domain.Viewer{UserID: user}}, Reader: s, Now: func() time.Time { return now }}
+	return app.GetDashboard{Identity: &progresstest.Identity{Is: domain.Viewer{UserID: user}}, Reader: s, Now: func() time.Time { return now }}
 }
 
 func heatmap(s *progresstest.Store) app.GetHeatmap {
-	return app.GetHeatmap{Viewers: &progresstest.Viewers{Who: domain.Viewer{UserID: user}}, Reader: s, Now: func() time.Time { return now }}
+	return app.GetHeatmap{Identity: &progresstest.Identity{Is: domain.Viewer{UserID: user}}, Reader: s, Now: func() time.Time { return now }}
 }
 
 func TestDashboardBringsTheWholePicture(t *testing.T) {
@@ -100,7 +100,7 @@ func TestDashboardDayRollsOverByTimeZoneAndCutoff(t *testing.T) {
 
 func TestDashboardNeedsASessionAndPropagatesFailures(t *testing.T) {
 	u := dashboard(progresstest.New())
-	u.Viewers = &progresstest.Viewers{}
+	u.Identity = &progresstest.Identity{}
 	if _, err := u.Run(context.Background(), "pt-BR"); !errors.Is(err, app.ErrNoSession) {
 		t.Errorf("sem sessao: %v", err)
 	}
@@ -147,7 +147,7 @@ func TestHeatmapValidatesTheRange(t *testing.T) {
 
 func TestHeatmapNeedsASession(t *testing.T) {
 	u := heatmap(progresstest.New())
-	u.Viewers = &progresstest.Viewers{}
+	u.Identity = &progresstest.Identity{}
 	if _, err := u.Run(context.Background(), nil, nil); !errors.Is(err, app.ErrNoSession) {
 		t.Errorf("sem sessao: %v", err)
 	}

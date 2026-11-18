@@ -32,11 +32,11 @@ func day(s string) time.Time {
 
 func fixture(who domain.Viewer) (http.Handler, *progresstest.Store) {
 	store := progresstest.New()
-	viewers := &progresstest.Viewers{Who: who}
+	identity := &progresstest.Identity{Is: who}
 	clock := func() time.Time { return now }
 	h := httpapi.Handler{
-		Dashboard: app.GetDashboard{Viewers: viewers, Reader: store, Now: clock},
-		Heatmap:   app.GetHeatmap{Viewers: viewers, Reader: store, Now: clock},
+		Dashboard: app.GetDashboard{Identity: identity, Reader: store, Now: clock},
+		Heatmap:   app.GetHeatmap{Identity: identity, Reader: store, Now: clock},
 	}
 	return api.Handler(api.Server{Progress: h}), store
 }
