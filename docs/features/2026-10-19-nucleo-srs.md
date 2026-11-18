@@ -1,6 +1,6 @@
 # Núcleo do SRS e módulo de aprendizado (Sprint 3)
 
-> Arquivo: `docs/features/2026-10-19-nucleo-srs.md` · Issue: #__ · Branch: `feat/srs-learning` · Estado: VERIFY
+> Arquivo: `docs/features/2026-10-19-nucleo-srs.md` · Issue: #__ · Branch: `feat/srs-learning` · Estado: DONE (PRs #35, #36 e #37 mescladas em 19–20/10/2026)
 
 ## Contexto
 O catálogo está pronto (Sprint 2). Falta o que transforma palavras em aprendizado: o **agendador** (quando revisar cada cartão), o **estado do usuário** no banco e a **API de estudo**. O Sprint 3 do [roadmap](../fase-6/06-roadmap-backlog.md) entrega `internal/srs` (biblioteca pura) com `simple_v1`, golden vectors, testes de propriedade e simulador; e o módulo `learning` (cartões, plano da sessão, envio idempotente de revisões, `review_log` só-INSERT). A especificação está em [fase-1/01-srs.md](../fase-1/01-srs.md) e o esquema rascunhado em [fase-3/schema-learning.sql](../fase-3/schema-learning.sql) e [openapi-sketch.yaml](../fase-3/openapi-sketch.yaml). A tela de estudo é o Sprint 4; geradores de exercício (L-05) ficam para o 3/4.
@@ -34,7 +34,8 @@ O catálogo está pronto (Sprint 2). Falta o que transforma palavras em aprendiz
 - [x] PR 3: contrato (`openapi.yaml` + `npm run gen`), migrações 00012/00013, SQL (`sqlc`), casos de uso, handlers, testes de unidade e integração (o de integração roda no CI)
 - [x] Documentação: este arquivo
 - [x] `npm run check` verde em cada PR
-- [ ] PRs abertas (com aprovação do usuário)
+- [x] PRs abertas e mescladas (#35, #36, #37)
+- [ ] L-05 (geradores e corretores de exercício): fica no Sprint 4 (lacuna e imagem → palavra)
 
 ## Verificação
 - PR 1 (#35): `internal/srs` com cobertura de 100%, `check:all` verde.

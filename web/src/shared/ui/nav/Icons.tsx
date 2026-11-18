@@ -28,6 +28,14 @@ export function HomeIcon(props: IconProps) {
   );
 }
 
+export function StudyIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.5 6.6 19.5l1.2-6L3.3 9.3l6.1-.7L12 3z" />
+    </Icon>
+  );
+}
+
 export function CardsIcon(props: IconProps) {
   return (
     <Icon {...props}>

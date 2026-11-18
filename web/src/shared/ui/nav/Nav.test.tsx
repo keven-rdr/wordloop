@@ -50,14 +50,15 @@ describe('Avatar', () => {
 });
 
 describe('Menu inferior', () => {
-  it('mostra Perfil (com a foto), Início e Palavras, e marca o item da tela atual', async () => {
+  it('mostra Perfil (com a foto), Início, Estudar e Palavras, e marca o item da tela atual', async () => {
     api({ 'GET /me': () => json({ ...me, picture_url: 'https://lh3.googleusercontent.com/a/x' }) });
     const { container } = renderApp('/words');
     const nav = await screen.findByRole('navigation', { name: 'Menu principal' });
     expect(nav.querySelector('img')).toHaveAttribute('src', 'https://lh3.googleusercontent.com/a/x');
-    expect(container.querySelectorAll('nav a')).toHaveLength(3);
+    expect(container.querySelectorAll('nav a')).toHaveLength(4);
     expect(screen.getByRole('link', { name: 'Perfil' })).toHaveAttribute('href', '/settings');
     expect(screen.getByRole('link', { name: 'Início' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'Estudar' })).toHaveAttribute('href', '/study');
     const words = screen.getByRole('link', { name: 'Palavras' });
     expect(words).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Início' })).not.toHaveAttribute('aria-current');

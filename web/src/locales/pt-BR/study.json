@@ -1,0 +1,70 @@
+{
+  "title": "Estudar",
+  "lead": "Quanto tempo você quer estudar hoje?",
+  "minutes_one": "{{count}} minuto",
+  "minutes_other": "{{count}} minutos",
+  "plan": {
+    "start": "Começar",
+    "loading": "Montando sua sessão…",
+    "failed": "Não consegui montar a sessão agora. Tente de novo.",
+    "empty": "Não há nada para estudar agora. Volte mais tarde."
+  },
+  "session": {
+    "close": "Sair da sessão",
+    "progress": "Progresso da sessão"
+  },
+  "exit": {
+    "title": "Sair da sessão?",
+    "text": "O que você já respondeu fica salvo.",
+    "stay": "Continuar estudando",
+    "leave": "Sair"
+  },
+  "choose": {
+    "prompt": "O que significa?",
+    "options": "Escolha a tradução"
+  },
+  "type": {
+    "prompt": "Como se diz em inglês?",
+    "label": "Sua resposta em inglês",
+    "hint": "Dica",
+    "hintShown": "Começa com “{{letter}}”",
+    "unknown": "Não sei"
+  },
+  "verify": "Verificar",
+  "next": "Continuar",
+  "feedback": {
+    "right": "Correto!",
+    "typo": "Quase!",
+    "wrong": "Quase!",
+    "answer": "A resposta é"
+  },
+  "difficulty": {
+    "question": "Foi fácil, médio ou difícil lembrar?",
+    "hard": "Difícil",
+    "medium": "Médio",
+    "easy": "Fácil",
+    "suggested": "sugerido"
+  },
+  "errorKind": {
+    "question": "Como foi?",
+    "no_idea": "Não sabia",
+    "almost": "Quase lembrei",
+    "slip": "Foi distração"
+  },
+  "sending": {
+    "busy": "Salvando suas respostas…",
+    "failed": "Não consegui salvar suas respostas agora. Elas continuam aqui.",
+    "retry": "Tentar de novo"
+  },
+  "summary": {
+    "title": "Sessão concluída",
+    "gain_one": "+{{count}} palavra conhecida",
+    "gain_other": "+{{count}} palavras conhecidas",
+    "noGain": "Boa! Você reforçou o que já sabia.",
+    "answered": "Respostas",
+    "correct": "Acertos",
+    "newWords": "Palavras novas",
+    "more": "Estudar mais",
+    "home": "Voltar ao início"
+  }
+}
