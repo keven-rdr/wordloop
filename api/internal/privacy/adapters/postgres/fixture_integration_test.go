@@ -103,7 +103,7 @@ func (f fixture) studied(t *testing.T, user uuid.UUID) {
 		var review uuid.UUID
 		err := f.pool.QueryRow(ctx, `INSERT INTO review_log (id, user_id, card_id, session_id, exercise_type, source, shown_at, answered_at,
 				tz, day_cutoff_hour, local_date, response_ms, answer_raw, is_correct, grade, state_before, state_after, scheduler, scheduler_version)
-			VALUES (gen_random_uuid(), $1, $2, $3, 'type', 'session', now() - interval '2 minutes', now() - interval '1 minute' + ($4 || ' seconds')::interval,
+			VALUES (gen_random_uuid(), $1, $2, $3, 'type', 'session', now() - interval '2 minutes', now() - interval '1 minute' + make_interval(secs => $4::int),
 				'America/Sao_Paulo', 4, '2026-11-12', 3000, 'house', $5, 3, 'review', 'review', 'simple_v1', '1') RETURNING id`,
 			user, card, session, i, correct).Scan(&review)
 		if err != nil {
