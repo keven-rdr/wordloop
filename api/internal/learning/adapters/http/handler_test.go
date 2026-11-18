@@ -34,8 +34,9 @@ func fixture(who domain.Viewer) (http.Handler, *learningtest.Store) {
 	viewers := &learningtest.Viewers{Who: who}
 	clock := func() time.Time { return now }
 	h := httpapi.Handler{
-		Plan:   app.PlanSession{Viewers: viewers, Repo: store, Scheduler: srs.SimpleV1{NoFuzz: true}, Now: clock, NewID: uuid.New},
-		Submit: app.SubmitReviews{Viewers: viewers, Repo: store, Scheduler: srs.SimpleV1{NoFuzz: true}, Now: clock},
+		Plan:     app.PlanSession{Viewers: viewers, Repo: store, Scheduler: srs.SimpleV1{NoFuzz: true}, Now: clock, NewID: uuid.New},
+		Submit:   app.SubmitReviews{Viewers: viewers, Repo: store, Scheduler: srs.SimpleV1{NoFuzz: true}, Now: clock},
+		Settings: app.SettingsService{Viewers: viewers, Repo: store},
 	}
 	return api.Handler(api.Server{Learning: h}), store
 }

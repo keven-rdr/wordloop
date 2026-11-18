@@ -31,6 +31,8 @@ type Tx interface {
 	// Settings devolve os ajustes da pessoa, criando os padroes na primeira vez.
 	Settings(ctx context.Context, user uuid.UUID) (domain.Settings, error)
 	SaveTZ(ctx context.Context, user uuid.UUID, tz string) error
+	// SavePreferences grava fuso, idioma, tema e se o fuso acompanha o aparelho (os ajustes ja existem: veja Settings).
+	SavePreferences(ctx context.Context, user uuid.UUID, s domain.Settings) error
 
 	DueCards(ctx context.Context, user uuid.UUID, now time.Time, limit int) ([]domain.Card, error)
 	// NewItems lista os proximos itens sem cartao receptivo, na ordem das unidades.

@@ -50,11 +50,14 @@ const (
 	ModeMixed  Mode = "mixed"
 )
 
-// Settings sao os ajustes de estudo da pessoa.
+// Settings sao os ajustes da pessoa: o fuso e o corte do dia de estudo, o agendador e as preferencias de tela.
 type Settings struct {
 	TZ         string
 	CutoffHour int
 	Scheduler  string
+	UILocale   string // system, pt-BR ou en-US
+	Theme      string // system, light ou dark
+	TZAuto     bool   // o fuso acompanha o aparelho (o plano o atualiza); falso = fixo, escolhido pela pessoa
 }
 
 // Card e o cartao agendado de uma pessoa para um item e uma direcao.

@@ -2,7 +2,7 @@
 INSERT INTO user_settings (user_id) VALUES (@user_id) ON CONFLICT (user_id) DO NOTHING;
 
 -- name: GetSettings :one
-SELECT tz, day_cutoff_hour, scheduler FROM user_settings WHERE user_id = @user_id;
+SELECT tz, day_cutoff_hour, scheduler, ui_locale, theme, tz_auto FROM user_settings WHERE user_id = @user_id;
 
 -- name: SaveTZ :exec
 UPDATE user_settings SET tz = @tz, updated_at = now() WHERE user_id = @user_id;
@@ -139,3 +139,7 @@ ON CONFLICT (user_id, local_date) DO UPDATE SET
     lapses        = study_day.lapses + EXCLUDED.lapses,
     new_items     = study_day.new_items + EXCLUDED.new_items,
     known_lexemes = EXCLUDED.known_lexemes;
+-- name: SavePreferences :exec
+UPDATE user_settings
+SET tz = @tz, ui_locale = @ui_locale, theme = @theme, tz_auto = @tz_auto, updated_at = now()
+WHERE user_id = @user_id;

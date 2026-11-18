@@ -85,13 +85,14 @@ func (u PlanSession) plan(ctx context.Context, tx Tx, v domain.Viewer, req PlanR
 	return domain.Pack{SessionID: id, Cards: packed, NewLimit: limits.New, ReviewLimit: limits.Reviews, ExpiresAt: expires}, nil
 }
 
-// rememberTZ guarda o fuso informado pelo aparelho quando e valido e diferente do guardado.
+// rememberTZ guarda o fuso informado pelo aparelho quando e valido, diferente do guardado e a pessoa deixou o fuso
+// acompanhar o aparelho (tz_auto); fuso escolhido nas configuracoes nao e mexido.
 func (u PlanSession) rememberTZ(ctx context.Context, tx Tx, user uuid.UUID, tz string) error {
 	s, err := tx.Settings(ctx, user)
 	if err != nil {
 		return err
 	}
-	if tz != "" && tz != s.TZ && domain.ValidTZ(tz) {
+	if s.TZAuto && tz != "" && tz != s.TZ && domain.ValidTZ(tz) {
 		return tx.SaveTZ(ctx, user, tz)
 	}
 	return nil

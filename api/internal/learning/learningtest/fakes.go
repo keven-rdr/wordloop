@@ -58,7 +58,7 @@ var _ app.Repository = (*Store)(nil)
 func New(items ...Item) *Store {
 	return &Store{
 		Items:    items,
-		Settings: domain.Settings{TZ: "America/Sao_Paulo", CutoffHour: 4, Scheduler: "simple_v1"},
+		Settings: domain.Settings{TZ: "America/Sao_Paulo", CutoffHour: 4, Scheduler: "simple_v1", UILocale: "system", Theme: "system", TZAuto: true},
 		Cards:    map[uuid.UUID]*domain.Card{},
 		Related:  map[uuid.UUID]uuid.UUID{},
 	}
@@ -103,6 +103,11 @@ func (t *tx) Settings(context.Context, uuid.UUID) (domain.Settings, error) {
 func (t *tx) SaveTZ(_ context.Context, _ uuid.UUID, tz string) error {
 	t.s.Settings.TZ = tz
 	return t.fail("SaveTZ")
+}
+
+func (t *tx) SavePreferences(_ context.Context, _ uuid.UUID, s domain.Settings) error {
+	t.s.Settings.TZ, t.s.Settings.UILocale, t.s.Settings.Theme, t.s.Settings.TZAuto = s.TZ, s.UILocale, s.Theme, s.TZAuto
+	return t.fail("SavePreferences")
 }
 
 func (t *tx) DueCards(_ context.Context, _ uuid.UUID, now time.Time, limit int) ([]domain.Card, error) {
