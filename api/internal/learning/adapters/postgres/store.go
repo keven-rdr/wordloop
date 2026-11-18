@@ -50,7 +50,10 @@ func (t *txn) Settings(ctx context.Context, user uuid.UUID) (domain.Settings, er
 	if err != nil {
 		return domain.Settings{}, fmt.Errorf("ler ajustes: %w", err)
 	}
-	return domain.Settings{TZ: s.Tz, CutoffHour: int(s.DayCutoffHour), Scheduler: s.Scheduler}, nil
+	return domain.Settings{
+		TZ: s.Tz, CutoffHour: int(s.DayCutoffHour), Scheduler: s.Scheduler,
+		UILocale: s.UiLocale, Theme: s.Theme, TZAuto: s.TzAuto,
+	}, nil
 }
 
 func (t *txn) SaveTZ(ctx context.Context, user uuid.UUID, tz string) error {
@@ -164,4 +167,13 @@ func card(r db.DueCardsRow) domain.Card {
 			Lapses: int(r.Lapses), SinceLapse: int(r.SinceLapse), LastReviewAt: when(r.LastReviewAt), DueAt: when(r.DueAt),
 		},
 	}
+}
+func (t *txn) SavePreferences(ctx context.Context, user uuid.UUID, s domain.Settings) error {
+	err := t.q.SavePreferences(ctx, db.SavePreferencesParams{
+		UserID: user, Tz: s.TZ, UiLocale: s.UILocale, Theme: s.Theme, TzAuto: s.TZAuto,
+	})
+	if err != nil {
+		return fmt.Errorf("gravar preferencias: %w", err)
+	}
+	return nil
 }

@@ -38,7 +38,8 @@ func buildLearning(pool *pgxpool.Pool, who identityhttp.Handler) learninghttp.Ha
 	viewers := learnerViewers{who: who.Principal}
 	sched := srs.SimpleV1{}
 	return learninghttp.Handler{
-		Plan:   learning.PlanSession{Viewers: viewers, Repo: repo, Scheduler: sched, NewID: uuid.New},
-		Submit: learning.SubmitReviews{Viewers: viewers, Repo: repo, Scheduler: sched},
+		Plan:     learning.PlanSession{Viewers: viewers, Repo: repo, Scheduler: sched, NewID: uuid.New},
+		Submit:   learning.SubmitReviews{Viewers: viewers, Repo: repo, Scheduler: sched},
+		Settings: learning.SettingsService{Viewers: viewers, Repo: repo},
 	}
 }

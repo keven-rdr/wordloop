@@ -46,6 +46,13 @@ export function SettingsPage() {
         </span>
         <Chevron />
       </Link>
+      <Link to="/preferences" {...stylex.props(menu.row)}>
+        <span {...stylex.props(menu.rowText)}>
+          {t('settings.preferences')}
+          <span {...stylex.props(menu.hint)}>{t('settings.preferencesHint')}</span>
+        </span>
+        <Chevron />
+      </Link>
       <Link to="/words/credits" {...stylex.props(menu.row)}>
         <span {...stylex.props(menu.rowText)}>
           {t('settings.credits')}

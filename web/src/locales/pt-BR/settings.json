@@ -1,0 +1,27 @@
+{
+  "title": "Preferências",
+  "subtitle": "Idioma, tema e fuso horário",
+  "loadFailed": "Não consegui carregar suas preferências agora.",
+  "saving": "Salvando…",
+  "saved": "Salvo",
+  "failed": "Não consegui salvar agora. Tente de novo.",
+  "locale": {
+    "legend": "Idioma",
+    "system": "Usar o idioma do aparelho",
+    "pt-BR": "Português (Brasil)",
+    "en-US": "English (US)"
+  },
+  "theme": {
+    "legend": "Tema",
+    "system": "Usar o tema do aparelho",
+    "light": "Claro",
+    "dark": "Escuro"
+  },
+  "zone": {
+    "legend": "Fuso horário",
+    "auto": "Seguir o fuso do aparelho",
+    "detected": "Detectado: {{zone}}",
+    "choose": "Escolha o fuso",
+    "hint": "Seu dia de estudo vira às 4h no fuso {{zone}}. Estudar de madrugada conta para o dia anterior."
+  }
+}

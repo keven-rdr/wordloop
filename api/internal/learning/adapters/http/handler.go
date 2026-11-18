@@ -12,8 +12,9 @@ import (
 
 // Handler junta os casos de uso de estudo.
 type Handler struct {
-	Plan   app.PlanSession
-	Submit app.SubmitReviews
+	Plan     app.PlanSession
+	Submit   app.SubmitReviews
+	Settings app.SettingsService
 }
 
 func (h Handler) PlanSession(ctx context.Context, req gen.PlanSessionRequestObject) (gen.PlanSessionResponseObject, error) {

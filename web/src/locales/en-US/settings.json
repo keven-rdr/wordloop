@@ -1,0 +1,27 @@
+{
+  "title": "Preferences",
+  "subtitle": "Language, theme and time zone",
+  "loadFailed": "I couldn't load your preferences right now.",
+  "saving": "Saving…",
+  "saved": "Saved",
+  "failed": "I couldn't save right now. Try again.",
+  "locale": {
+    "legend": "Language",
+    "system": "Use the device language",
+    "pt-BR": "Português (Brasil)",
+    "en-US": "English (US)"
+  },
+  "theme": {
+    "legend": "Theme",
+    "system": "Use the device theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "zone": {
+    "legend": "Time zone",
+    "auto": "Follow the device time zone",
+    "detected": "Detected: {{zone}}",
+    "choose": "Choose the time zone",
+    "hint": "Your study day rolls over at 4 am in the {{zone}} time zone. Studying after midnight counts for the previous day."
+  }
+}
