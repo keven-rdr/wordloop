@@ -1,6 +1,6 @@
 # Estudo na tela (Sprint 4)
 
-> Arquivo: `docs/features/2026-11-18-estudo-sessao.md` · Issue: #__ · Branch: `feat/estudo-sessao` · Estado: BUILD (3 PRs prontas, a aguardar publicação)
+> Arquivo: `docs/features/2026-11-18-estudo-sessao.md` · Issue: #__ · Branch: `feat/estudo-sessao` · Estado: DONE (mesclado: #43, #44 e #46)
 
 ## Contexto
 O núcleo do SRS está pronto (Sprint 3): `POST /study/plan` entrega o pacote de cartões e `POST /study/reviews` recebe respostas em lote, de forma idempotente. Falta a **tela de estudo**. O Sprint 4 do [roadmap](../fase-6/06-roadmap-backlog.md) pede: casca da sessão, plano "quanto tempo hoje?", 4 exercícios, dificuldade em 1 toque, resumo e fila offline. Critério: sessão completa online e offline; Playwright por exercício; alvos ≥ 48 px. UX em [fase-5/05-ux-ui-fluxos.md](../fase-5/05-ux-ui-fluxos.md) (seções 4.2, 5 e 6). Itens: U-01, U-02, U-03, U-04, U-05 e L-05 (parte 4).
