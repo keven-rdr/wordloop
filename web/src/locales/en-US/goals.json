@@ -1,0 +1,61 @@
+{
+  "title": "Goals",
+  "subtitle": "How much do you want to study each week?",
+  "failed": "I couldn't load your goals right now.",
+  "page": {
+    "current": "Your goal",
+    "retro": "How your cycle went",
+    "first": "Set your weekly goal",
+    "next": "What's your goal for next week?",
+    "change": "Change your goal"
+  },
+  "card": {
+    "setTitle": "Set your weekly goal",
+    "setText": "Tell us how long you want to study and follow your pace.",
+    "setAction": "Set goal",
+    "title": "Weekly goal",
+    "see": "View goal",
+    "endedTitle": "Your cycle is over",
+    "endedAction": "See how it went and pick the next one"
+  },
+  "progress": {
+    "days_one": "{{done}} of {{count}} day studied",
+    "days_other": "{{done}} of {{count}} days studied",
+    "minutes": "{{done}} of {{goal}} minutes",
+    "left_one": "{{count}} day left",
+    "left_other": "{{count}} days left",
+    "lastDay": "Today is the last day of the cycle",
+    "met": "Goal met!",
+    "bar": "Days studied in the cycle"
+  },
+  "retro": {
+    "met_one": "Goal met! You studied {{done}} of {{count}} day.",
+    "met_other": "Goal met! You studied {{done}} of {{count}} days.",
+    "missed_one": "You studied {{done}} of {{count}} day. You can try again!",
+    "missed_other": "You studied {{done}} of {{count}} days. You can try again!",
+    "days": "Days studied",
+    "minutes": "Minutes",
+    "words": "New words"
+  },
+  "preset": {
+    "light": "Light",
+    "steady": "Steady",
+    "intense": "Intense",
+    "custom": "Custom"
+  },
+  "choose": {
+    "legend": "Choose a goal",
+    "fromHistory": "Suggestions based on your pace over the last 4 weeks.",
+    "initial": "Suggestions to get started. They adjust to your pace after a few days of study.",
+    "detail_one": "{{minutes}} min a day, {{count}} day a week",
+    "detail_other": "{{minutes}} min a day, {{count}} days a week",
+    "minutes": "Minutes per day",
+    "days": "Days per week",
+    "errorMinutes": "Use 1 to {{max}} minutes",
+    "errorDays": "Use 1 to {{max}} days",
+    "start": "Start",
+    "keep": "Keep the same",
+    "saving": "Saving…",
+    "failed": "I couldn't save your goal right now. Try again."
+  }
+}
