@@ -48,6 +48,8 @@ type Tx interface {
 	// InsertReview grava a linha do log; false se o UUID ja existia (reenvio).
 	InsertReview(ctx context.Context, row domain.LogRow) (bool, error)
 	SaveCard(ctx context.Context, card domain.Card) error
+	// BumpDay soma a resposta na agregacao do dia (study_day), na mesma transacao do log; chamar depois de SaveCard.
+	BumpDay(ctx context.Context, row domain.LogRow) error
 	CardLog(ctx context.Context, card uuid.UUID) ([]srs.Answer, error)
 }
 

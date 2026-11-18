@@ -16,6 +16,11 @@ components:
   lrn-adapters: { in: [learning/adapters/http, learning/adapters/postgres] }
   lrn-sqlc:     { in: learning/adapters/postgres/db }   # gerado pelo sqlc
   lrn-test:     { in: learning/learningtest }           # fakes em memoria, so para testes
+  prg-domain:   { in: progress/domain }
+  prg-app:      { in: progress/app }
+  prg-adapters: { in: [progress/adapters/http, progress/adapters/postgres] }
+  prg-sqlc:     { in: progress/adapters/postgres/db }   # gerado pelo sqlc
+  prg-test:     { in: progress/progresstest }           # fakes em memoria, so para testes
   srs:      { in: srs }   # biblioteca pura de repeticao espacada: so a biblioteca padrao
   srs-sim:  { in: srs/sim }   # simulador de alunos virtuais: so para testes e relatorios
   contract: { in: ../openapi }   # openapi.yaml embutido (go:embed so alcanca a propria pasta)
@@ -43,6 +48,11 @@ deps:
   lrn-adapters: { mayDependOn: [lrn-domain, lrn-app, lrn-sqlc, srs, apigen, platform], anyVendorDeps: true }
   lrn-sqlc:     { anyVendorDeps: true }
   lrn-test:     { mayDependOn: [lrn-domain, lrn-app, srs], anyVendorDeps: true }
+  prg-domain:   { anyVendorDeps: true }
+  prg-app:      { mayDependOn: [prg-domain, platform], anyVendorDeps: true }
+  prg-adapters: { mayDependOn: [prg-domain, prg-app, prg-sqlc, apigen, platform], anyVendorDeps: true }
+  prg-sqlc:     { anyVendorDeps: true }
+  prg-test:     { mayDependOn: [prg-domain, prg-app], anyVendorDeps: true }
   srs-sim:  { mayDependOn: [srs], anyVendorDeps: true }
   srs:      { anyVendorDeps: true }   # so importa a biblioteca padrao (a regra de componentes impede importar modulos)
   id-domain:   { anyVendorDeps: true }

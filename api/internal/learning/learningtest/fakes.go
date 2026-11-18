@@ -46,6 +46,7 @@ type Store struct {
 	Settings domain.Settings
 	Cards    map[uuid.UUID]*domain.Card
 	Log      []domain.LogRow
+	Days     []domain.LogRow // respostas somadas no study_day, na ordem
 	Sessions []uuid.UUID
 	FailOn   string // nome do metodo que deve falhar (para testar o erro)
 	Related  map[uuid.UUID]uuid.UUID
@@ -71,14 +72,14 @@ func (s *Store) InTx(_ context.Context, fn func(app.Tx) error) error {
 	for id, c := range s.Cards {
 		cards[id] = *c
 	}
-	logLen, sessions, settings := len(s.Log), len(s.Sessions), s.Settings
+	logLen, daysLen, sessions, settings := len(s.Log), len(s.Days), len(s.Sessions), s.Settings
 	if err := fn(&tx{s: s}); err != nil {
 		s.Cards = map[uuid.UUID]*domain.Card{}
 		for id, c := range cards {
 			c := c
 			s.Cards[id] = &c
 		}
-		s.Log, s.Sessions, s.Settings = s.Log[:logLen], s.Sessions[:sessions], settings
+		s.Log, s.Days, s.Sessions, s.Settings = s.Log[:logLen], s.Days[:daysLen], s.Sessions[:sessions], settings
 		return err
 	}
 	return nil
@@ -222,6 +223,11 @@ func (t *tx) SaveCard(_ context.Context, c domain.Card) error {
 	cp := c
 	t.s.Cards[c.ID] = &cp
 	return t.fail("SaveCard")
+}
+
+func (t *tx) BumpDay(_ context.Context, row domain.LogRow) error {
+	t.s.Days = append(t.s.Days, row)
+	return t.fail("BumpDay")
 }
 
 func (t *tx) CardLog(_ context.Context, card uuid.UUID) ([]srs.Answer, error) {

@@ -126,3 +126,16 @@ SELECT answered_at, exercise_type, is_correct, typo_flag, hint_used, explanation
 FROM review_log
 WHERE card_id = @card_id
 ORDER BY answered_at, received_at;
+
+-- name: BumpStudyDay :exec
+-- Soma a resposta no dia (P-01), na mesma transacao do log; known_lexemes e a foto depois desta resposta.
+INSERT INTO study_day (user_id, local_date, active_ms, reviews, correct, lapses, new_items, known_lexemes)
+VALUES (@user_id, @local_date, @active_ms, 1, @correct, @lapses, @new_items,
+        (SELECT count(*) FROM user_lexeme_known WHERE user_id = @user_id)::int)
+ON CONFLICT (user_id, local_date) DO UPDATE SET
+    active_ms     = study_day.active_ms + EXCLUDED.active_ms,
+    reviews       = study_day.reviews + 1,
+    correct       = study_day.correct + EXCLUDED.correct,
+    lapses        = study_day.lapses + EXCLUDED.lapses,
+    new_items     = study_day.new_items + EXCLUDED.new_items,
+    known_lexemes = EXCLUDED.known_lexemes;

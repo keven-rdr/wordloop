@@ -80,6 +80,9 @@ func (u SubmitReviews) commit(ctx context.Context, tx Tx, v domain.Viewer, a dom
 	if err := tx.SaveCard(ctx, card); err != nil {
 		return domain.Result{}, err
 	}
+	if err := tx.BumpDay(ctx, row); err != nil {
+		return domain.Result{}, err
+	}
 	return domain.Result{
 		ID: a.ID, Status: domain.Applied, Correct: d.verdict.Correct, Typo: d.verdict.Typo, Grade: d.grade, Card: &card,
 	}, nil
