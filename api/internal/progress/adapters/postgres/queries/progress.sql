@@ -36,3 +36,24 @@ WHERE r.user_id = @user_id AND NOT r.is_correct AND NOT r.typo_flag AND r.local_
 GROUP BY c.item_id, term.body, gloss.body, gloss_default.body
 ORDER BY count(*) DESC, max(r.answered_at) DESC
 LIMIT @max_rows;
+
+-- name: CurrentGoal :one
+-- A meta mais recente: o ciclo aberto ou, se acabou e a pessoa nao abriu outro, o ultimo (nao bloqueia o estudo).
+SELECT id, period_start, period_end, preset, daily_minutes, days_target, weekdays
+FROM goal_cycle
+WHERE user_id = @user_id
+ORDER BY period_start DESC
+LIMIT 1;
+
+-- name: CloseOlderGoals :exec
+UPDATE goal_cycle SET status = 'closed'
+WHERE user_id = @user_id AND status = 'active' AND period_start < @period_start;
+
+-- name: UpsertGoal :one
+-- Um ciclo por (pessoa, dia de inicio): abrir outro no mesmo dia substitui o de hoje.
+INSERT INTO goal_cycle (user_id, period_start, period_end, preset, daily_minutes, days_target, weekdays, status)
+VALUES (@user_id, @period_start, @period_end, sqlc.narg('preset'), @daily_minutes, @days_target, @weekdays, 'active')
+ON CONFLICT (user_id, period_start) DO UPDATE SET
+    period_end = EXCLUDED.period_end, preset = EXCLUDED.preset, daily_minutes = EXCLUDED.daily_minutes,
+    days_target = EXCLUDED.days_target, weekdays = EXCLUDED.weekdays, status = 'active'
+RETURNING id, period_start, period_end, preset, daily_minutes, days_target, weekdays;

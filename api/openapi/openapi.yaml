@@ -509,6 +509,59 @@ paths:
               schema: { $ref: "#/components/schemas/Heatmap" }
         "400": { description: intervalo invalido (de depois de ate, ou maior que 400 dias) }
         "401": { description: sem sessao valida }
+  /goals/current:
+    get:
+      tags: [progress]
+      operationId: getCurrentGoal
+      description: >
+        A meta do ciclo e o quanto ja foi cumprido. O ciclo dura 7 dias a partir de quando foi aberto. Passado o
+        fim (ended = true), o progresso e a retrospectiva do ciclo e a meta continua valendo ate a pessoa abrir
+        outra: nao responder nunca bloqueia o estudo. Sem meta ainda, vem so ended = false.
+      responses:
+        "200":
+          description: a meta atual (ausente se nunca houve)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CurrentGoal" }
+        "401": { description: sem sessao valida }
+  /goals/suggestions:
+    get:
+      tags: [progress]
+      operationId: getGoalSuggestions
+      description: >
+        Tres sugestoes de meta (leve, constante e intensa) a partir dos ultimos 28 dias: 0,8x, 1x e o percentil 75
+        do tempo real por dia estudado, e os dias por semana ao redor do que a pessoa ja faz. Com menos de 3 dias
+        de estudo no periodo, vem valores iniciais fixos (based_on_history = false).
+      responses:
+        "200":
+          description: as sugestoes, da mais leve a mais intensa
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GoalSuggestions" }
+        "401": { description: sem sessao valida }
+  /goals:
+    post:
+      tags: [progress]
+      operationId: startGoal
+      description: >
+        Abre um novo ciclo de 7 dias a partir de hoje (dia de estudo da pessoa); o ciclo anterior e encerrado,
+        cumprido ou nao. "Manter a mesma" e reenviar os mesmos valores. Se ja ha um ciclo aberto hoje, ele e
+        substituido.
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GoalRequest" }
+      responses:
+        "201":
+          description: a meta aberta, com o progresso de hoje
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CurrentGoal" }
+        "400": { description: cabecalho de protecao ausente ou meta invalida (minutos, dias ou dias da semana fora dos limites) }
+        "401": { description: sem sessao valida }
 components:
   responses:
     TooManyRequests:
@@ -841,3 +894,53 @@ components:
         date: { type: string, format: date }
         reviews: { type: integer }
         correct: { type: integer }
+    GoalRequest:
+      type: object
+      required: [daily_minutes, days_target]
+      properties:
+        preset: { type: string, enum: [light, steady, intense, custom], description: "ausente = custom" }
+        daily_minutes: { type: integer, minimum: 1, maximum: 240 }
+        days_target: { type: integer, minimum: 1, maximum: 7, description: "dias de estudo por ciclo" }
+        weekdays: { type: array, description: "dias da semana permitidos, 1 = segunda a 7 = domingo; ausente = todos", items: { type: integer, minimum: 1, maximum: 7 } }
+    Goal:
+      type: object
+      required: [id, period_start, period_end, daily_minutes, days_target, weekdays]
+      properties:
+        id: { type: string, format: uuid }
+        period_start: { type: string, format: date }
+        period_end: { type: string, format: date }
+        preset: { type: string, enum: [light, steady, intense, custom] }
+        daily_minutes: { type: integer }
+        days_target: { type: integer }
+        weekdays: { type: array, items: { type: integer } }
+    GoalProgress:
+      type: object
+      required: [days_studied, days_target, minutes_studied, minutes_goal, new_words, days_left, met]
+      properties:
+        days_studied: { type: integer, description: "dias do ciclo com ao menos 1 resposta" }
+        days_target: { type: integer }
+        minutes_studied: { type: integer, description: "tempo ativo no ciclo, em minutos" }
+        minutes_goal: { type: integer, description: "daily_minutes x days_target" }
+        new_words: { type: integer, description: "palavras vistas pela 1a vez no ciclo" }
+        days_left: { type: integer, minimum: 0, description: "dias que faltam para o fim do ciclo (0 no ultimo dia ou depois)" }
+        met: { type: boolean, description: "dias estudados >= dias da meta" }
+    CurrentGoal:
+      type: object
+      required: [ended]
+      properties:
+        goal: { $ref: "#/components/schemas/Goal" }
+        progress: { $ref: "#/components/schemas/GoalProgress" }
+        ended: { type: boolean, description: "o ciclo ja acabou: mostrar a retrospectiva e perguntar a proxima meta" }
+    GoalSuggestion:
+      type: object
+      required: [preset, daily_minutes, days_target]
+      properties:
+        preset: { type: string, enum: [light, steady, intense] }
+        daily_minutes: { type: integer }
+        days_target: { type: integer }
+    GoalSuggestions:
+      type: object
+      required: [suggestions, based_on_history]
+      properties:
+        suggestions: { type: array, items: { $ref: "#/components/schemas/GoalSuggestion" } }
+        based_on_history: { type: boolean }

@@ -36,11 +36,21 @@ type Store struct {
 	Due    map[int]int
 	Known  int
 	Missed []domain.Missed
-	FailOn string // nome do metodo que deve falhar
+	Cycles []Cycle // ciclos de meta gravados
+	FailOn string  // nome do metodo que deve falhar
 	Err    error
 }
 
-var _ app.Reader = (*Store)(nil)
+var (
+	_ app.Reader = (*Store)(nil)
+	_ app.Goals  = (*Store)(nil)
+)
+
+// Cycle e um ciclo de meta guardado; Closed marca os que foram encerrados por outro mais novo.
+type Cycle struct {
+	Goal   domain.Goal
+	Closed bool
+}
 
 // New cria um leitor com os ajustes padrao.
 func New() *Store { return &Store{Config: domain.DefaultSettings, Due: map[int]int{}} }
@@ -76,4 +86,35 @@ func (s *Store) KnownWords(context.Context, uuid.UUID) (int, error) {
 
 func (s *Store) MostMissed(context.Context, uuid.UUID, time.Time, string, int) ([]domain.Missed, error) {
 	return s.Missed, s.fail("MostMissed")
+}
+
+func (s *Store) CurrentGoal(context.Context, uuid.UUID) (domain.Goal, bool, error) {
+	if err := s.fail("CurrentGoal"); err != nil || len(s.Cycles) == 0 {
+		return domain.Goal{}, false, err
+	}
+	latest := s.Cycles[0].Goal
+	for _, c := range s.Cycles {
+		if c.Goal.PeriodStart.After(latest.PeriodStart) {
+			latest = c.Goal
+		}
+	}
+	return latest, true, nil
+}
+
+// StartGoal encerra os ciclos mais antigos e grava o novo; um ciclo que comecou no mesmo dia e substituido.
+func (s *Store) StartGoal(_ context.Context, _ uuid.UUID, g domain.Goal) (domain.Goal, error) {
+	if err := s.fail("StartGoal"); err != nil {
+		return domain.Goal{}, err
+	}
+	kept := s.Cycles[:0]
+	for _, c := range s.Cycles {
+		if c.Goal.PeriodStart.Equal(g.PeriodStart) {
+			continue
+		}
+		c.Closed = c.Closed || c.Goal.PeriodStart.Before(g.PeriodStart)
+		kept = append(kept, c)
+	}
+	g.ID = uuid.New()
+	s.Cycles = append(kept, Cycle{Goal: g})
+	return g, nil
 }
