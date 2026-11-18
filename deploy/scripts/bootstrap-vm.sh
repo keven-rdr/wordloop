@@ -4,7 +4,10 @@
 set -euo pipefail
 
 PUBKEY="${1:?uso: bootstrap-vm.sh \"ssh-ed25519 AAAA... deploy\"}"
-BASE=/srv/wordloop/tst
+# Ambiente da VM: WORDLOOP_ENV=prd sudo bash bootstrap-vm.sh "<chave>"  (padrao: tst). Cada VM serve um ambiente.
+ENV_NAME="${WORDLOOP_ENV:-tst}"
+[[ "$ENV_NAME" == tst || "$ENV_NAME" == prd ]] || { echo "WORDLOOP_ENV deve ser tst ou prd" >&2; exit 2; }
+BASE="/srv/wordloop/$ENV_NAME"
 
 # 1) Swap de 2 GB: com 1 GB de RAM o Docker e o pull de imagens estouram sem isso.
 if ! swapon --show | grep -q /swapfile; then
@@ -42,3 +45,4 @@ chown deploy:deploy /home/deploy/.ssh/authorized_keys
 chmod 600 /home/deploy/.ssh/authorized_keys
 
 echo "ok: copie compose.yaml, Caddyfile, deploy.sh e crie versions.env e secrets.env em $BASE"
+[[ "$ENV_NAME" != prd ]] || echo "producao: depois rode harden-vm.sh (--admin-user <seu-usuario>) e siga docs/ops/producao.md"

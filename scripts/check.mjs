@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // `npm run check`: Definition of Done local. Roda nos componentes alterados contra a base (develop);
-// `--all` roda nos dois. Mesmos comandos do CI (api-ci, web-ci), sem Sonar/E2E/Lighthouse.
+// `--all` roda em todos (api, web e ops = testes dos scripts de deploy/). Mesmos comandos do CI (api-ci, web-ci), sem Sonar/E2E/Lighthouse.
 // Funciona numa maquina limpa: gera o codigo que falta e usa `go run` quando o binario nao esta no PATH.
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -17,7 +17,7 @@ function changedComponents() {
   const base = ["origin/develop", "develop", "origin/main", "main"].find((r) => {
     try { git("rev-parse", "--verify", r); return true; } catch { return false; }
   });
-  if (!base) return new Set(["api", "web"]);
+  if (!base) return new Set(["api", "web", "ops"]);
   const mergeBase = git("merge-base", "HEAD", base);
   const files = [
     ...git("diff", "--name-only", mergeBase).split("\n"),
@@ -28,6 +28,7 @@ function changedComponents() {
     if (f.startsWith("api/")) set.add("api");
     if (f.startsWith("web/")) set.add("web");
     if (f.startsWith("api/openapi/")) set.add("web"); // o cliente web e gerado do contrato
+    if (f.startsWith("deploy/")) set.add("ops"); // scripts de operacao (backup, restauracao, deploy): testes proprios
   }
   return set;
 }
@@ -75,7 +76,7 @@ const steps = {
 
 const run = (cwd, cmd, args) => spawnSync(cmd, args, { cwd, encoding: "utf8", shell: win });
 
-const targets = all ? new Set(["api", "web"]) : changedComponents();
+const targets = all ? new Set(["api", "web", "ops"]) : changedComponents();
 if (targets.size === 0) console.log("check: nenhum componente alterado (use --all para tudo)");
 
 let failed = 0;
@@ -96,6 +97,13 @@ for (const t of ["api", "web"].filter((c) => targets.has(c))) {
       process.stdout.write(`${r.stdout ?? ""}${r.stderr ?? ""}`);
     }
   }
+}
+if (targets.has("ops")) {
+  // No Windows, o `bash` do PATH pode ser o do WSL: prefere o do Git for Windows.
+  const bash = (win && ["C:\\Program Files\\Git\\bin\\bash.exe"].find(existsSync)) || "bash";
+  const r = spawnSync(bash, ["deploy/scripts/tests/run.sh"], { encoding: "utf8" });
+  console.log(`${r.status === 0 ? "ok    " : "FALHOU"}  ops: bash deploy/scripts/tests/run.sh`);
+  if (r.status !== 0) { failed++; process.stdout.write(`${r.stdout ?? ""}${r.stderr ?? ""}`); }
 }
 if (targets.has("web") || targets.has("api")) {
   const r = spawnSync("node", ["scripts/check-changed-lines.mjs"], { encoding: "utf8" });

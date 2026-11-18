@@ -1,0 +1,128 @@
+# Deploy em PRODUCAO: SEMPRE manual e com aprovacao (o Environment `prd` exige revisor: Settings > Environments > prd).
+# Promove um commit que ja passou pelo CI e esta em develop ou main; monta o pacote (compose, Caddyfile, api.env
+# preenchido, secrets.env e scripts de backup) com build-package.sh e o envia ao deploy.sh da VM por SSH. O deploy.sh faz
+# backup do banco ANTES de migrar e, se o backup falhar, para sem tocar em nada.
+# Secrets do Environment `prd`: DEPLOY_SSH_KEY, DEPLOY_HOST, DEPLOY_KNOWN_HOSTS, DATABASE_URL; opcionais: GOOGLE_CLIENT_ID/_SECRET,
+# GH_OAUTH_CLIENT_ID/_SECRET, OIDC_*, SESSION_KEY, BREVO_API_KEY. Variaveis do Environment: PRD_DOMAIN (obrigatoria) e MAIL_FROM.
+# Tags: 'sha-<commit completo>' (ou '-' para manter a atual). Passo a passo: docs/ops/producao.md
+name: deploy-prd
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "deploy ou rollback"
+        type: choice
+        options: [deploy, rollback]
+        default: deploy
+      api_tag: { description: "tag da API (sha-<commit de 40 caracteres>) ou -", default: "-" }
+      web_tag: { description: "tag do web (sha-<commit de 40 caracteres>) ou -", default: "-" }
+permissions: { contents: read }
+concurrency: { group: deploy-prd, cancel-in-progress: false }
+
+jobs:
+  prd:
+    runs-on: ubuntu-latest
+    environment: prd # a aprovacao acontece aqui
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { fetch-depth: 0 }
+      - name: Valida as tags (formato e origem)
+        env:
+          ACTION: ${{ inputs.action }}
+          API_TAG: ${{ inputs.api_tag }}
+          WEB_TAG: ${{ inputs.web_tag }}
+        run: |
+          if [ "$ACTION" = "rollback" ]; then echo "rollback: volta a versao anterior registrada na VM"; exit 0; fi
+          if [ "$API_TAG" = "-" ] && [ "$WEB_TAG" = "-" ]; then echo "::error::informe ao menos uma tag (api_tag ou web_tag)"; exit 1; fi
+          for tag in "$API_TAG" "$WEB_TAG"; do
+            [ "$tag" = "-" ] && continue
+            case "$tag" in sha-[0-9a-f]*) ;; *) echo "::error::tag invalida: $tag (use sha-<commit de 40 caracteres>)"; exit 1 ;; esac
+            sha="${tag#sha-}"
+            printf '%s' "$sha" | grep -Eq '^[0-9a-f]{40}$' || { echo "::error::a tag precisa ter o commit completo (40 caracteres): $tag"; exit 1; }
+            git cat-file -e "$sha^{commit}" 2>/dev/null || { echo "::error::commit $sha nao existe neste repositorio"; exit 1; }
+            # So sobe para producao o que passou pelo fluxo: o commit tem que estar em develop ou main.
+            if ! git merge-base --is-ancestor "$sha" origin/develop && ! git merge-base --is-ancestor "$sha" origin/main; then
+              echo "::error::o commit $sha nao esta em develop nem em main"; exit 1
+            fi
+          done
+      - name: Monta o pacote de configuracao
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PRD_DOMAIN: ${{ vars.PRD_DOMAIN }}
+          MAIL_FROM: ${{ vars.MAIL_FROM }}
+          OIDC_ISSUER: ${{ secrets.OIDC_ISSUER }}
+          OIDC_CLIENT_ID: ${{ secrets.OIDC_CLIENT_ID }}
+          OIDC_CLIENT_SECRET: ${{ secrets.OIDC_CLIENT_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GITHUB_CLIENT_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
+          GITHUB_CLIENT_SECRET: ${{ secrets.GH_OAUTH_CLIENT_SECRET }}
+          SESSION_KEY: ${{ secrets.SESSION_KEY }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+        run: |
+          bash deploy/scripts/build-package.sh prd "$RUNNER_TEMP/pacote.tar"
+      - name: Prepara a chave SSH
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          for v in KEY KNOWN; do
+            [ -n "${!v}" ] || { echo "::error::secret ausente ou vazio: $v (Settings > Environments > prd)"; exit 1; }
+          done
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN" | tr -d '\r' > ~/.ssh/known_hosts
+      - name: Executa o deploy.sh na VM (comando forcado)
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          ACTION: ${{ inputs.action }}
+          API_TAG: ${{ inputs.api_tag }}
+          WEB_TAG: ${{ inputs.web_tag }}
+        run: |
+          HOST="$(printf '%s' "$HOST" | tr -d '[:space:]')"
+          # Espaco na frente: um comando que comeca com "-" (tag "-" = manter) o ssh leria como opcao.
+          if [ "$ACTION" = "rollback" ]; then CMD="rollback"; else CMD=" $API_TAG $WEB_TAG"; fi
+          set +e
+          # 255 = falha do proprio ssh (conexao derrubada): o deploy.sh nem rodou, repetir e seguro.
+          for tentativa in 1 2 3; do
+            saida="$(ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o ConnectTimeout=20 "deploy@$HOST" "$CMD" < "$RUNNER_TEMP/pacote.tar" 2>&1)"
+            codigo=$?
+            [ "$codigo" -ne 255 ] && break
+            case "$saida" in *usage:*) break ;; esac
+            echo "ssh falhou (255) na tentativa $tentativa: $(printf '%s' "$saida" | tail -n 1)"
+            sleep $((tentativa * 10))
+          done
+          printf '%s\n' "$saida"
+          if [ "$codigo" -eq 3 ]; then
+            echo "::error title=backup falhou, deploy cancelado::o banco nao foi tocado; veja docs/ops/producao.md (backup)"
+          elif [ "$codigo" -ne 0 ]; then
+            echo "::error title=deploy falhou (codigo $codigo)::$(printf '%s' "$saida" | tail -n 8 | tr '\n' ' ')"
+          fi
+          exit "$codigo"
+      # Smoke test: o deploy so conta como feito se o que foi implantado esta MESMO no ar e respondendo.
+      - name: Smoke test em producao
+        env:
+          URL: https://${{ vars.PRD_DOMAIN }}
+          API_TAG: ${{ inputs.api_tag }}
+          ACTION: ${{ inputs.action }}
+        run: |
+          fail() { echo "::error title=smoke test falhou::$1"; exit 1; }
+          get() { curl -fsS --max-time 15 "$@"; }
+          ok=0
+          for i in $(seq 1 24); do # o contêiner da API reinicia no deploy: espera ate 2 min
+            [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$URL/api/v1/health/ready")" = "200" ] && { ok=1; break; }
+            sleep 5
+          done
+          [ "$ok" = 1 ] || fail "GET /api/v1/health/ready nao respondeu 200 em 2 min (considere o rollback)"
+          version="$(get "$URL/api/v1/version")" || fail "GET /api/v1/version falhou"
+          echo "no ar: $version"
+          case "$ACTION:$API_TAG" in
+            deploy:sha-*)
+              want="${API_TAG#sha-}"; got="$(printf '%s' "$version" | grep -o '"commit":"[^"]*"' | cut -d'"' -f4)"
+              [ -n "$got" ] || fail "nao consegui ler o commit em /api/v1/version: $version"
+              [ "$got" = "$want" ] || fail "a API serve o commit $got, esperava $want" ;;
+          esac
+          get "$URL/" | grep -q 'id="root"' || fail "GET / nao devolveu a pagina do app (#root)"
+          get -o /dev/null "$URL/favicon.svg" || fail "GET /favicon.svg falhou"
+          [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$URL/api/v1/docs/")" = "404" ] || fail "a documentacao interativa nao deve estar exposta em producao"
+          echo "smoke test ok"

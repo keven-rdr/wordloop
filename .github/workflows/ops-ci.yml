@@ -1,0 +1,32 @@
+# CI dos scripts de operacao (backup, restauracao, endurecimento da VM, deploy): testes com comandos de mentira
+# (sem rede, sem Docker, sem banco) e shellcheck. Roda so quando algo de deploy/ muda.
+name: ops-ci
+on:
+  pull_request:
+    paths: ["deploy/**", ".github/workflows/ops-ci.yml", ".github/workflows/deploy*.yml"]
+  push:
+    branches: [develop]
+    paths: ["deploy/**", ".github/workflows/ops-ci.yml"]
+permissions: { contents: read }
+concurrency: { group: "ops-ci-${{ github.ref }}", cancel-in-progress: true }
+
+jobs:
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Testes dos scripts de operacao
+        run: bash deploy/scripts/tests/run.sh
+      - name: shellcheck
+        run: shellcheck --severity=error --external-sources deploy/scripts/*.sh deploy/scripts/lib/*.sh deploy/scripts/tests/*.sh
+      - name: Valida o YAML do compose de prd
+        run: |
+          cd deploy/prd
+          printf 'PRD_DOMAIN=app.exemplo.com.br\nAPI_TAG=x\nWEB_TAG=x\n' > "$RUNNER_TEMP/versions.env"
+          : > secrets.env; cp api.env.tmpl api.env
+          docker compose --env-file "$RUNNER_TEMP/versions.env" config -q
+          rm -f secrets.env api.env
+      - name: Valida o Caddyfile de prd
+        run: |
+          docker run --rm -e PRD_DOMAIN=app.exemplo.com.br -v "$PWD/deploy/prd/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile

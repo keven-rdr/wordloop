@@ -1,0 +1,32 @@
+# TLS automatico (Let's Encrypt) para o dominio de producao. O dominio vem de PRD_DOMAIN (versions.env).
+# Mesma origem para web e API: sem CORS e com cookie httpOnly (BFF).
+
+# CSP estrita do app e da API: sem script nem estilo inline.
+(csp_estrita) {
+	header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: https://lh3.googleusercontent.com https://avatars.githubusercontent.com; connect-src 'self'; frame-ancestors 'none'"
+}
+
+{$PRD_DOMAIN} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	# A documentacao interativa (Swagger UI) e ferramenta de desenvolvimento: nao fica exposta em producao.
+	# O contrato continua no repositorio (api/openapi/openapi.yaml).
+	handle /api/v1/docs* {
+		respond "not found" 404
+	}
+	handle /api/* {
+		import csp_estrita
+		reverse_proxy api:8080
+	}
+	handle {
+		import csp_estrita
+		reverse_proxy web:8080
+	}
+}
