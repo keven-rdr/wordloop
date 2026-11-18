@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StudyCard } from '../../../api/generated/types.gen';
 import { s } from './styles';
+import { TypePrompt } from './TypePrompt';
 
 type Props = Readonly<{
   card: StudyCard;
@@ -21,8 +22,7 @@ export function TypeExercise({ card, typed, locked, hintUsed, onType, onSubmit, 
   useEffect(() => input.current?.focus(), []);
   return (
     <>
-      <p {...stylex.props(s.hint)}>{t('type.prompt')}</p>
-      <h1 {...stylex.props(s.term)}>{card.gloss}</h1>
+      <TypePrompt card={card} />
       <form
         onSubmit={(event) => {
           event.preventDefault();

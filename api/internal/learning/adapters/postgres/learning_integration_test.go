@@ -202,7 +202,7 @@ func TestProductiveCardAppearsAfterTheReceptiveGetsStrong(t *testing.T) {
 	for _, c := range next.Cards {
 		if c.Card.Direction == domain.Productive && c.Card.ItemID == card.ItemID {
 			productive++
-			if len(c.Options) != 0 || c.Card.Exercise() != domain.Type {
+			if len(c.Options) != 0 || !c.Exercise.IsTyped() {
 				t.Errorf("produtivo digita, sem alternativas: %+v", c)
 			}
 		}
@@ -221,6 +221,15 @@ func TestProductiveCardAppearsAfterTheReceptiveGetsStrong(t *testing.T) {
 	res, err := f.submit.Run(ctx, []domain.Answer{typed})
 	if err != nil || res[0].Status != domain.Applied || res[0].Grade != srs.Hard || !res[0].Typo || res[0].Card.State.Lapses != 0 {
 		t.Fatalf("erro de digitacao: %+v %v", res, err)
+	}
+	// as variantes lacuna e imagem tambem entram no log (o CHECK de exercise_type foi alargado na 00014)
+	for i, ex := range []domain.Exercise{domain.Cloze, domain.Image} {
+		a := domain.Answer{ID: uuid.New(), CardID: prod.ID, Exercise: ex, Text: "house",
+			ShownAt: now.Add(-20 * time.Second), AnsweredAt: now.Add(time.Duration(-10+i) * time.Second)}
+		res, err := f.submit.Run(ctx, []domain.Answer{a})
+		if err != nil || res[0].Status != domain.Applied || !res[0].Correct {
+			t.Fatalf("%s: %+v %v", ex, res, err)
+		}
 	}
 }
 

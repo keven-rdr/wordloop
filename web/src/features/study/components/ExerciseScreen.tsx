@@ -68,7 +68,7 @@ function ActionBar({ checked, canCheck, isType, verify, skip, next }: BarProps) 
 export function ExerciseScreen({ card, checked, hintUsed, onHint, onCheck, onGrade }: Props) {
   const [chosen, setChosen] = useState<string>();
   const [typed, setTyped] = useState('');
-  const isType = card.exercise === 'type';
+  const isType = card.exercise !== 'choose'; // digitar, lacuna e imagem → palavra se respondem digitando
   const canCheck = isType ? typed.trim() !== '' : chosen !== undefined;
   const verify = () => onCheck(isType ? { answer: typed } : { chosenItemId: chosen });
   useExerciseKeys({ card, checked, chosen }, { onChoose: setChosen, onVerify: verify, onGrade });

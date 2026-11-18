@@ -30,6 +30,13 @@
     "hintShown": "Começa com “{{letter}}”",
     "unknown": "Não sei"
   },
+  "cloze": {
+    "prompt": "Complete a frase com a palavra que falta"
+  },
+  "image": {
+    "prompt": "Que palavra em inglês a imagem mostra?",
+    "alt": "Imagem da palavra que você precisa escrever"
+  },
   "verify": "Verificar",
   "next": "Continuar",
   "feedback": {

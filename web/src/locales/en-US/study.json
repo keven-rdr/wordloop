@@ -30,6 +30,13 @@
     "hintShown": "Starts with “{{letter}}”",
     "unknown": "I don't know"
   },
+  "cloze": {
+    "prompt": "Complete the sentence with the missing word"
+  },
+  "image": {
+    "prompt": "Which English word does the image show?",
+    "alt": "Picture of the word you need to write"
+  },
   "verify": "Check",
   "next": "Continue",
   "feedback": {

@@ -41,9 +41,9 @@ function check(state: SessionState, action: Extract<SessionAction, { type: 'chec
   const card = state.queue[0];
   if (!card || state.checked) return state;
   const outcome =
-    card.exercise === 'type'
-      ? checkTyped(card.term, action.answer ?? '')
-      : checkChoice(card, action.chosenItemId ?? '');
+    card.exercise === 'choose'
+      ? checkChoice(card, action.chosenItemId ?? '')
+      : checkTyped(card.term, action.answer ?? '');
   const suggested = suggestDifficulty(action.now - state.shownAt, card.exercise);
   const checked: Checked = {
     outcome,

@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { type Call, json, me, renderApp, setupTestApp, stubApi, version } from '../../../test-support';
+import { json, me, renderApp, setupTestApp, stubApi, version } from '../../../test-support';
+import { accepted, api, house, mother, sentReviews, start } from './studyTestKit';
 
 beforeAll(setupTestApp);
 
@@ -8,66 +9,6 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
 });
-
-const house = {
-  id: 'c1',
-  item_id: 'i1',
-  direction: 'receptive',
-  state: 'new',
-  exercise: 'choose',
-  term: 'house',
-  gloss: 'casa',
-  mastery: 0,
-  options: [
-    { item_id: 'i2', gloss: 'mãe' },
-    { item_id: 'i1', gloss: 'casa' },
-  ],
-};
-const mother = {
-  ...house,
-  id: 'c2',
-  item_id: 'i2',
-  exercise: 'type',
-  term: 'mother',
-  gloss: 'mãe',
-  options: undefined,
-};
-const pack = (cards: unknown[]) => ({
-  session_id: 'sess-1',
-  cards,
-  new_limit: 8,
-  review_limit: 20,
-  expires_at: '2026-11-19T04:00:00Z',
-});
-const accepted = (req: Request) =>
-  req
-    .clone()
-    .json()
-    .then((body: { reviews: { id: string }[] }) =>
-      json({
-        results: body.reviews.map((review) => ({ id: review.id, status: 'applied', correct: true })),
-      }),
-    );
-
-function api(cards: unknown[], reviews: (req: Request) => Response | Promise<Response> = accepted) {
-  return stubApi({
-    'GET /version': () => json(version),
-    'GET /me': () => json(me),
-    'POST /study/plan': () => json(pack(cards)),
-    'POST /study/reviews': reviews,
-  });
-}
-
-// Respostas do primeiro lote enviado ao servidor.
-function sentReviews(calls: Call[]): Record<string, unknown>[] {
-  const batch = calls.find((call) => call.path === '/study/reviews');
-  return (batch?.body as { reviews: Record<string, unknown>[] } | undefined)?.reviews ?? [];
-}
-
-const start = async () => {
-  renderApp('/study');
-  fireEvent.click(await screen.findByRole('button', { name: 'Começar' }));
-};
 
 describe('plano', () => {
   it('pede o tempo escolhido, com o fuso do aparelho, e abre a sessão', async () => {

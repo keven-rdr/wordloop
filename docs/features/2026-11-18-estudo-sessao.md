@@ -14,7 +14,7 @@ O núcleo do SRS está pronto (Sprint 3): `POST /study/plan` entrega o pacote de
 
 ## Definições confirmadas
 - **PR 1 — sessão online:** rotas `/study` (plano: 5/15/30/60 min), `/study/session/:id` (loop) e `/study/summary/:id`; hooks gerados `planSession` e `submitReviews`; exercícios **escolher** e **digitar** (já suportados pela API); estados `pergunta → verificando → acerto | erro → dificuldade → próximo`; dificuldade em 1 toque (acerto: Fácil/Médio/Difícil com sugestão por tempo; erro: "Não sabia / Quase lembrei / Foi distração"); erro devolve o cartão à fila em 3 cartões; sair (✕) pede confirmação e **envia o que foi respondido**; resumo mostra ganhos; atalhos de teclado (`Enter`, `1–3`, `A–D`, `Esc`); alvos ≥ 48 px; feedback em `aria-live="polite"`.
-- **PR 2 — L-05:** exercícios **lacuna** e **imagem → palavra** (contrato: novos valores de `exercise` e campos do cartão; geradores e corretores no servidor, sem irmãos semânticos nos distratores).
+- **PR 2 — L-05:** exercícios **lacuna** (`cloze`) e **imagem → palavra** (`image`). Ambos são variantes do cartão **produtivo** (S ≥ 7 d) e se respondem **digitando**; a correção é a mesma do digitar (tolera 1 erro em palavras ≥ 5 letras). O **servidor** escolhe a variante, de forma determinística por cartão (`hash(card_id, reps)`): unidade "Palavrinhas" (`little-words`) com exemplo que contém o termo → sempre lacuna; nos demais, 1ª fatia → lacuna se couber (senão imagem), 2ª fatia → imagem se houver e S < 21 d (*fading*), 3ª → PT→digitar. Lacuna mostra a frase com `____` e a tradução da frase como dica; imagem→palavra mostra só a imagem (sem a tradução). A imagem **é a pergunta**: não ativa `image_before_answer` (Fácil continua possível). Contrato: `exercise` ganha `cloze` e `image` (cartão e resposta) e o cartão ganha `cloze_text`. Migração aditiva alarga o `CHECK` de `review_log.exercise_type`.
 - **PR 3 — U-05:** fila offline em IndexedDB com o UUID do cliente; faixa com contador de respostas pendentes; reenvio ao voltar a conexão, sem duplicar; a sessão continua com o pacote local.
 - Corrigir resposta, nota e agendamento **só no servidor**; o cliente só mostra feedback provisório (`client_correct`).
 
@@ -29,7 +29,7 @@ O núcleo do SRS está pronto (Sprint 3): `POST /study/plan` entrega o pacote de
 ## Checklist de progresso
 - [x] Roadmap e doc do Sprint 3 fechados
 - [x] PR 1: contrato já pronto (`npm run gen`), feature `study` (plano, sessão, escolher, digitar, dificuldade, resumo), rotas, menu, i18n, testes (Vitest + Playwright)
-- [ ] PR 2: lacuna e imagem → palavra (contrato, API, tela)
+- [x] PR 2: lacuna e imagem → palavra (contrato, migração 00014, variantes e correção no servidor, telas)
 - [ ] PR 3: fila offline
 - [ ] Documentação: este arquivo
 - [ ] `npm run check` verde em cada PR
@@ -43,4 +43,8 @@ O núcleo do SRS está pronto (Sprint 3): `POST /study/plan` entrega o pacote de
   - O menu ganhou o item "Estudar" (única edição em arquivo central, já prevista) e o Início ganhou o botão "Estudar agora".
   - Erro de digitação (1 letra, palavras ≥ 5) e acerto com dica não perguntam dificuldade: o servidor aplica Difícil sem lapso. O cartão errado volta daqui a 3 cartões.
   - Atalhos: A–D/1–4 escolhem, Enter verifica/continua, 1–3 respondem a dificuldade (com o foco nos botões, Enter e Espaço ficam com o botão), Esc abre/fecha a confirmação de sair.
-  - Pendente para o PR 2/3: imagem na apresentação, TTS e a faixa offline.
+  - Pendente: imagem na apresentação do cartão novo e TTS (Sprint 8) e a faixa offline (PR 3).
+- **PR 2:** `go test` do `learning` e do `srs` verde (variantes, `Blank`, determinismo, fading da imagem, rejeição de variante que não cabe na direção do cartão); integração Postgres **compila** com a tag `integration`, mas **não rodou** (sem Docker): o CI roda e cobre o `CHECK` alargado pela migração 00014. Vitest cobre lacuna e imagem (frase sem a palavra, tradução como dica, dica limita a nota, queda para o digitar quando faltam frase ou imagem); Playwright ganhou 2 cenários.
+  - A variante é do servidor e determinística (`hash(card_id, reps)`); o app só mostra o que veio no plano. A correção aceita qualquer variante digitada em cartão produtivo e recusa `cloze`/`image` em cartão receptivo.
+  - `Blank` troca a primeira ocorrência da palavra **inteira** no exemplo (sem letra colada); formas flexionadas ("runs" para "run") não geram lacuna e o cartão cai no digitar.
+  - Instalei o Go 1.27.4 nesta máquina (winget) para gerar o código e rodar a API.

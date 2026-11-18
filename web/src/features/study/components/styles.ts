@@ -83,6 +83,7 @@ export const s = stylex.create({
     borderRadius: radius.lg,
     backgroundColor: color.surface,
   },
+  pictureBig: { maxWidth: '14rem', maxHeight: '14rem' },
   options: { display: 'flex', flexDirection: 'column', gap: space.sm, margin: 0, padding: 0, borderWidth: 0 },
   option: {
     display: 'flex',

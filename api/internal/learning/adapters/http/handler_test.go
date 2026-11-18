@@ -103,6 +103,34 @@ func TestPlanReturnsThePackWithContentAndOptions(t *testing.T) {
 	}
 }
 
+func TestPlanSendsTheClozeFieldsForProductiveFunctionalWords(t *testing.T) {
+	item := learningtest.Item{ID: uuid.New(), Content: domain.Content{
+		Term: "the", Gloss: "o", Example: "The cat sleeps.", ExampleGloss: "O gato dorme.", Theme: domain.FunctionalTheme,
+	}}
+	store := learningtest.New(item)
+	id := uuid.New()
+	store.Cards[id] = &domain.Card{ID: id, ItemID: item.ID, Direction: domain.Receptive, Scheduler: "simple_v1", State: srs.CardState{
+		ID: id.String(), State: srs.StateReview, Stability: 10, Reps: 3, LastReviewAt: now.Add(-72 * time.Hour), DueAt: now.Add(24 * time.Hour),
+	}}
+	viewers := &learningtest.Viewers{Who: domain.Viewer{UserID: user}}
+	clock := func() time.Time { return now }
+	h := api.Handler(api.Server{Learning: httpapi.Handler{
+		Plan: app.PlanSession{Viewers: viewers, Repo: store, Scheduler: srs.SimpleV1{NoFuzz: true}, Now: clock, NewID: uuid.New},
+	}})
+	pack := decode[map[string]any](t, post(h, "/api/v1/study/plan", `{"minutes":15,"mode":"learn"}`, true))
+	for _, c := range pack["cards"].([]any) {
+		card := c.(map[string]any)
+		if card["direction"] != "productive" {
+			continue
+		}
+		if card["exercise"] != "cloze" || card["cloze_text"] != "____ cat sleeps." || card["options"] != nil {
+			t.Errorf("lacuna: %+v", card)
+		}
+		return
+	}
+	t.Fatal("o cartao produtivo deveria estar no plano")
+}
+
 func TestPlanValidation(t *testing.T) {
 	h, _ := fixture(domain.Viewer{UserID: user})
 	cases := map[string]struct {
