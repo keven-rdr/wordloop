@@ -34,3 +34,14 @@ test('sem provedores ligados os botões ficam desligados com "em breve"', async 
   await expect(page.getByRole('button', { name: /Continuar com GitHub/ })).toBeDisabled();
   await expect(page.getByText('em breve')).toHaveCount(2);
 });
+
+test('os botões de Google e GitHub têm a mesma largura do formulário (sem passar da borda)', async ({ page }) => {
+  await mockApi(page, ['google', 'github']);
+  await page.goto('/login');
+  const width = async (locator: ReturnType<Page['locator']>) => (await locator.boundingBox())?.width ?? 0;
+  const form = await width(page.getByLabel('E-mail'));
+  expect(form).toBeGreaterThan(0);
+  expect(await width(page.getByRole('link', { name: /Continuar com Google/ }))).toBeCloseTo(form, 0);
+  expect(await width(page.getByRole('link', { name: /Continuar com GitHub/ }))).toBeCloseTo(form, 0);
+  expect(await width(page.getByRole('button', { name: 'Entrar com passkey' }))).toBeCloseTo(form, 0);
+});

@@ -35,7 +35,7 @@ export const ui = stylex.create({
     borderStyle: 'solid',
     borderColor: color.border,
   },
-  block: { width: '100%' },
+  block: { width: '100%', boxSizing: 'border-box' }, // <a> é content-box: sem isto, borda e padding o faziam passar da coluna
   error: { color: color.danger, margin: 0 },
   muted: { color: color.textMuted, margin: 0 },
   list: {
