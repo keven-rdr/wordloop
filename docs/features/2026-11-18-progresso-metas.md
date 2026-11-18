@@ -1,6 +1,6 @@
 # Progresso e metas (Sprint 5)
 
-> Arquivo: `docs/features/2026-11-18-progresso-metas.md` · Issue: #__ · Branch: `feat/progresso-metas` · Estado: BUILD (PR 1 pronta; PRs 2 a 4 pendentes)
+> Arquivo: `docs/features/2026-11-18-progresso-metas.md` · Issue: #__ · Branch: `feat/progresso-metas` · Estado: BUILD (PRs 1 e 2 prontas; PRs 3 e 4 pendentes)
 
 ## Contexto
 O estudo na tela está pronto (Sprint 4, #43, #44, #46). Falta mostrar **o que a pessoa ganhou** e **quanto ela quer estudar**. O Sprint 5 do [roadmap](../fase-6/06-roadmap-backlog.md) entrega P-01 (agregação diária), P-02 (painel), P-03 (metas por ciclo) e W-01 (configurações). Critério: o painel reflete a sessão na hora; a virada de dia por fuso é testada. Modelo de dados em [schema-learning.sql](../fase-3/schema-learning.sql) (`study_day`, `goal_cycle`, `user_lexeme_known`); contrato esboçado em [openapi-sketch.yaml](../fase-3/openapi-sketch.yaml); fluxo "Fim do ciclo" em [05-ux-ui-fluxos.md](../fase-5/05-ux-ui-fluxos.md) §4.4.
@@ -34,12 +34,14 @@ O estudo na tela está pronto (Sprint 4, #43, #44, #46). Falta mostrar **o que a
 | `study_day.mastered_items` | **fora** da tabela (o esquema de rascunho previa a coluna) | "dominado" ainda não tem definição fechada; entra com a necessidade (YAGNI) |
 | Lapso no `study_day` | o cartão perdeu forca naquela resposta (`lapses` do cartão subiu); no preenchimento retroativo, nota Again em cartão já em revisão | contar todo erro: erro em cartão novo não é esquecimento |
 | Palavras conhecidas | foto em `study_day.known_lexemes` a cada resposta; o painel lê a visão `user_lexeme_known` na hora | só a foto: ficaria velha até a próxima resposta |
+| Onde mora o painel | Início (`/`): a rota junta `HomePage` (auth, atalhos) e `ProgressPanel` (progress) por `children`; as features não se importam | painel em rota própria: esconde o progresso; `progress` importar `auth`: viola a regra de features |
+| Heatmap | 12 semanas, colunas de semana (segunda a domingo), tom pela quantidade de respostas (1, 5, 15 e 30) via opacidade do roxo; para leitor de tela é uma imagem com resumo ("estudou em N dias") | 84 células focáveis: ruído |
 | Dia de hoje | calculado na API com o fuso e o corte da pessoa (`progress/domain.Today`, cópia da regra do `learning`: módulos não se importam) | ler `local_date` do log: não existe hoje antes da 1ª resposta |
 
 ## Checklist de progresso
 - [x] Roadmap atualizado (Sprint 4 concluído) e requisitos confirmados
 - [x] PR 1: `study_day` + API do painel (migração 00015, soma na transação, módulo `progress`, contrato)
-- [ ] PR 2: painel na web
+- [x] PR 2: painel na web (feature `progress`, Início, i18n, Vitest e Playwright)
 - [ ] PR 3: metas
 - [ ] PR 4: configurações
 - [ ] `npm run check` verde em cada PR
@@ -49,3 +51,5 @@ O estudo na tela está pronto (Sprint 4, #43, #44, #46). Falta mostrar **o que a
 - **PR 1:** `npm run check` verde (API: gofmt, vet, golangci-lint, estrutura, arch-lint com os componentes novos de `progress`, `go test -short`; web: tudo). Testes unitários cobrem a regra de dia/fuso (madrugada, Tóquio, Lisboa no horário de verão), a sequência (hoje ainda não estudou, buraco, dia sem resposta), a taxa de acertos, a previsão, o painel de quem nunca estudou, o contrato HTTP (200, 400, 401) e a soma única por resposta no `study_day` (reenvio não soma; falha em `BumpDay` desfaz o log).
   - **Não rodei** os testes de integração com Postgres (sem Docker aqui): compilam com `-tags integration` e o CI roda. Cobrem a migração 00015 (inclusive o preenchimento retroativo, executando o SQL da própria migração), as consultas do painel (previsão no fuso da pessoa, atrasadas em hoje, suspensas fora, palavras conhecidas, mais erradas sem erro de digitação, isolamento entre pessoas) e a soma no mesmo ciclo da revisão.
   - Os dois endpoints ainda não têm tela: o painel na web é a PR 2.
+- **PR 2:** `npm run check` verde. Vitest cobre a grade do heatmap (alinhamento na segunda, 84 dias, tons), a altura das barras e o painel (tudo preenchido, sem estudo hoje, sem acertos em 7 dias, quem nunca estudou, falha do servidor sem derrubar o Início, atalhos mantidos). Playwright (2 cenários) rodou localmente no Edge e passa, e a captura foi conferida a olho: cartões em coluna única, sem rolagem horizontal.
+  - Pendente: o cartão "Defina sua meta da semana" e o progresso da meta entram na PR 3; cobertura em % espera o NGSL.
