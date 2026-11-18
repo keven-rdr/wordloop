@@ -1,0 +1,61 @@
+{
+  "title": "Metas",
+  "subtitle": "Quanto você quer estudar por semana?",
+  "failed": "Não consegui carregar suas metas agora.",
+  "page": {
+    "current": "Sua meta",
+    "retro": "Como foi o seu ciclo",
+    "first": "Defina sua meta da semana",
+    "next": "Qual a meta da próxima semana?",
+    "change": "Mudar a meta"
+  },
+  "card": {
+    "setTitle": "Defina sua meta da semana",
+    "setText": "Diga quanto tempo quer estudar e acompanhe o seu ritmo.",
+    "setAction": "Definir meta",
+    "title": "Meta da semana",
+    "see": "Ver meta",
+    "endedTitle": "Seu ciclo acabou",
+    "endedAction": "Ver como foi e escolher a próxima"
+  },
+  "progress": {
+    "days_one": "{{done}} de {{count}} dia estudado",
+    "days_other": "{{done}} de {{count}} dias estudados",
+    "minutes": "{{done}} de {{goal}} minutos",
+    "left_one": "Falta {{count}} dia",
+    "left_other": "Faltam {{count}} dias",
+    "lastDay": "Hoje é o último dia do ciclo",
+    "met": "Meta cumprida!",
+    "bar": "Dias estudados no ciclo"
+  },
+  "retro": {
+    "met_one": "Meta cumprida! Você estudou {{done}} de {{count}} dia.",
+    "met_other": "Meta cumprida! Você estudou {{done}} de {{count}} dias.",
+    "missed_one": "Você estudou {{done}} de {{count}} dia. Dá para tentar de novo!",
+    "missed_other": "Você estudou {{done}} de {{count}} dias. Dá para tentar de novo!",
+    "days": "Dias estudados",
+    "minutes": "Minutos",
+    "words": "Palavras novas"
+  },
+  "preset": {
+    "light": "Leve",
+    "steady": "Constante",
+    "intense": "Intensa",
+    "custom": "Personalizar"
+  },
+  "choose": {
+    "legend": "Escolha uma meta",
+    "fromHistory": "Sugestões baseadas no seu ritmo das últimas 4 semanas.",
+    "initial": "Sugestões para começar. Elas se ajustam ao seu ritmo depois de alguns dias de estudo.",
+    "detail_one": "{{minutes}} min por dia, {{count}} dia por semana",
+    "detail_other": "{{minutes}} min por dia, {{count}} dias por semana",
+    "minutes": "Minutos por dia",
+    "days": "Dias por semana",
+    "errorMinutes": "Use de 1 a {{max}} minutos",
+    "errorDays": "Use de 1 a {{max}} dias",
+    "start": "Começar",
+    "keep": "Manter a mesma",
+    "saving": "Salvando…",
+    "failed": "Não consegui salvar sua meta agora. Tente de novo."
+  }
+}
