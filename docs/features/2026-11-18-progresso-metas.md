@@ -1,6 +1,6 @@
 # Progresso e metas (Sprint 5)
 
-> Arquivo: `docs/features/2026-11-18-progresso-metas.md` · Issue: #__ · Branch: `feat/progresso-metas` · Estado: DONE no código (PRs 1 a 3b mescladas: #48, #50, #51 e #52; PR 4 pronta, a aguardar publicação)
+> Arquivo: `docs/features/2026-11-18-progresso-metas.md` · Issue: #__ · Branch: `feat/progresso-metas` · Estado: DONE (mesclado: #48, #50, #51, #52 e #53)
 
 ## Contexto
 O estudo na tela está pronto (Sprint 4, #43, #44, #46). Falta mostrar **o que a pessoa ganhou** e **quanto ela quer estudar**. O Sprint 5 do [roadmap](../fase-6/06-roadmap-backlog.md) entrega P-01 (agregação diária), P-02 (painel), P-03 (metas por ciclo) e W-01 (configurações). Critério: o painel reflete a sessão na hora; a virada de dia por fuso é testada. Modelo de dados em [schema-learning.sql](../fase-3/schema-learning.sql) (`study_day`, `goal_cycle`, `user_lexeme_known`); contrato esboçado em [openapi-sketch.yaml](../fase-3/openapi-sketch.yaml); fluxo "Fim do ciclo" em [05-ux-ui-fluxos.md](../fase-5/05-ux-ui-fluxos.md) §4.4.
