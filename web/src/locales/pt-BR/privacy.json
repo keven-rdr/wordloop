@@ -1,0 +1,37 @@
+{
+  "title": "Seus dados",
+  "subtitle": "Baixar uma cópia ou excluir a conta",
+  "export": {
+    "title": "Baixar meus dados",
+    "text": "Um arquivo JSON com tudo o que o wordloop guarda sobre você: perfil, passkeys (só nome e datas), sessões, preferências, metas, estudo e o histórico de respostas. Não inclui senhas nem chaves.",
+    "action": "Baixar meus dados",
+    "downloading": "Preparando…",
+    "done": "Pronto! O arquivo foi baixado.",
+    "failed": "Não consegui baixar agora. Tente de novo."
+  },
+  "erase": {
+    "title": "Excluir minha conta",
+    "text": "Apaga na hora e para sempre:",
+    "items": {
+      "account": "seu perfil, seus vínculos de login, suas passkeys e suas sessões",
+      "study": "suas preferências, metas, cartões e dias de estudo",
+      "log": "todo o histórico das suas respostas"
+    },
+    "irreversible": "Não tem volta. Se quiser, baixe uma cópia dos seus dados antes.",
+    "open": "Excluir minha conta…",
+    "dialogTitle": "Excluir a conta para sempre?",
+    "dialogText": "Tudo será apagado agora e não dá para desfazer. Para confirmar, digite o e-mail da sua conta.",
+    "typeEmail": "E-mail da conta",
+    "confirm": "Excluir para sempre",
+    "erasing": "Excluindo…",
+    "cancel": "Cancelar",
+    "relogin": "Sair e entrar de novo",
+    "errors": {
+      "mismatch": "O e-mail digitado não é o da conta.",
+      "admin": "Contas de administrador não se apagam por aqui.",
+      "recent": "Por segurança, entre de novo e repita o pedido.",
+      "session": "Sua sessão acabou. Entre de novo.",
+      "failed": "Não consegui excluir agora. Nada foi apagado. Tente de novo."
+    }
+  }
+}

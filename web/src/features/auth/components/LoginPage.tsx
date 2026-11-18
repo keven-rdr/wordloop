@@ -7,6 +7,7 @@ import { PasskeyError } from '../passkey/browser';
 import { passkeyMessageKey } from '../passkey/errors';
 import { AuthShell } from './AuthShell';
 import { form } from './formStyles';
+import { LegalNotice } from './LegalNotice';
 import { LoginForm } from './LoginForm';
 import { Divider, SocialButtons } from './ProviderButton';
 import { ui } from './styles';
@@ -48,6 +49,7 @@ function SignInOptions() {
           {t('login.createAccount')}
         </Link>
       </p>
+      <LegalNotice />
     </>
   );
 }

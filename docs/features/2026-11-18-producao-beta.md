@@ -1,6 +1,6 @@
 # Pronto para produção (Sprint 6)
 
-> Arquivo: `docs/features/2026-11-18-producao-beta.md` · Issue: #__ · Branch: `feat/lgpd-api` · Estado: BUILD (PR 1 pronta; PRs 2 a 4 pendentes)
+> Arquivo: `docs/features/2026-11-18-producao-beta.md` · Issue: #__ · Branch: `feat/lgpd-api` · Estado: BUILD (PR 1 mesclada: #54; PR 2 pronta; PRs 3 e 4 pendentes)
 
 ## Contexto
 O Sprint 5 fechou o ciclo de estudo (progresso, metas, preferências). O Sprint 6 do [roadmap](../fase-6/06-roadmap-backlog.md) leva o app a **produção beta**: login Google com vínculo por e-mail (I-02, I-03), e-mails por SMTP (I-04), **LGPD: exportar e excluir** (I-05), privacidade e termos (I-06), backup com restauração (O-01), prd endurecido (O-02) e o release `0.x` em prd (F-06). Critério: "você estuda em prd; backup restaurado em banco descartável; exclusão apaga tudo".
@@ -34,12 +34,16 @@ O Sprint 5 fechou o ciclo de estudo (progresso, metas, preferências). O Sprint 
 | Registro da exclusão | `account_erasure` sem id nem e-mail da pessoa | guardar o id: deixaria a pessoa identificável depois de pedir esquecimento |
 | Como a exportação é montada | uma consulta no Postgres devolve o JSON (`jsonb_build_object`), com as colunas **sempre listadas**; a API só acrescenta `schema_version` e `generated_at` | mapear linha a linha em Go: muito código para conferir e fácil esquecer uma coluna; `SELECT *`: um segredo entra no dia em que uma coluna nova nascer |
 | Encerrar a sessão depois de apagar | a exclusão apaga as linhas de sessão (cascata); o app chama `POST /auth/logout` em seguida para limpar o cookie | o módulo `privacy` conhecer os cookies do `identity` |
+| Rotas | `/account/data` (Seus dados, exige sessão) e `/privacy` e `/terms` (públicas, abrem sem entrar); links nas Configurações, e no login e no cadastro ("Ao continuar, você aceita…") | páginas de texto dentro de `_app`: quem ainda não tem conta não conseguiria ler antes de aceitar |
+| Textos legais | **rascunho técnico**, escrito só com o que o app faz hoje, com aviso visível de "rascunho em revisão"; sem prometer o que ainda não existe (backups, e-mail) | texto jurídico "completo" copiado de outro lugar: prometeria coisa que o app não faz |
+| Exclusão na tela | diálogo de alerta com foco em "Cancelar", Esc fecha, botão só libera com o e-mail digitado (quem confere é o servidor); sucesso chama o logout (para limpar o cookie) e leva ao login; 428 oferece "Sair e entrar de novo" | confirmar com um toque: erro de dedo apaga tudo |
+| Exportação na tela | baixa o JSON direto para o disco (Blob), sem cache de dado pessoal no app; o nome do arquivo usa a data do aparelho | guardar a resposta no cache do TanStack: dado pessoal sobra na memória |
 | Formato da exportação | JSON, entregue na hora | e-mail com link: depende de SMTP, que ainda não existe |
 
 ## Checklist de progresso
 - [x] Roadmap: Sprint 5 concluído e Sprint 6 em andamento
 - [x] PR 1: LGPD na API (exportar e excluir: migração 00018, módulo `privacy`, contrato)
-- [ ] PR 2: LGPD na web e páginas de privacidade e termos
+- [x] PR 2: LGPD na web e páginas de privacidade e termos (feature `privacy`: Seus dados, política e termos, links)
 - [ ] PR 3: backup, restauração, prd endurecido e deploy de prd (como código e doc)
 - [ ] PR 4: Google com vínculo e e-mails por SMTP (prontos para ligar)
 - [ ] `npm run check` verde em cada PR
@@ -50,3 +54,5 @@ O Sprint 5 fechou o ciclo de estudo (progresso, metas, preferências). O Sprint 
   - **Não rodei** os testes de integração com Postgres (sem Docker aqui): compilam com `-tags integration`; o CI roda. Cobrem a migração 00018 e o que mais importa: a exportação **nunca** traz um segredo (nem por nome de coluna nem por valor, inclusive em hexadecimal), não traz dado de outra pessoa e vem completa mesmo para quem nunca estudou; a exclusão **não deixa linha em nenhuma tabela com `user_id`** (a lista vem do próprio banco, então vale para tabelas futuras), não mexe nos dados de outra pessoa, registra a exclusão sem dado pessoal (o teste confere as colunas da tabela), é "tudo ou nada" e o `review_log` **continua imutável** fora da exclusão (inclusive declarando outra pessoa ou tentando `UPDATE`).
   - A tela de exportar e excluir é a PR 2: por ora os dois endpoints só existem na API.
   - **No CI da PR 1:** o gitleaks tratou um valor falso do teste (um "canário") como segredo: renomeado, com o falso positivo do commit anterior no `.gitleaksignore`; o Sonar reprovou por cobertura de código novo (72,3% contra 80%), e a ligação dos módulos em `cmd/api/learner.go` ganhou testes (os adaptadores de sessão e a montagem de cada módulo), assim como os caminhos de erro do handler. O e2e das preferências tinha uma corrida (lia o `localStorage` antes de a resposta do `PUT` aplicar o tema) e passou a esperar o valor.
+- **PR 2 (telas de privacidade):** `npm run check` verde. Vitest cobre o mapa de erros da exclusão (204, 400, 401, 403, 428 e 5xx), a leitura segura das seções dos textos legais, a tela inteira (exportar com nome do dia, falha ao exportar, sem sessão leva ao login; o diálogo começa em Cancelar, só libera com o e-mail digitado e Esc fecha sem apagar; confirmar manda o e-mail, sai da conta e volta ao login; cada erro explica e deixa tentar de novo) e as páginas públicas (sem entrar, 9 e 8 seções, aviso de rascunho, em inglês, links entre elas, no login/cadastro e nas Configurações). Playwright (5 cenários) rodou no Edge: política e termos sem entrar e sem rolagem horizontal, o download de verdade do arquivo, a exclusão até o login e o aviso de login antigo. Capturas conferidas.
+  - **Pendências que dependem do dono (estão marcadas no próprio texto):** o **contato do responsável** pelos dados ("a definir") e o **prazo dos backups** ("será publicado antes da abertura do beta"). Os textos também precisam de **revisão jurídica** antes de o beta abrir ao público.

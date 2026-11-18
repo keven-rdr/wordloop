@@ -1,0 +1,37 @@
+{
+  "title": "Your data",
+  "subtitle": "Download a copy or delete the account",
+  "export": {
+    "title": "Download my data",
+    "text": "A JSON file with everything wordloop keeps about you: profile, passkeys (name and dates only), sessions, preferences, goals, study and your answer history. It does not include passwords or keys.",
+    "action": "Download my data",
+    "downloading": "Preparing…",
+    "done": "Done! The file was downloaded.",
+    "failed": "I couldn't download right now. Try again."
+  },
+  "erase": {
+    "title": "Delete my account",
+    "text": "Erases right away and for good:",
+    "items": {
+      "account": "your profile, your sign-in links, your passkeys and your sessions",
+      "study": "your preferences, goals, cards and study days",
+      "log": "your entire answer history"
+    },
+    "irreversible": "There is no way back. If you want, download a copy of your data first.",
+    "open": "Delete my account…",
+    "dialogTitle": "Delete the account for good?",
+    "dialogText": "Everything will be erased now and it cannot be undone. To confirm, type your account e-mail.",
+    "typeEmail": "Account e-mail",
+    "confirm": "Delete for good",
+    "erasing": "Deleting…",
+    "cancel": "Cancel",
+    "relogin": "Sign out and sign in again",
+    "errors": {
+      "mismatch": "The e-mail you typed is not the account e-mail.",
+      "admin": "Administrator accounts cannot be deleted here.",
+      "recent": "For security, sign in again and repeat the request.",
+      "session": "Your session ended. Sign in again.",
+      "failed": "I couldn't delete right now. Nothing was erased. Try again."
+    }
+  }
+}

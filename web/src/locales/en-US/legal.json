@@ -1,0 +1,133 @@
+{
+  "draft": {
+    "badge": "Beta version",
+    "notice": "Draft under review. This text describes what wordloop does with your data today and will be reviewed before the beta opens to the public."
+  },
+  "privacy": {
+    "title": "Privacy policy",
+    "updated": "Updated on 18 Nov 2026",
+    "sections": [
+      {
+        "title": "Who looks after your data",
+        "body": [
+          "wordloop is an open source project, maintained by one person and non-commercial at this stage.",
+          "The contact for the person responsible for the data will be listed here before the beta opens: to be defined."
+        ]
+      },
+      {
+        "title": "What data we keep",
+        "body": [
+          "Account: your e-mail and your name (from sign-up or, if you sign in with Google or GitHub, what they provide, and a profile picture if any).",
+          "Sign-in: the passkeys you registered (we keep only the public key, never your biometrics) and, if you create a password, only an irreversible code of it (never the password). We also keep where you signed in from: provider, device and session dates.",
+          "Preferences: language, theme and time zone, and the study goals you set.",
+          "Study: your cards, every answer you gave (with the time, how long it took and what you typed) and a summary of each study day."
+        ]
+      },
+      {
+        "title": "What we use it for",
+        "body": [
+          "Only to make the app work: keep you signed in, build your study sessions, work out what to review and show your progress.",
+          "We do not sell your data, we do not show ads and we do not build profiles for third parties."
+        ]
+      },
+      {
+        "title": "What stays on your device",
+        "body": [
+          "An essential session cookie, which scripts cannot read, so you stay signed in.",
+          "Your theme and language preferences, and the answers not yet sent when you study offline (they leave the device once sent).",
+          "We do not use advertising or usage-analytics cookies."
+        ]
+      },
+      {
+        "title": "Who we share it with",
+        "body": [
+          "Only with the services needed to run the app: the hosting of the server and the database; the e-mail service that sends sign-up and recovery links, when it is turned on; and Google and GitHub, only if you choose to sign in with them."
+        ]
+      },
+      {
+        "title": "How long we keep it",
+        "body": [
+          "For as long as your account exists. When you delete the account, everything is erased right away, including your answer history. Only an anonymous record that a deletion happened remains (the date and how many answers there were), with nothing that identifies you.",
+          "Backups: when they exist, they will be encrypted and replaced in short cycles. The exact period will be published here before the beta opens."
+        ]
+      },
+      {
+        "title": "Your rights",
+        "body": [
+          "Under Brazil LGPD, you can access your data, take it with you and ask for it to be erased. This is already in the app, under Settings, Your data: download a full copy as JSON and delete the account.",
+          "To delete, you type the account e-mail and must have signed in recently. There is no way back.",
+          "You can also complain to the Brazilian data protection authority (ANPD)."
+        ]
+      },
+      {
+        "title": "Security",
+        "body": [
+          "The app uses a secure connection (HTTPS), stores passwords only as an irreversible code, keeps the session in a protected cookie and asks for stronger confirmation to delete the account.",
+          "No system is perfect. If an incident affects your data, we will tell you."
+        ]
+      },
+      {
+        "title": "Changes to this text",
+        "body": [
+          "This text may change as the app evolves. The update date is at the top, and important changes will be announced in the app."
+        ]
+      }
+    ]
+  },
+  "terms": {
+    "title": "Terms of use",
+    "updated": "Updated on 18 Nov 2026",
+    "sections": [
+      {
+        "title": "What wordloop is",
+        "body": [
+          "An app to grow your English vocabulary with spaced repetition, made for Brazilian Portuguese speakers. It is in beta."
+        ]
+      },
+      {
+        "title": "Your account",
+        "body": [
+          "You are responsible for keeping your passkey or password safe and your details correct. Use one account per person and an e-mail that is yours."
+        ]
+      },
+      {
+        "title": "Acceptable use",
+        "body": [
+          "Use the app to study. Do not try to access other people data, bypass security, overload the service or use it for anything illegal."
+        ]
+      },
+      {
+        "title": "Content and licenses",
+        "body": [
+          "The wordloop code is free software under the MIT license. The study content (words, translations and examples) is licensed under CC BY-SA 4.0, and the images have their own licenses. Full credits are under Settings, Credits and licenses."
+        ]
+      },
+      {
+        "title": "Your data",
+        "body": [
+          "How we look after your data is in the Privacy policy. You can download a copy and delete your account whenever you want."
+        ]
+      },
+      {
+        "title": "Beta and availability",
+        "body": [
+          "During the beta, the service is provided as is, with no guarantee that it will always be available or error-free. Changes, outages and, in rare cases, loss of study data may happen."
+        ]
+      },
+      {
+        "title": "Ending",
+        "body": ["You can delete your account at any time. We may also suspend accounts that break these terms."]
+      },
+      {
+        "title": "Changes and governing law",
+        "body": ["These terms may change; important changes will be announced in the app. Brazilian law applies."]
+      }
+    ]
+  },
+  "links": {
+    "label": "Other pages",
+    "privacy": "Privacy policy",
+    "terms": "Terms of use",
+    "home": "Back to home"
+  }
+}
