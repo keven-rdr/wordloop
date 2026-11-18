@@ -663,7 +663,13 @@ components:
         item_id: { type: string, format: uuid }
         direction: { type: string, enum: [receptive, productive] }
         state: { type: string, enum: [new, learning, review, relearning] }
-        exercise: { type: string, enum: [choose, type], description: "escolher (receptivo) ou digitar (produtivo)" }
+        exercise:
+          type: string
+          enum: [choose, type, cloze, image]
+          description: >
+            escolher (receptivo) ou, no produtivo, digitar a palavra a partir da traducao (type), completar a lacuna da
+            frase (cloze) ou digitar a palavra que a imagem mostra (image). O servidor escolhe a variante.
+        cloze_text: { type: string, description: "so para cloze: a frase de exemplo com a palavra trocada por ____; a traducao da frase vem em example" }
         term: { type: string, description: "o termo em ingles; no exercicio de digitar nao deve aparecer antes da resposta" }
         gloss: { type: string }
         example: { $ref: "#/components/schemas/ItemExample" }
@@ -692,7 +698,7 @@ components:
         id: { type: string, format: uuid, description: "gerado no cliente; garante a idempotencia" }
         card_id: { type: string, format: uuid }
         session_id: { type: string, format: uuid }
-        exercise: { type: string, enum: [choose, type] }
+        exercise: { type: string, enum: [choose, type, cloze, image], description: "o exercicio que o cartao mostrou; so choose serve ao cartao receptivo, os demais ao produtivo" }
         source: { type: string, enum: [session, notification, placement, reading], default: session }
         shown_at: { type: string, format: date-time }
         answered_at: { type: string, format: date-time }

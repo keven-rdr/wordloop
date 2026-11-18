@@ -88,7 +88,7 @@ func (u SubmitReviews) commit(ctx context.Context, tx Tx, v domain.Viewer, a dom
 // correct refaz a correcao no servidor: digitar compara com o termo; escolher confere o item escolhido.
 // O segundo retorno e false quando a resposta nao serve para o exercicio do cartao.
 func (u SubmitReviews) correct(ctx context.Context, tx Tx, card domain.Card, a domain.Answer) (domain.Verdict, bool, error) {
-	if a.Exercise != card.Exercise() {
+	if !card.Accepts(a.Exercise) {
 		return domain.Verdict{}, false, nil
 	}
 	if a.Exercise == domain.Choose {
@@ -105,7 +105,7 @@ func (u SubmitReviews) correct(ctx context.Context, tx Tx, card domain.Card, a d
 // review traduz a resposta ja corrigida no que o agendador entende.
 func review(a domain.Answer, v domain.Verdict) srs.Review {
 	r := srs.Review{
-		Correct: v.Correct, Typo: v.Typo, Production: a.Exercise == domain.Type,
+		Correct: v.Correct, Typo: v.Typo, Production: a.Exercise.IsTyped(),
 		Hint: a.HintUsed, Explained: a.Explained, ImageBefore: a.ImageBefore,
 	}
 	if v.Correct {
@@ -154,6 +154,6 @@ func (u SubmitReviews) logRow(a domain.Answer, v domain.Viewer, s domain.Setting
 		RAtReview: u.Scheduler.Retrievability(before, a.AnsweredAt), ElapsedDays: elapsed,
 		ScheduledDays: after.DueAt.Sub(a.AnsweredAt).Hours() / 24,
 		Scheduler:     u.Scheduler.Name(), SchedulerVersion: SchedulerVersion,
-		Production: a.Exercise == domain.Type,
+		Production: a.Exercise.IsTyped(),
 	}, nil
 }

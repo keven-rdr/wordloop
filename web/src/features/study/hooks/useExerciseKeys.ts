@@ -18,7 +18,8 @@ type Context = Readonly<{ card: StudyCard; checked?: Checked; chosen?: string }>
 const optionIndex = (key: string) => (LETTERS.includes(key) ? LETTERS.indexOf(key) : Number(key) - 1);
 
 function beforeCheck(key: string, { card, chosen }: Context): KeyAction | undefined {
-  const option = card.exercise === 'choose' ? card.options?.[optionIndex(key)] : undefined;
+  if (card.exercise !== 'choose') return key === 'enter' && chosen ? { do: 'verify' } : undefined;
+  const option = (card.options ?? [])[optionIndex(key)];
   if (option) return { do: 'choose', itemId: option.item_id };
   return key === 'enter' && chosen ? { do: 'verify' } : undefined;
 }

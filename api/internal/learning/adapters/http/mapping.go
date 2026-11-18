@@ -39,11 +39,14 @@ func studyPack(p domain.Pack) gen.StudyPack {
 func studyCard(c domain.PackCard) gen.StudyCard {
 	out := gen.StudyCard{
 		Id: c.Card.ID, ItemId: c.Card.ItemID, Direction: gen.StudyCardDirection(c.Card.Direction),
-		State: gen.StudyCardState(c.Card.State.State), Exercise: gen.StudyCardExercise(c.Card.Exercise()),
+		State: gen.StudyCardState(c.Card.State.State), Exercise: gen.StudyCardExercise(c.Exercise),
 		Term: c.Content.Term, Gloss: c.Content.Gloss, Mastery: float32(c.Mastery),
 	}
 	if c.Content.Example != "" {
 		out.Example = &gen.ItemExample{Text: c.Content.Example, Translation: optional(c.Content.ExampleGloss)}
+	}
+	if c.ClozeText != "" {
+		out.ClozeText = &c.ClozeText
 	}
 	if c.Content.ImageKey != "" {
 		url := mediaPath + c.Content.ImageKey

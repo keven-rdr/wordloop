@@ -30,6 +30,13 @@
     "hintShown": "Starts with “{{letter}}”",
     "unknown": "I don't know"
   },
+  "cloze": {
+    "prompt": "Complete the sentence with the missing word"
+  },
+  "image": {
+    "prompt": "Which English word does the image show?",
+    "alt": "Picture of the word you need to write"
+  },
   "verify": "Check",
   "next": "Continue",
   "feedback": {
@@ -52,9 +59,12 @@
     "slip": "It was a slip"
   },
   "sending": {
-    "busy": "Saving your answers…",
-    "failed": "I couldn't save your answers right now. They are still here.",
-    "retry": "Try again"
+    "busy": "Saving your answers…"
+  },
+  "offline": {
+    "banner": "No connection. Your answers are saved and will be sent later.",
+    "pending_one": "{{count}} answer waiting to be sent",
+    "pending_other": "{{count}} answers waiting to be sent"
   },
   "summary": {
     "title": "Session complete",
@@ -64,6 +74,8 @@
     "answered": "Answers",
     "correct": "Correct",
     "newWords": "New words",
+    "pending_one": "{{count}} answer will be confirmed when the connection is back.",
+    "pending_other": "{{count}} answers will be confirmed when the connection is back.",
     "more": "Study more",
     "home": "Back to home"
   }

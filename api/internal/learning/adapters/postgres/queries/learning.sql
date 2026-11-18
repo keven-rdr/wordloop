@@ -52,8 +52,10 @@ SELECT i.id AS item_id, term.body AS term,
        COALESCE(exg.body, '')::text AS example_gloss,
        COALESCE((SELECT m.storage_key FROM item_media im JOIN media m ON m.id = im.media_id
                   WHERE im.item_id = i.id AND im.role = 'context' AND (m.status = 'approved' OR @include_drafts::boolean)
-                  ORDER BY im.position LIMIT 1), '')::text AS image_key
+                  ORDER BY im.position LIMIT 1), '')::text AS image_key,
+       COALESCE(u.theme_key, '')::text AS theme
 FROM item i
+LEFT JOIN unit u ON u.id = i.unit_id
 JOIN course c ON c.id = i.course_id AND (c.status = 'published' OR @include_drafts::boolean)
 JOIN item_text term ON term.item_id = i.id AND term.role = 'term' AND term.position = 0 AND term.locale = c.studied_locale
 LEFT JOIN item_text gloss ON gloss.item_id = i.id AND gloss.role = 'gloss' AND gloss.position = 0 AND gloss.locale = @locale::text

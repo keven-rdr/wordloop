@@ -30,6 +30,13 @@
     "hintShown": "Começa com “{{letter}}”",
     "unknown": "Não sei"
   },
+  "cloze": {
+    "prompt": "Complete a frase com a palavra que falta"
+  },
+  "image": {
+    "prompt": "Que palavra em inglês a imagem mostra?",
+    "alt": "Imagem da palavra que você precisa escrever"
+  },
   "verify": "Verificar",
   "next": "Continuar",
   "feedback": {
@@ -52,9 +59,12 @@
     "slip": "Foi distração"
   },
   "sending": {
-    "busy": "Salvando suas respostas…",
-    "failed": "Não consegui salvar suas respostas agora. Elas continuam aqui.",
-    "retry": "Tentar de novo"
+    "busy": "Salvando suas respostas…"
+  },
+  "offline": {
+    "banner": "Sem conexão. Suas respostas ficam salvas e são enviadas depois.",
+    "pending_one": "{{count}} resposta aguardando envio",
+    "pending_other": "{{count}} respostas aguardando envio"
   },
   "summary": {
     "title": "Sessão concluída",
@@ -64,6 +74,8 @@
     "answered": "Respostas",
     "correct": "Acertos",
     "newWords": "Palavras novas",
+    "pending_one": "{{count}} resposta será confirmada quando a conexão voltar.",
+    "pending_other": "{{count}} respostas serão confirmadas quando a conexão voltar.",
     "more": "Estudar mais",
     "home": "Voltar ao início"
   }

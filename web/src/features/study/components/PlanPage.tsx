@@ -2,7 +2,9 @@ import * as stylex from '@stylexjs/stylex';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BrandScreen } from '../../../shared/ui/BrandScreen';
+import { useOfflineQueue } from '../hooks/useOfflineQueue';
 import { PLAN_MINUTES, type PlanMinutes, useStudyPlan } from '../hooks/useStudyPlan';
+import { OfflineBanner } from './OfflineBanner';
 import { p } from './panelStyles';
 import { s } from './styles';
 
@@ -11,6 +13,7 @@ export function PlanPage() {
   const { t, ready } = useTranslation('study');
   const [minutes, setMinutes] = useState<PlanMinutes>(5);
   const { start, loading, failed, empty } = useStudyPlan();
+  const { online, pending } = useOfflineQueue();
   if (!ready) return <div aria-busy="true" />;
   return (
     <BrandScreen title={t('title')} subtitle={t('lead')}>
@@ -28,6 +31,7 @@ export function PlanPage() {
           </button>
         ))}
       </fieldset>
+      <OfflineBanner online={online} pending={pending} />
       <div role="status">
         {failed && <p {...stylex.props(p.error)}>{t('plan.failed')}</p>}
         {empty && <p {...stylex.props(p.lead)}>{t('plan.empty')}</p>}

@@ -94,7 +94,7 @@ func (t *txn) Contents(ctx context.Context, items []uuid.UUID, locale string, dr
 	}
 	out := make(map[uuid.UUID]domain.Content, len(rows))
 	for _, r := range rows {
-		out[r.ItemID] = domain.Content{Term: r.Term, Gloss: r.Gloss, Example: r.Example, ExampleGloss: r.ExampleGloss, ImageKey: r.ImageKey}
+		out[r.ItemID] = domain.Content{Term: r.Term, Gloss: r.Gloss, Example: r.Example, ExampleGloss: r.ExampleGloss, ImageKey: r.ImageKey, Theme: r.Theme}
 	}
 	return out, nil
 }
@@ -148,7 +148,7 @@ func (t *txn) CardLog(ctx context.Context, id uuid.UUID) ([]srs.Answer, error) {
 	out := make([]srs.Answer, 0, len(rows))
 	for _, r := range rows {
 		out = append(out, srs.Answer{At: r.AnsweredAt.Time, Review: srs.Review{
-			Correct: r.IsCorrect, Typo: r.TypoFlag, Production: r.ExerciseType == string(domain.Type),
+			Correct: r.IsCorrect, Typo: r.TypoFlag, Production: domain.Exercise(r.ExerciseType).IsTyped(),
 			Hint: r.HintUsed, Explained: r.ExplanationViewed, ImageBefore: r.ImageBeforeAnswer,
 			Difficulty: srs.Difficulty(r.DifficultyChosen.String), ErrorKind: srs.ErrorKind(r.ErrorKind.String),
 		}})

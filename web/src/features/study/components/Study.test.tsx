@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { type Call, json, me, renderApp, setupTestApp, stubApi, version } from '../../../test-support';
+import { json, me, renderApp, setupTestApp, stubApi, version } from '../../../test-support';
+import { accepted, api, house, mother, sentReviews, start } from './studyTestKit';
 
 beforeAll(setupTestApp);
 
@@ -8,66 +9,6 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
 });
-
-const house = {
-  id: 'c1',
-  item_id: 'i1',
-  direction: 'receptive',
-  state: 'new',
-  exercise: 'choose',
-  term: 'house',
-  gloss: 'casa',
-  mastery: 0,
-  options: [
-    { item_id: 'i2', gloss: 'mãe' },
-    { item_id: 'i1', gloss: 'casa' },
-  ],
-};
-const mother = {
-  ...house,
-  id: 'c2',
-  item_id: 'i2',
-  exercise: 'type',
-  term: 'mother',
-  gloss: 'mãe',
-  options: undefined,
-};
-const pack = (cards: unknown[]) => ({
-  session_id: 'sess-1',
-  cards,
-  new_limit: 8,
-  review_limit: 20,
-  expires_at: '2026-11-19T04:00:00Z',
-});
-const accepted = (req: Request) =>
-  req
-    .clone()
-    .json()
-    .then((body: { reviews: { id: string }[] }) =>
-      json({
-        results: body.reviews.map((review) => ({ id: review.id, status: 'applied', correct: true })),
-      }),
-    );
-
-function api(cards: unknown[], reviews: (req: Request) => Response | Promise<Response> = accepted) {
-  return stubApi({
-    'GET /version': () => json(version),
-    'GET /me': () => json(me),
-    'POST /study/plan': () => json(pack(cards)),
-    'POST /study/reviews': reviews,
-  });
-}
-
-// Respostas do primeiro lote enviado ao servidor.
-function sentReviews(calls: Call[]): Record<string, unknown>[] {
-  const batch = calls.find((call) => call.path === '/study/reviews');
-  return (batch?.body as { reviews: Record<string, unknown>[] } | undefined)?.reviews ?? [];
-}
-
-const start = async () => {
-  renderApp('/study');
-  fireEvent.click(await screen.findByRole('button', { name: 'Começar' }));
-};
 
 describe('plano', () => {
   it('pede o tempo escolhido, com o fuso do aparelho, e abre a sessão', async () => {
@@ -225,7 +166,7 @@ describe('sair e falhar ao salvar', () => {
     expect(calls.some((call) => call.path === '/study/reviews')).toBe(false);
   });
 
-  it('se o envio falhar, mantém as respostas e tenta de novo com os mesmos UUIDs', async () => {
+  it('se o envio falhar, a sessão termina com o resumo provisório e a resposta segue na fila', async () => {
     let attempts = 0;
     const calls = api([house], (req) => {
       attempts += 1;
@@ -236,13 +177,13 @@ describe('sair e falhar ao salvar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Verificar' }));
     fireEvent.click(await screen.findByRole('button', { name: /Fácil/ }));
 
-    expect(await screen.findByText(/Não consegui salvar suas respostas/)).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));
     expect(await screen.findByText('Sessão concluída')).toBeTruthy();
+    expect(screen.getByText('1 resposta será confirmada quando a conexão voltar.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('link', { name: 'Estudar mais' }));
 
-    const bodies = calls.filter((call) => call.path === '/study/reviews').map((call) => call.body);
-    expect(bodies).toHaveLength(2);
-    expect(bodies[0]).toEqual(bodies[1]);
+    const bodies = () => calls.filter((call) => call.path === '/study/reviews').map((call) => call.body);
+    await waitFor(() => expect(bodies()).toHaveLength(2));
+    expect(bodies()[0]).toEqual(bodies()[1]);
   });
 
   it('sem o pacote na memória (página recarregada), volta ao plano', async () => {

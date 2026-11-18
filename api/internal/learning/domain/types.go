@@ -27,13 +27,19 @@ const (
 	Productive Direction = "productive"
 )
 
-// Exercise e o tipo de pergunta: escolher (reconhecimento) ou digitar (producao).
+// Exercise e o tipo de pergunta: escolher (reconhecimento) ou, no cartao produtivo, uma das tres variantes de
+// digitar (producao): a partir da traducao (Type), completando a lacuna da frase (Cloze) ou a partir da imagem (Image).
 type Exercise string
 
 const (
 	Choose Exercise = "choose"
 	Type   Exercise = "type"
+	Cloze  Exercise = "cloze"
+	Image  Exercise = "image"
 )
+
+// IsTyped diz se a resposta e digitada (producao): todas as variantes do cartao produtivo.
+func (e Exercise) IsTyped() bool { return e == Type || e == Cloze || e == Image }
 
 // Mode diz o que a sessao traz: so revisoes, so palavras novas ou as duas coisas.
 type Mode string
@@ -60,7 +66,7 @@ type Card struct {
 	Scheduler string
 }
 
-// Exercise devolve o exercicio do cartao: receptivo escolhe, produtivo digita.
+// Exercise devolve o exercicio base do cartao: receptivo escolhe, produtivo digita.
 func (c Card) Exercise() Exercise {
 	if c.Direction == Productive {
 		return Type
@@ -68,9 +74,19 @@ func (c Card) Exercise() Exercise {
 	return Choose
 }
 
+// Accepts diz se uma resposta com esse exercicio serve ao cartao: o receptivo so escolhe; o produtivo digita,
+// em qualquer das variantes (o app mostra a que o servidor mandou no plano).
+func (c Card) Accepts(e Exercise) bool {
+	if c.Direction == Productive {
+		return e.IsTyped()
+	}
+	return e == Choose
+}
+
 // Content e o que o cartao mostra, vindo do catalogo (no idioma da pessoa).
 type Content struct {
 	Term, Gloss, Example, ExampleGloss, ImageKey string
+	Theme                                        string // tema da unidade do item (ex.: little-words)
 }
 
 // Option e uma alternativa do exercicio de escolher.
@@ -81,10 +97,12 @@ type Option struct {
 
 // PackCard e um cartao pronto para estudar, com o conteudo (serve ao modo sem rede).
 type PackCard struct {
-	Card    Card
-	Content Content
-	Options []Option
-	Mastery float64
+	Card      Card
+	Exercise  Exercise // a variante escolhida pelo servidor para esta vez
+	ClozeText string   // so para Cloze: a frase com a palavra trocada por BlankMark
+	Content   Content
+	Options   []Option
+	Mastery   float64
 }
 
 // Pack e a sessao montada: o que estudar agora.

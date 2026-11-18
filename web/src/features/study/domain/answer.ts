@@ -48,7 +48,7 @@ export function checkChoice(card: StudyCard, chosenItemId: string): Outcome {
 }
 
 export function suggestDifficulty(responseMs: number, exercise: StudyCard['exercise']): Difficulty {
-  const extra = exercise === 'type' ? TYPING_EXTRA_MS : 0;
+  const extra = exercise === 'choose' ? 0 : TYPING_EXTRA_MS;
   if (responseMs <= EASY_WITHIN_MS + extra) return 'easy';
   if (responseMs <= MEDIUM_WITHIN_MS + extra) return 'medium';
   return 'hard';
