@@ -41,7 +41,8 @@ test('preferências: trocar o idioma e o tema salva e já vale na tela', async (
   await page.getByText('Dark', { exact: true }).click();
   await expect.poll(() => puts.length).toBe(2);
   expect(puts[1]).toEqual({ ...defaults, ui_locale: 'en-US', theme: 'dark' });
-  expect(await page.evaluate(() => window.localStorage.getItem('wl-theme'))).toBe('dark');
+  // O tema é aplicado quando a resposta do PUT volta, um instante depois de o pedido sair: espera, não lê de uma vez.
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem('wl-theme'))).toBe('dark');
 });
 
 test('preferências: escolher um fuso o fixa; os alvos de toque têm 48 px e a tela cabe no aparelho', async ({

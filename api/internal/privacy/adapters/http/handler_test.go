@@ -128,3 +128,32 @@ func TestErasingTwiceTheSecondTimeFindsNothing(t *testing.T) {
 		t.Errorf("2a: a conta nao existe mais, sem vazar nada: %d", rec.Code)
 	}
 }
+
+func TestPrivacyModuleOffAnswers401ToErase(t *testing.T) {
+	if rec := erase(api.Handler(api.Server{}), `{"confirmation":"ana@example.com"}`, true); rec.Code != http.StatusUnauthorized {
+		t.Errorf("modulo desligado responde 401 tambem ao apagar: %d", rec.Code)
+	}
+}
+
+func TestStoreFailuresBecomeServerErrorsAndNeverLeakDetails(t *testing.T) {
+	h, store := fixture(recent())
+	store.FailOn = "Export"
+	rec := export(h)
+	if rec.Code != http.StatusInternalServerError || strings.Contains(rec.Body.String(), "falha") {
+		t.Errorf("falha ao exportar: %d %q", rec.Code, rec.Body.String())
+	}
+
+	h, store = fixture(recent())
+	store.FailOn = "Erase"
+	if rec := erase(h, `{"confirmation":"ana@example.com"}`, true); rec.Code != http.StatusInternalServerError {
+		t.Errorf("falha ao apagar: %d", rec.Code)
+	}
+}
+
+func TestAnExportThatIsNotAJSONObjectIsAServerError(t *testing.T) {
+	h, store := fixture(recent())
+	store.Data = json.RawMessage(`[1, 2, 3]`)
+	if rec := export(h); rec.Code != http.StatusInternalServerError {
+		t.Errorf("o banco devolveu algo que nao e um objeto: %d", rec.Code)
+	}
+}
