@@ -1,6 +1,6 @@
 # Pronto para produção (Sprint 6)
 
-> Arquivo: `docs/features/2026-11-18-producao-beta.md` · Issue: #__ · Branch: `feat/lgpd-api` · Estado: SPEC (requisitos confirmados; PR 1 em construção)
+> Arquivo: `docs/features/2026-11-18-producao-beta.md` · Issue: #__ · Branch: `feat/lgpd-api` · Estado: BUILD (PR 1 pronta; PRs 2 a 4 pendentes)
 
 ## Contexto
 O Sprint 5 fechou o ciclo de estudo (progresso, metas, preferências). O Sprint 6 do [roadmap](../fase-6/06-roadmap-backlog.md) leva o app a **produção beta**: login Google com vínculo por e-mail (I-02, I-03), e-mails por SMTP (I-04), **LGPD: exportar e excluir** (I-05), privacidade e termos (I-06), backup com restauração (O-01), prd endurecido (O-02) e o release `0.x` em prd (F-06). Critério: "você estuda em prd; backup restaurado em banco descartável; exclusão apaga tudo".
@@ -32,11 +32,13 @@ O Sprint 5 fechou o ciclo de estudo (progresso, metas, preferências). O Sprint 
 | Confirmação | digitar o e-mail da conta + login de até 15 min | só um botão: erro de toque apaga tudo; pedir senha: a conta pode não ter senha (passkey/Google) |
 | Admin | não se apaga pela API | apagar o único admin trancaria o sistema |
 | Registro da exclusão | `account_erasure` sem id nem e-mail da pessoa | guardar o id: deixaria a pessoa identificável depois de pedir esquecimento |
+| Como a exportação é montada | uma consulta no Postgres devolve o JSON (`jsonb_build_object`), com as colunas **sempre listadas**; a API só acrescenta `schema_version` e `generated_at` | mapear linha a linha em Go: muito código para conferir e fácil esquecer uma coluna; `SELECT *`: um segredo entra no dia em que uma coluna nova nascer |
+| Encerrar a sessão depois de apagar | a exclusão apaga as linhas de sessão (cascata); o app chama `POST /auth/logout` em seguida para limpar o cookie | o módulo `privacy` conhecer os cookies do `identity` |
 | Formato da exportação | JSON, entregue na hora | e-mail com link: depende de SMTP, que ainda não existe |
 
 ## Checklist de progresso
 - [x] Roadmap: Sprint 5 concluído e Sprint 6 em andamento
-- [ ] PR 1: LGPD na API (exportar e excluir)
+- [x] PR 1: LGPD na API (exportar e excluir: migração 00018, módulo `privacy`, contrato)
 - [ ] PR 2: LGPD na web e páginas de privacidade e termos
 - [ ] PR 3: backup, restauração, prd endurecido e deploy de prd (como código e doc)
 - [ ] PR 4: Google com vínculo e e-mails por SMTP (prontos para ligar)
@@ -44,4 +46,6 @@ O Sprint 5 fechou o ciclo de estudo (progresso, metas, preferências). O Sprint 
 - [ ] PRs abertas (com aprovação do usuário)
 
 ## Verificação
-(a preencher a cada PR)
+- **PR 1:** `npm run check` verde (golangci-lint, estrutura, arch-lint com os componentes de `privacy`, `go test -short`, web). Testes unitários cobrem as regras de exclusão (e-mail sem diferenciar maiúsculas nem espaços, parte do e-mail, conta sem e-mail, administrador, login de 15 min contra 15 min e 1 s, e qual aviso vem primeiro), os casos de uso (nada é apagado quando uma regra falha; falhas sobem; conta inexistente) e o contrato HTTP (204, 400 com e sem o cabeçalho de proteção, 401, 403 e 428; o arquivo exportado traz `Content-Disposition`, versão e data; apagar duas vezes não vaza nada).
+  - **Não rodei** os testes de integração com Postgres (sem Docker aqui): compilam com `-tags integration`; o CI roda. Cobrem a migração 00018 e o que mais importa: a exportação **nunca** traz um segredo (nem por nome de coluna nem por valor, inclusive em hexadecimal), não traz dado de outra pessoa e vem completa mesmo para quem nunca estudou; a exclusão **não deixa linha em nenhuma tabela com `user_id`** (a lista vem do próprio banco, então vale para tabelas futuras), não mexe nos dados de outra pessoa, registra a exclusão sem dado pessoal (o teste confere as colunas da tabela), é "tudo ou nada" e o `review_log` **continua imutável** fora da exclusão (inclusive declarando outra pessoa ou tentando `UPDATE`).
+  - A tela de exportar e excluir é a PR 2: por ora os dois endpoints só existem na API.

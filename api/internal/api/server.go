@@ -29,7 +29,9 @@ type Server struct {
 	// Learning e o modulo de estudo; nulo = estudo indisponivel.
 	Learning Learning
 	// Progress e o modulo de progresso (painel e heatmap); nulo = progresso indisponivel.
-	Progress    Progress
+	Progress Progress
+	// Privacy e o modulo dos direitos da pessoa sobre os dados (exportar e apagar); nulo = indisponivel.
+	Privacy     Privacy
 	AuthLimiter *ratelimit.Limiter
 }
 

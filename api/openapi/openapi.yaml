@@ -13,6 +13,7 @@ tags:
   - name: catalog
   - name: learning
   - name: progress
+  - name: privacy
 paths:
   /version:
     get:
@@ -136,6 +137,48 @@ paths:
               schema: { $ref: "#/components/schemas/Settings" }
         "400": { description: cabecalho de protecao ausente, fuso desconhecido ou valor fora das opcoes }
         "401": { description: sem sessao valida }
+  /me/export:
+    get:
+      tags: [privacy]
+      operationId: exportMyData
+      description: >
+        Todos os dados da pessoa em um JSON para baixar (LGPD, acesso e portabilidade): perfil, vinculos de login,
+        passkeys (nome e datas), sessoes (aparelho e datas), preferencias, metas, dias de estudo, sessoes de estudo,
+        cartoes e o log de revisoes inteiro. Nunca traz segredo: hash de senha, chave publica de passkey, tokens e
+        hashes de sessao ficam de fora.
+      responses:
+        "200":
+          description: os dados, como arquivo
+          headers:
+            Content-Disposition:
+              description: o nome do arquivo para baixar (wordloop-dados-AAAA-MM-DD.json)
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExportData" }
+        "401": { description: sem sessao valida }
+  /me/erase:
+    post:
+      tags: [privacy]
+      operationId: eraseMyAccount
+      description: >
+        Apaga a conta e todos os dados da pessoa, na hora e sem volta (LGPD, eliminacao): perfil, vinculos de login,
+        passkeys, sessoes, preferencias, metas, estudo e o log de revisoes. Fica so um registro sem dado pessoal de
+        que houve exclusao. Exige a confirmacao igual ao e-mail da conta e um login recente (ate 15 minutos).
+        Contas de administrador nao se apagam por aqui.
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EraseRequest" }
+      responses:
+        "204": { description: conta apagada (a sessao deixa de existir; o app deve chamar logout para limpar o cookie) }
+        "400": { description: cabecalho de protecao ausente ou confirmacao diferente do e-mail da conta }
+        "401": { description: sem sessao valida }
+        "403": { description: conta de administrador }
+        "428": { description: "login antigo demais, entre de novo e repita" }
   /me/two-factor:
     put:
       tags: [identity]
@@ -988,3 +1031,14 @@ components:
         theme: { type: string, enum: [system, light, dark] }
         tz: { type: string, description: "fuso IANA (ex.: America/Sao_Paulo)" }
         tz_auto: { type: boolean, description: "o fuso acompanha o aparelho" }
+    ExportData:
+      type: object
+      additionalProperties: true
+      description: >
+        Chaves: schema_version, generated_at, profile, logins, passkeys, sessions, preferences, goals, study_days,
+        study_sessions, cards, reviews.
+    EraseRequest:
+      type: object
+      required: [confirmation]
+      properties:
+        confirmation: { type: string, description: "o e-mail da conta, digitado pela pessoa (sem diferenciar maiusculas)" }
