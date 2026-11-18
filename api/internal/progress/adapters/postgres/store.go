@@ -18,12 +18,15 @@ import (
 	"github.com/keven-rdr/wordloop/api/internal/progress/domain"
 )
 
-// Store implementa app.Reader: so consultas de leitura, sem transacao.
-type Store struct{ q *db.Queries }
+// Store implementa app.Reader (consultas de leitura) e app.Goals (abrir meta usa uma transacao).
+type Store struct {
+	q    *db.Queries
+	pool *pgxpool.Pool
+}
 
 var _ app.Reader = (*Store)(nil)
 
-func NewStore(pool *pgxpool.Pool) *Store { return &Store{q: db.New(pool)} }
+func NewStore(pool *pgxpool.Pool) *Store { return &Store{q: db.New(pool), pool: pool} }
 
 func date(t time.Time) pgtype.Date { return pgtype.Date{Time: t, Valid: true} }
 

@@ -6,6 +6,7 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"github.com/keven-rdr/wordloop/api/internal/api/gen"
+	"github.com/keven-rdr/wordloop/api/internal/progress/app"
 	"github.com/keven-rdr/wordloop/api/internal/progress/domain"
 )
 
@@ -48,6 +49,43 @@ func heatmap(h domain.Heatmap) gen.Heatmap {
 	out := gen.Heatmap{From: date(h.From), To: date(h.To), Days: make([]gen.HeatmapDay, len(h.Days))}
 	for i, d := range h.Days {
 		out.Days[i] = gen.HeatmapDay{Date: date(d.Date), Reviews: d.Reviews, Correct: d.Correct}
+	}
+	return out
+}
+
+func goalRequest(b gen.GoalRequest) domain.GoalRequest {
+	r := domain.GoalRequest{DailyMinutes: b.DailyMinutes, DaysTarget: b.DaysTarget}
+	if b.Preset != nil {
+		r.Preset = domain.Preset(*b.Preset)
+	}
+	if b.Weekdays != nil {
+		r.Weekdays = *b.Weekdays
+	}
+	return r
+}
+
+func currentGoal(c app.Current) gen.CurrentGoal {
+	out := gen.CurrentGoal{Ended: c.Ended}
+	if c.Goal == nil || c.Progress == nil {
+		return out
+	}
+	g, p := c.Goal, c.Progress
+	preset := gen.GoalPreset(g.Preset)
+	out.Goal = &gen.Goal{
+		Id: g.ID, PeriodStart: date(g.PeriodStart), PeriodEnd: date(g.PeriodEnd), Preset: &preset,
+		DailyMinutes: g.DailyMinutes, DaysTarget: g.DaysTarget, Weekdays: g.Weekdays,
+	}
+	out.Progress = &gen.GoalProgress{
+		DaysStudied: p.DaysStudied, DaysTarget: p.DaysTarget, MinutesStudied: p.MinutesStudied, MinutesGoal: p.MinutesGoal,
+		NewWords: p.NewWords, DaysLeft: p.DaysLeft, Met: p.Met,
+	}
+	return out
+}
+
+func goalSuggestions(list []domain.Suggestion, fromHistory bool) gen.GoalSuggestions {
+	out := gen.GoalSuggestions{BasedOnHistory: fromHistory, Suggestions: make([]gen.GoalSuggestion, len(list))}
+	for i, s := range list {
+		out.Suggestions[i] = gen.GoalSuggestion{Preset: gen.GoalSuggestionPreset(s.Preset), DailyMinutes: s.DailyMinutes, DaysTarget: s.DaysTarget}
 	}
 	return out
 }

@@ -29,6 +29,14 @@ type Reader interface {
 	MostMissed(ctx context.Context, user uuid.UUID, since time.Time, locale string, limit int) ([]domain.Missed, error)
 }
 
+// Goals guarda as metas por ciclo.
+type Goals interface {
+	// CurrentGoal devolve a meta mais recente (o ciclo aberto ou, se acabou e nao abriram outro, o ultimo); false se nunca houve.
+	CurrentGoal(ctx context.Context, user uuid.UUID) (domain.Goal, bool, error)
+	// StartGoal fecha os ciclos abertos e abre este, na mesma transacao; se ja ha um ciclo que comecou no mesmo dia, o substitui.
+	StartGoal(ctx context.Context, user uuid.UUID, goal domain.Goal) (domain.Goal, error)
+}
+
 // Identity diz quem esta perguntando, pela sessao; sem sessao devolve ErrNoSession.
 type Identity interface {
 	Who(ctx context.Context) (domain.Viewer, error)
@@ -52,4 +60,24 @@ func asker(ctx context.Context, id Identity) (domain.Viewer, error) {
 		err = ErrNoSession
 	}
 	return who, err
+}
+
+// Asker e quem pergunta, o fuso dele e o dia de estudo de hoje: o ponto de partida de todo caso de uso.
+type Asker struct {
+	Viewer   domain.Viewer
+	Settings domain.Settings
+	Today    time.Time
+}
+
+func resolve(ctx context.Context, id Identity, r Reader, now Clock) (Asker, error) {
+	v, err := asker(ctx, id)
+	if err != nil {
+		return Asker{}, err
+	}
+	s, err := r.Settings(ctx, v.UserID)
+	if err != nil {
+		return Asker{}, err
+	}
+	today, err := domain.Today(now.now(), s.TZ, s.CutoffHour)
+	return Asker{Viewer: v, Settings: s, Today: today}, err
 }

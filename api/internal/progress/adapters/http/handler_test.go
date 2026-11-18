@@ -37,6 +37,7 @@ func fixture(who domain.Viewer) (http.Handler, *progresstest.Store) {
 	h := httpapi.Handler{
 		Dashboard: app.GetDashboard{Identity: identity, Reader: store, Now: clock},
 		Heatmap:   app.GetHeatmap{Identity: identity, Reader: store, Now: clock},
+		Goals:     app.GoalService{Identity: identity, Reader: store, Goals: store, Now: clock},
 	}
 	return api.Handler(api.Server{Progress: h}), store
 }

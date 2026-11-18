@@ -23,18 +23,11 @@ type GetHeatmap struct {
 // Run devolve os dias entre from e to; datas nulas usam o padrao. Intervalo invertido ou maior que 400 dias
 // e ErrInvalidRange.
 func (u GetHeatmap) Run(ctx context.Context, from, to *time.Time) (domain.Heatmap, error) {
-	v, err := asker(ctx, u.Identity)
+	who, err := resolve(ctx, u.Identity, u.Reader, u.Now)
 	if err != nil {
 		return domain.Heatmap{}, err
 	}
-	s, err := u.Reader.Settings(ctx, v.UserID)
-	if err != nil {
-		return domain.Heatmap{}, err
-	}
-	today, err := domain.Today(u.Now.now(), s.TZ, s.CutoffHour)
-	if err != nil {
-		return domain.Heatmap{}, err
-	}
+	v, today := who.Viewer, who.Today
 	start, end := today.AddDate(0, 0, 1-defaultHeatmapDays), today
 	if from != nil {
 		start = *from

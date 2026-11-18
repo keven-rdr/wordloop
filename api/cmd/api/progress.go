@@ -37,5 +37,6 @@ func buildProgress(pool *pgxpool.Pool, who identityhttp.Handler) progresshttp.Ha
 	return progresshttp.Handler{
 		Dashboard: progress.GetDashboard{Identity: identity, Reader: reader},
 		Heatmap:   progress.GetHeatmap{Identity: identity, Reader: reader},
+		Goals:     progress.GoalService{Identity: identity, Reader: reader, Goals: reader},
 	}
 }

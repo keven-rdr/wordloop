@@ -23,18 +23,11 @@ type GetDashboard struct {
 }
 
 func (u GetDashboard) Run(ctx context.Context, locale string) (domain.Dashboard, error) {
-	v, err := asker(ctx, u.Identity)
+	who, err := resolve(ctx, u.Identity, u.Reader, u.Now)
 	if err != nil {
 		return domain.Dashboard{}, err
 	}
-	s, err := u.Reader.Settings(ctx, v.UserID)
-	if err != nil {
-		return domain.Dashboard{}, err
-	}
-	today, err := domain.Today(u.Now.now(), s.TZ, s.CutoffHour)
-	if err != nil {
-		return domain.Dashboard{}, err
-	}
+	v, s, today := who.Viewer, who.Settings, who.Today
 	days, err := u.Reader.Days(ctx, v.UserID, domain.AddDays(today, -streakLookbackDays), today)
 	if err != nil {
 		return domain.Dashboard{}, err

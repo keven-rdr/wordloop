@@ -13,6 +13,7 @@ import (
 type Handler struct {
 	Dashboard app.GetDashboard
 	Heatmap   app.GetHeatmap
+	Goals     app.GoalService
 }
 
 func (h Handler) GetDashboard(ctx context.Context, req gen.GetDashboardRequestObject) (gen.GetDashboardResponseObject, error) {
