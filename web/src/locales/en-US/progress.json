@@ -1,0 +1,46 @@
+{
+  "title": "Your progress",
+  "empty": "Do a study session to see your progress here.",
+  "failed": "I couldn't load your progress right now.",
+  "streak": {
+    "title": "Streak",
+    "days_one": "{{count}} day in a row",
+    "days_other": "{{count}} days in a row",
+    "none": "Study today to start a streak.",
+    "keep": "Study today to keep your streak.",
+    "done": "Today counts!"
+  },
+  "today": {
+    "answers_one": "{{count}} answer",
+    "answers_other": "{{count}} answers",
+    "newWords_one": "{{count}} new word",
+    "newWords_other": "{{count}} new words"
+  },
+  "accuracy": {
+    "title": "Correct in 7 days",
+    "empty": "No answers yet"
+  },
+  "known": {
+    "title": "Known words",
+    "hint": "Already solid in memory"
+  },
+  "heatmap": {
+    "title_one": "Last week",
+    "title_other": "Last {{count}} weeks",
+    "summary_one": "You studied on {{count}} day in the last {{weeks}} weeks",
+    "summary_other": "You studied on {{count}} days in the last {{weeks}} weeks"
+  },
+  "forecast": {
+    "title": "Reviews in the next days",
+    "none": "Nothing to review in the next 7 days.",
+    "total_one": "{{count}} review in the next 7 days",
+    "total_other": "{{count}} reviews in the next 7 days",
+    "today": "Today"
+  },
+  "missed": {
+    "title": "Words you miss the most",
+    "empty": "No mistakes in the last month.",
+    "misses_one": "{{count}} mistake",
+    "misses_other": "{{count}} mistakes"
+  }
+}

@@ -1,12 +1,14 @@
 import * as stylex from '@stylexjs/stylex';
 import { Link, Navigate } from '@tanstack/react-router';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BrandScreen } from '../../../shared/ui/BrandScreen';
 import { CardsIcon, StudyIcon } from '../../../shared/ui/nav/Icons';
 import { useSession } from '../hooks/useSession';
 import { menu } from './menuStyles';
 
-export function HomePage() {
+// `children` entra depois dos atalhos: o painel de progresso vem da feature progress (a rota junta as duas).
+export function HomePage({ children }: Readonly<{ children?: ReactNode }>) {
   const { t, ready } = useTranslation('auth');
   const session = useSession();
   if (!ready || session.status === 'loading') return <div aria-busy="true" />;
@@ -28,6 +30,7 @@ export function HomePage() {
           <span {...stylex.props(menu.heroText)}>{t('home.wordsHint')}</span>
         </span>
       </Link>
+      {children}
     </BrandScreen>
   );
 }

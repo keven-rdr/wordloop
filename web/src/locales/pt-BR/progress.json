@@ -1,0 +1,46 @@
+{
+  "title": "Seu progresso",
+  "empty": "Faça uma sessão de estudo para ver seu progresso aqui.",
+  "failed": "Não consegui carregar seu progresso agora.",
+  "streak": {
+    "title": "Sequência",
+    "days_one": "{{count}} dia seguido",
+    "days_other": "{{count}} dias seguidos",
+    "none": "Estude hoje para começar uma sequência.",
+    "keep": "Estude hoje para manter a sequência.",
+    "done": "Hoje já conta!"
+  },
+  "today": {
+    "answers_one": "{{count}} resposta",
+    "answers_other": "{{count}} respostas",
+    "newWords_one": "{{count}} palavra nova",
+    "newWords_other": "{{count}} palavras novas"
+  },
+  "accuracy": {
+    "title": "Acertos em 7 dias",
+    "empty": "Sem respostas ainda"
+  },
+  "known": {
+    "title": "Palavras conhecidas",
+    "hint": "Já firmes na memória"
+  },
+  "heatmap": {
+    "title_one": "Última semana",
+    "title_other": "Últimas {{count}} semanas",
+    "summary_one": "Você estudou em {{count}} dia nas últimas {{weeks}} semanas",
+    "summary_other": "Você estudou em {{count}} dias nas últimas {{weeks}} semanas"
+  },
+  "forecast": {
+    "title": "Revisões nos próximos dias",
+    "none": "Nada para revisar nos próximos 7 dias.",
+    "total_one": "{{count}} revisão nos próximos 7 dias",
+    "total_other": "{{count}} revisões nos próximos 7 dias",
+    "today": "Hoje"
+  },
+  "missed": {
+    "title": "Palavras que você mais erra",
+    "empty": "Nenhum erro no último mês.",
+    "misses_one": "{{count}} erro",
+    "misses_other": "{{count}} erros"
+  }
+}
