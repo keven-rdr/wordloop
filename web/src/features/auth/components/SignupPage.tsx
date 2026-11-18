@@ -5,6 +5,7 @@ import { useSession } from '../hooks/useSession';
 import { AuthShell } from './AuthShell';
 import { EmailRequestForm } from './EmailRequestForm';
 import { form } from './formStyles';
+import { LegalNotice } from './LegalNotice';
 import { Divider, SocialButtons } from './ProviderButton';
 import { ui } from './styles';
 
@@ -26,6 +27,7 @@ export function SignupPage() {
           {t('signup.signIn')}
         </Link>
       </p>
+      <LegalNotice />
     </AuthShell>
   );
 }

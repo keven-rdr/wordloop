@@ -1,0 +1,135 @@
+{
+  "draft": {
+    "badge": "Versão beta",
+    "notice": "Rascunho em revisão. Este texto descreve o que o wordloop faz hoje com os seus dados e será revisado antes da abertura do beta ao público."
+  },
+  "privacy": {
+    "title": "Política de privacidade",
+    "updated": "Atualizada em 18/11/2026",
+    "sections": [
+      {
+        "title": "Quem cuida dos seus dados",
+        "body": [
+          "O wordloop é um projeto de código aberto, mantido por uma pessoa e sem fins comerciais nesta fase.",
+          "O contato do responsável pelos dados será informado aqui antes da abertura do beta: a definir."
+        ]
+      },
+      {
+        "title": "Quais dados guardamos",
+        "body": [
+          "Conta: seu e-mail e seu nome (do cadastro ou, se você entrar por Google ou GitHub, os que eles informam, e a foto de perfil, se houver).",
+          "Entrada: as passkeys que você cadastrou (guardamos só a chave pública, nunca a sua biometria) e, se você criar uma senha, apenas um código irreversível dela (nunca a senha). Também guardamos de onde você entrou: provedor, aparelho e datas das sessões.",
+          "Preferências: idioma, tema e fuso horário, e as metas de estudo que você definiu.",
+          "Estudo: os cartões, cada resposta que você deu (com o horário, o tempo que levou e o que você digitou) e o resumo de cada dia de estudo."
+        ]
+      },
+      {
+        "title": "Para que usamos",
+        "body": [
+          "Só para o app funcionar: manter você conectado, montar suas sessões de estudo, calcular o que revisar e mostrar o seu progresso.",
+          "Não vendemos seus dados, não mostramos anúncios e não montamos perfil para terceiros."
+        ]
+      },
+      {
+        "title": "O que fica no seu aparelho",
+        "body": [
+          "Um cookie de sessão essencial, que não pode ser lido por scripts, para você continuar conectado.",
+          "Suas preferências de tema e idioma, e as respostas que ainda não foram enviadas quando você estuda sem conexão (elas somem do aparelho depois de enviadas).",
+          "Não usamos cookies de publicidade nem de análise de uso."
+        ]
+      },
+      {
+        "title": "Com quem compartilhamos",
+        "body": [
+          "Apenas com os serviços necessários para o app funcionar: a hospedagem do servidor e do banco de dados; o serviço de e-mail, que envia os links de cadastro e de recuperação de acesso, quando estiver ativado; e o Google e o GitHub, somente se você escolher entrar por eles."
+        ]
+      },
+      {
+        "title": "Por quanto tempo guardamos",
+        "body": [
+          "Enquanto a sua conta existir. Quando você exclui a conta, tudo é apagado na hora, inclusive o histórico de respostas. Fica apenas um registro anônimo de que houve uma exclusão (a data e quantas respostas havia), sem nada que identifique você.",
+          "Cópias de segurança: quando elas existirem, serão criptografadas e substituídas em ciclos curtos. O prazo exato será publicado aqui antes da abertura do beta."
+        ]
+      },
+      {
+        "title": "Seus direitos",
+        "body": [
+          "Pela LGPD, você pode ter acesso aos seus dados, levá-los com você e pedir a eliminação deles. Isso já está no app, em Configurações, Seus dados: baixar uma cópia completa em JSON e excluir a conta.",
+          "Para excluir, você digita o e-mail da conta e precisa ter entrado há pouco tempo. Não tem volta.",
+          "Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD)."
+        ]
+      },
+      {
+        "title": "Segurança",
+        "body": [
+          "O app usa conexão segura (HTTPS), guarda senhas só como código irreversível, mantém a sessão em um cookie protegido e exige confirmação reforçada para excluir a conta.",
+          "Nenhum sistema é perfeito. Se houver um incidente que afete seus dados, avisaremos."
+        ]
+      },
+      {
+        "title": "Mudanças neste texto",
+        "body": [
+          "Este texto pode mudar enquanto o app evolui. A data de atualização fica no topo, e mudanças importantes serão avisadas no próprio app."
+        ]
+      }
+    ]
+  },
+  "terms": {
+    "title": "Termos de uso",
+    "updated": "Atualizados em 18/11/2026",
+    "sections": [
+      {
+        "title": "O que é o wordloop",
+        "body": [
+          "Um aplicativo para ampliar o vocabulário de inglês com repetição espaçada, feito para quem fala português do Brasil. Está em fase beta."
+        ]
+      },
+      {
+        "title": "Sua conta",
+        "body": [
+          "Você é responsável por guardar sua passkey ou senha e por manter seus dados corretos. Use uma conta por pessoa e um e-mail que seja seu."
+        ]
+      },
+      {
+        "title": "Uso aceitável",
+        "body": [
+          "Use o app para estudar. Não tente acessar dados de outras pessoas, burlar a segurança, sobrecarregar o serviço nem usá-lo para algo ilegal."
+        ]
+      },
+      {
+        "title": "Conteúdo e licenças",
+        "body": [
+          "O código do wordloop é livre, sob a licença MIT. O conteúdo de estudo (palavras, traduções e exemplos) é licenciado sob a CC BY-SA 4.0, e as imagens têm licenças próprias. Os créditos completos ficam em Configurações, Créditos e licenças."
+        ]
+      },
+      {
+        "title": "Seus dados",
+        "body": [
+          "Como cuidamos dos seus dados está na Política de privacidade. Você pode baixar uma cópia e excluir sua conta quando quiser."
+        ]
+      },
+      {
+        "title": "Beta e disponibilidade",
+        "body": [
+          "No beta, o serviço é oferecido como está, sem garantia de que estará sempre disponível ou livre de erros. Podem ocorrer mudanças, instabilidades e, em casos raros, perda de dados de estudo."
+        ]
+      },
+      {
+        "title": "Encerramento",
+        "body": [
+          "Você pode excluir sua conta a qualquer momento. Também podemos suspender contas que violem estes termos."
+        ]
+      },
+      {
+        "title": "Mudanças e lei aplicável",
+        "body": ["Estes termos podem mudar; mudanças importantes serão avisadas no app. Valem as leis do Brasil."]
+      }
+    ]
+  },
+  "links": {
+    "label": "Outras páginas",
+    "privacy": "Política de privacidade",
+    "terms": "Termos de uso",
+    "home": "Voltar ao início"
+  }
+}

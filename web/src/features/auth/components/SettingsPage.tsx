@@ -26,6 +26,25 @@ function Chevron() {
   );
 }
 
+type Row = Readonly<{
+  to: '/passkeys' | '/preferences' | '/account/data' | '/privacy' | '/words/credits';
+  title: string;
+  hint: string;
+}>;
+
+// Uma linha do menu das Configurações: título, uma dica embaixo e a seta.
+function NavRow({ to, title, hint }: Row) {
+  return (
+    <Link to={to} {...stylex.props(menu.row)}>
+      <span {...stylex.props(menu.rowText)}>
+        {title}
+        <span {...stylex.props(menu.hint)}>{hint}</span>
+      </span>
+      <Chevron />
+    </Link>
+  );
+}
+
 export function SettingsPage() {
   const { t, ready } = useTranslation('auth');
   const session = useSession();
@@ -33,33 +52,22 @@ export function SettingsPage() {
   if (!ready || session.status === 'loading') return <div aria-busy="true" />;
   if (session.status === 'anonymous') return <Navigate to="/login" replace />;
   const { display_name: name, picture_url: picture } = session.me;
+  const rows: Row[] = [
+    { to: '/passkeys', title: t('myPasskeys'), hint: t('settings.passkeysHint') },
+    { to: '/preferences', title: t('settings.preferences'), hint: t('settings.preferencesHint') },
+    { to: '/account/data', title: t('settings.data'), hint: t('settings.dataHint') },
+    { to: '/privacy', title: t('settings.privacy'), hint: t('settings.privacyHint') },
+    { to: '/words/credits', title: t('settings.credits'), hint: t('settings.creditsHint') },
+  ];
   return (
     <BrandScreen
       title={t('settings.title')}
       subtitle={name || t('greetingAnonymous')}
       lead={<Avatar name={name} pictureUrl={picture} large />}
     >
-      <Link to="/passkeys" {...stylex.props(menu.row)}>
-        <span {...stylex.props(menu.rowText)}>
-          {t('myPasskeys')}
-          <span {...stylex.props(menu.hint)}>{t('settings.passkeysHint')}</span>
-        </span>
-        <Chevron />
-      </Link>
-      <Link to="/preferences" {...stylex.props(menu.row)}>
-        <span {...stylex.props(menu.rowText)}>
-          {t('settings.preferences')}
-          <span {...stylex.props(menu.hint)}>{t('settings.preferencesHint')}</span>
-        </span>
-        <Chevron />
-      </Link>
-      <Link to="/words/credits" {...stylex.props(menu.row)}>
-        <span {...stylex.props(menu.rowText)}>
-          {t('settings.credits')}
-          <span {...stylex.props(menu.hint)}>{t('settings.creditsHint')}</span>
-        </span>
-        <Chevron />
-      </Link>
+      {rows.map((row) => (
+        <NavRow key={row.to} {...row} />
+      ))}
       <div {...stylex.props(menu.row)}>
         <span>{t('settings.theme')}</span>
         <ThemeToggle />
