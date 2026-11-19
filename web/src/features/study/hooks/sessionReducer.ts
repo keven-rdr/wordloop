@@ -1,5 +1,6 @@
 import type { ReviewInput, StudyCard } from '../../../api/generated/types.gen';
 import {
+  checkAssembled,
   checkChoice,
   checkTyped,
   type Difficulty,
@@ -37,13 +38,19 @@ export function startSession(sessionId: string, cards: readonly StudyCard[], now
   return { sessionId, queue: cards, shownAt: now, hintUsed: false, reviews: [] };
 }
 
-function check(state: SessionState, action: Extract<SessionAction, { type: 'check' }>): SessionState {
+type CheckAction = Extract<SessionAction, { type: 'check' }>;
+
+// Resultado provisório: escolher confere o item; montar frase compara as palavras; as demais comparam o digitado.
+function outcomeOf(card: StudyCard, action: CheckAction): Outcome {
+  if (card.exercise === 'choose') return checkChoice(card, action.chosenItemId ?? '');
+  if (card.exercise === 'assemble') return checkAssembled(card.term, action.answer ?? '');
+  return checkTyped(card.term, action.answer ?? '');
+}
+
+function check(state: SessionState, action: CheckAction): SessionState {
   const card = state.queue[0];
   if (!card || state.checked) return state;
-  const outcome =
-    card.exercise === 'choose'
-      ? checkChoice(card, action.chosenItemId ?? '')
-      : checkTyped(card.term, action.answer ?? '');
+  const outcome = outcomeOf(card, action);
   const suggested = suggestDifficulty(action.now - state.shownAt, card.exercise);
   const checked: Checked = {
     outcome,

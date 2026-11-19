@@ -34,3 +34,4 @@ Os 27 primeiros foram gerados por `gen_adrs.py` em 2026-10-06 (**não rode de no
 | 0028 | [Contas próprias sem senha: passkeys, depois Google e GitHub vinculados](0028-contas-proprias-sem-senha-passkeys-depois-google-github.md) (revisada em parte pelo 0029) | `features/2026-10-14-contas-proprias.md` |
 | 0029 | [Senha guardada só como hash Argon2id, ao lado da passkey](0029-senha-como-hash-argon2id-ao-lado-da-passkey.md) | `features/2026-10-16-senha-do-admin.md` |
 | 0030 | [Versão automática por componente, com bump de patch gravado na `develop`](0030-versao-automatica-por-componente-com-bump-na-develop.md) | `ci-cd.md` |
+| 0031 | [Fontes do conteúdo v1: NGSL (vocabulário) e Tatoeba (frases e traduções)](0031-fontes-do-conteudo-v1.md) | `features/2026-11-18-conteudo-e-montar-frases.md` |

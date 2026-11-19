@@ -24,7 +24,7 @@
 | `word` | *sort* (verbo, sentido 1) | EN→PT, lacuna, ouvir | por sentido, com `lexeme` (lema + classe) separado |
 | `expression` | *by the way* | lacuna, PT→EN | colocações vêm de listas ou do Tatoeba |
 | `phrasal_verb` | *give up* | lacuna em frase | uma ficha por **sentido** (Garnier & Schmitt 2015, ver seção 7) |
-| `sentence` | *I live in a hot country.* | lacuna, montar frase | alimenta o desafio da notificação |
+| `sentence` | *I live in a hot country.* | montar frase (3 a 9 palavras; o cartão produtivo nasce com estabilidade ≥ 3), lacuna | alimenta o desafio da notificação |
 | `dialogue` / `paragraph` / `text` | mini-diálogo, texto graduado | compreensão e lacunas | só com cobertura suficiente (seção 3) |
 
 Regras de qualidade do item `[PREMISSA]`: (1) um sentido por item; (2) resposta curta (≤ 4 palavras); (3) toda palavra de nível A1 tem **1 frase de exemplo curta** com vocabulário já ensinado; (4) até **3 sentidos** por palavra nos 1.000 primeiros, e o sentido 2 só entra depois do 1 em review; (5) tradução PT-BR revisada por você (nativo).

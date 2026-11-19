@@ -29,6 +29,9 @@ func (u PlanSession) fill(ctx context.Context, tx Tx, v domain.Viewer, cards []d
 		}
 		pc := domain.PackCard{Card: c, Content: content, Mastery: srs.Mastery(c.State.Stability)}
 		pc.Exercise, pc.ClozeText = domain.PickExercise(c, content)
+		if pc.Exercise == domain.Assemble {
+			pc.Tiles = domain.Tiles(c, content.Term)
+		}
 		if pc.Exercise == domain.Choose {
 			if pc.Options, err = u.options(ctx, tx, v, c, content, locale); err != nil {
 				return nil, err

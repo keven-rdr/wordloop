@@ -20,3 +20,7 @@ deploy/**/secrets.env
 deploy/**/versions.env
 deploy/**/versions.env.prev
 api/internal/**/postgres/db/
+
+# conteudo: fontes baixadas (reproduziveis por content/tools/fetch_sources.py) nunca vao para o Git
+content/.cache/
+__pycache__/

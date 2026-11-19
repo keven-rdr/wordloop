@@ -57,8 +57,22 @@ describe('Tela Palavras', () => {
     api();
     renderApp('/words');
     const link = await screen.findByRole('link', { name: /Casa e família/ });
-    expect(link).toHaveTextContent('2 palavras');
+    expect(link).toHaveTextContent('2 itens');
     expect(link).toHaveAttribute('href', `/words/${unit.id}`);
+  });
+
+  it('mostra as lições do lote novo como "Lição A1 · 3", sem uma tradução por lição', async () => {
+    const lesson = {
+      id: '22222222-2222-2222-2222-222222222222',
+      position: 9,
+      theme_key: 'lesson-a1-03',
+      item_count: 1,
+    };
+    api({ 'GET /catalog/units': () => json([unit, lesson]) });
+    renderApp('/words');
+    const link = await screen.findByRole('link', { name: /Lição A1 · 3/ });
+    expect(link).toHaveTextContent('1 item');
+    expect(link).toHaveAttribute('href', `/words/${lesson.id}`);
   });
 
   it('mostra aviso e tenta de novo quando as unidades não carregam', async () => {

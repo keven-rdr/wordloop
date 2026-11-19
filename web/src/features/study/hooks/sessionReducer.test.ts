@@ -84,3 +84,30 @@ describe('sessionReducer', () => {
     expect(sessionReducer(empty, { type: 'check', now: T0 })).toBe(empty);
   });
 });
+
+describe('sessionReducer: montar frase', () => {
+  it('corrige as palavras na ordem (sem tolerância) e manda o texto montado', () => {
+    const assemble: StudyCard = {
+      ...choose,
+      id: 'c3',
+      item_id: 'i4',
+      direction: 'productive',
+      exercise: 'assemble',
+      term: 'I like the red house.',
+      gloss: 'Eu gosto da casa vermelha.',
+      tiles: ['red', 'I', 'house', 'the', 'like'],
+      options: undefined,
+    };
+    let state = sessionReducer(begin(assemble), { type: 'check', now: T0 + 6000, answer: 'i like THE red house' });
+    expect(state.checked).toMatchObject({ outcome: 'right' });
+    state = sessionReducer(state, { type: 'grade', now: T0 + 6500, id: 'r9', difficulty: 'easy' });
+    expect(state.reviews[0]).toMatchObject({
+      exercise: 'assemble',
+      answer: 'i like THE red house',
+      client_correct: true,
+      difficulty_suggested: 'easy', // montar demora: ganha o tempo extra do digitar
+    });
+    const wrong = sessionReducer(begin(assemble), { type: 'check', now: T0 + 6000, answer: 'I like the red hose' });
+    expect(wrong.checked?.outcome).toBe('wrong'); // "quase" não existe aqui
+  });
+});

@@ -115,7 +115,7 @@ func (u PlanSession) newCards(ctx context.Context, tx Tx, v domain.Viewer, limit
 		return nil, nil
 	}
 	var out []domain.Card
-	productive, err := tx.ProductiveItems(ctx, v.UserID, domain.ProductiveFrom, now.Add(-24*time.Hour), limit)
+	productive, err := tx.ProductiveItems(ctx, v.UserID, domain.ProductiveFrom, domain.ProductiveFromSentence, now.Add(-24*time.Hour), limit)
 	if err != nil {
 		return nil, err
 	}

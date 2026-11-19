@@ -37,8 +37,8 @@ type Tx interface {
 	DueCards(ctx context.Context, user uuid.UUID, now time.Time, limit int) ([]domain.Card, error)
 	// NewItems lista os proximos itens sem cartao receptivo, na ordem das unidades.
 	NewItems(ctx context.Context, user uuid.UUID, drafts bool, limit int) ([]uuid.UUID, error)
-	// ProductiveItems lista os itens cujo cartao receptivo ja passou de S minimo (ha um dia ou mais) e que ainda nao tem o produtivo.
-	ProductiveItems(ctx context.Context, user uuid.UUID, minStability float64, before time.Time, limit int) ([]uuid.UUID, error)
+	// ProductiveItems lista os itens cujo cartao receptivo ja passou de S minimo (ha um dia ou mais; frases tem minimo proprio) e que ainda nao tem o produtivo.
+	ProductiveItems(ctx context.Context, user uuid.UUID, minStability, minSentenceStability float64, before time.Time, limit int) ([]uuid.UUID, error)
 	CreateCard(ctx context.Context, user uuid.UUID, item uuid.UUID, dir domain.Direction, now time.Time) (domain.Card, error)
 	Contents(ctx context.Context, items []uuid.UUID, locale string, drafts bool) (map[uuid.UUID]domain.Content, error)
 	Distractors(ctx context.Context, item uuid.UUID, locale string, drafts bool, n int) ([]domain.Option, error)

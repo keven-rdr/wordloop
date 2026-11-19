@@ -1,10 +1,12 @@
 import * as stylex from '@stylexjs/stylex';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StudyCard } from '../../../api/generated/types.gen';
 import { DIFFICULTIES, ERROR_KINDS } from '../domain/answer';
 import { asksDifficulty, type Checked } from '../hooks/sessionReducer';
+import { useAnswerState } from '../hooks/useAnswerState';
 import { type Grade, useExerciseKeys } from '../hooks/useExerciseKeys';
+import { AssembleExercise } from './AssembleExercise';
 import { ChooseExercise } from './ChooseExercise';
 import { DifficultyPicker } from './DifficultyPicker';
 import { Feedback } from './Feedback';
@@ -64,52 +66,74 @@ function ActionBar({ checked, canCheck, isType, verify, skip, next }: BarProps) 
   );
 }
 
+// O resultado da resposta: o feedback e, conforme o caso, a pergunta de dificuldade (acertou) ou do tipo de erro (errou).
+function Verdict({
+  card,
+  checked,
+  onGrade,
+}: Readonly<{ card: StudyCard; checked?: Checked; onGrade: (grade: Grade) => void }>) {
+  const ask = checked ? asksDifficulty(checked) : undefined;
+  return (
+    <div aria-live="polite" {...stylex.props(p.live)}>
+      {checked && <Feedback card={card} outcome={checked.outcome} />}
+      {ask === 'difficulty' && checked && (
+        <DifficultyPicker
+          kind="difficulty"
+          values={DIFFICULTIES}
+          suggested={checked.suggested}
+          onPick={(difficulty) => onGrade({ difficulty })}
+        />
+      )}
+      {ask === 'errorKind' && (
+        <DifficultyPicker kind="errorKind" values={ERROR_KINDS} onPick={(errorKind) => onGrade({ errorKind })} />
+      )}
+    </div>
+  );
+}
+
 // Uma pergunta: responder → verificar → feedback → dificuldade (ou continuar). A mesma moldura serve a todo exercício.
 export function ExerciseScreen({ card, checked, hintUsed, onHint, onCheck, onGrade }: Props) {
-  const [chosen, setChosen] = useState<string>();
-  const [typed, setTyped] = useState('');
-  const isType = card.exercise !== 'choose'; // digitar, lacuna e imagem → palavra se respondem digitando
-  const canCheck = isType ? typed.trim() !== '' : chosen !== undefined;
-  const verify = () => onCheck(isType ? { answer: typed } : { chosenItemId: chosen });
-  useExerciseKeys({ card, checked, chosen }, { onChoose: setChosen, onVerify: verify, onGrade });
-  const ask = checked ? asksDifficulty(checked) : undefined;
+  const a = useAnswerState(card);
+  const verify = () => onCheck(a.answer);
+  useExerciseKeys(
+    { card, checked, chosen: a.chosen, assemble: a.assemble },
+    { onChoose: a.setChosen, onVerify: verify, onGrade, onPlace: a.placeAt, onUndo: a.undo },
+  );
   return (
     <>
       <main {...stylex.props(s.body)}>
         <div {...stylex.props(s.column)}>
-          {isType ? (
+          {a.kind === 'type' && (
             <TypeExercise
               card={card}
-              typed={typed}
+              typed={a.typed}
               locked={checked !== undefined}
               hintUsed={hintUsed}
-              onType={setTyped}
+              onType={a.setTyped}
               onSubmit={verify}
               onHint={onHint}
             />
-          ) : (
-            <ChooseExercise card={card} chosen={chosen} outcome={checked?.outcome} onChoose={setChosen} />
           )}
-          <div aria-live="polite" {...stylex.props(p.live)}>
-            {checked && <Feedback card={card} outcome={checked.outcome} />}
-            {ask === 'difficulty' && checked && (
-              <DifficultyPicker
-                kind="difficulty"
-                values={DIFFICULTIES}
-                suggested={checked.suggested}
-                onPick={(difficulty) => onGrade({ difficulty })}
-              />
-            )}
-            {ask === 'errorKind' && (
-              <DifficultyPicker kind="errorKind" values={ERROR_KINDS} onPick={(errorKind) => onGrade({ errorKind })} />
-            )}
-          </div>
+          {a.kind === 'assemble' && (
+            <AssembleExercise
+              card={card}
+              placed={a.placed}
+              outcome={checked?.outcome}
+              onPlace={a.placeTile}
+              onRemove={a.removeAt}
+              onClear={a.clear}
+            />
+          )}
+          {a.kind === 'choose' && (
+            <ChooseExercise card={card} chosen={a.chosen} outcome={checked?.outcome} onChoose={a.setChosen} />
+          )}
+          <Verdict card={card} checked={checked} onGrade={onGrade} />
         </div>
       </main>
       <ActionBar
         checked={checked}
-        canCheck={canCheck}
-        isType={isType}
+        canCheck={a.canCheck}
+        isType={a.kind !== 'choose'}
         verify={verify}
         skip={() => onCheck({ answer: '' })}
         next={() => onGrade({})}

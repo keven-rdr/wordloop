@@ -12,8 +12,9 @@
   "units": {
     "title": "Units",
     "empty": "No units available for you yet.",
-    "count_one": "{{count}} word",
-    "count_other": "{{count}} words",
+    "lesson": "Lesson {{level}} · {{n}}",
+    "count_one": "{{count}} item",
+    "count_other": "{{count}} items",
     "theme": {
       "home-and-family": "Home and family",
       "food-and-drink": "Food and drink",

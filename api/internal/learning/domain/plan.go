@@ -13,6 +13,9 @@ const (
 	sessionTTL       = 12 // horas ate o pacote expirar
 	// ProductiveFrom e a estabilidade a partir da qual nasce o cartao produtivo (digitar).
 	ProductiveFrom = 7.0
+	// ProductiveFromSentence vale para itens do tipo frase: montar a frase e o objetivo de estudar uma frase, entao o
+	// cartao produtivo nasce mais cedo (reconhecer a frase pronta e facil; sem isso ninguem montaria nas primeiras semanas).
+	ProductiveFromSentence = 3.0
 )
 
 var (

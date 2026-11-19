@@ -27,8 +27,9 @@ const (
 	Productive Direction = "productive"
 )
 
-// Exercise e o tipo de pergunta: escolher (reconhecimento) ou, no cartao produtivo, uma das tres variantes de
-// digitar (producao): a partir da traducao (Type), completando a lacuna da frase (Cloze) ou a partir da imagem (Image).
+// Exercise e o tipo de pergunta: escolher (reconhecimento) ou, no cartao produtivo, uma das variantes de producao:
+// digitar a partir da traducao (Type), completar a lacuna da frase (Cloze), digitar a partir da imagem (Image) ou,
+// para itens do tipo frase, montar a frase em ingles com as pecas (Assemble).
 type Exercise string
 
 const (
@@ -36,10 +37,13 @@ const (
 	Type   Exercise = "type"
 	Cloze  Exercise = "cloze"
 	Image  Exercise = "image"
+	// Assemble: a pessoa monta a frase em ingles tocando nas pecas (as palavras, embaralhadas), na ordem certa.
+	Assemble Exercise = "assemble"
 )
 
-// IsTyped diz se a resposta e digitada (producao): todas as variantes do cartao produtivo.
-func (e Exercise) IsTyped() bool { return e == Type || e == Cloze || e == Image }
+// IsTyped diz se a resposta e produzida pela pessoa (producao, nao reconhecimento): todas as variantes do cartao
+// produtivo, inclusive montar a frase. E o que libera o "Facil" e o que o replay do log reconstroi.
+func (e Exercise) IsTyped() bool { return e == Type || e == Cloze || e == Image || e == Assemble }
 
 // Mode diz o que a sessao traz: so revisoes, so palavras novas ou as duas coisas.
 type Mode string
@@ -90,6 +94,7 @@ func (c Card) Accepts(e Exercise) bool {
 type Content struct {
 	Term, Gloss, Example, ExampleGloss, ImageKey string
 	Theme                                        string // tema da unidade do item (ex.: little-words)
+	Kind                                         string // tipo do item no catalogo: word, expression, phrasal_verb, sentence...
 }
 
 // Option e uma alternativa do exercicio de escolher.
@@ -103,6 +108,7 @@ type PackCard struct {
 	Card      Card
 	Exercise  Exercise // a variante escolhida pelo servidor para esta vez
 	ClozeText string   // so para Cloze: a frase com a palavra trocada por BlankMark
+	Tiles     []string // so para Assemble: as palavras da frase, embaralhadas (nunca na ordem certa)
 	Content   Content
 	Options   []Option
 	Mastery   float64

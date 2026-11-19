@@ -220,3 +220,45 @@ func TestRepositoryFailuresBecome500WithoutDetails(t *testing.T) {
 		t.Errorf("revisao de cartao inexistente: %d", rec.Code)
 	}
 }
+
+func TestPlanSendsTilesAndTheServerGradesAnAssembledSentence(t *testing.T) {
+	item := learningtest.Item{ID: uuid.New(), Content: domain.Content{Term: "I like the red house.", Gloss: "Eu gosto da casa vermelha.", Kind: domain.SentenceKind}}
+	store := learningtest.New(item)
+	id := uuid.New()
+	store.Cards[id] = &domain.Card{ID: id, ItemID: item.ID, Direction: domain.Receptive, Scheduler: "simple_v1", State: srs.CardState{
+		ID: id.String(), State: srs.StateReview, Stability: 4, Reps: 3, LastReviewAt: now.Add(-72 * time.Hour), DueAt: now.Add(24 * time.Hour),
+	}}
+	viewers := &learningtest.Viewers{Who: domain.Viewer{UserID: user}}
+	clock := func() time.Time { return now }
+	h := api.Handler(api.Server{Learning: httpapi.Handler{
+		Plan:   app.PlanSession{Viewers: viewers, Repo: store, Scheduler: srs.SimpleV1{NoFuzz: true}, Now: clock, NewID: uuid.New},
+		Submit: app.SubmitReviews{Viewers: viewers, Repo: store, Scheduler: srs.SimpleV1{NoFuzz: true}, Now: clock},
+	}})
+	pack := decode[map[string]any](t, post(h, "/api/v1/study/plan", `{"minutes":15,"mode":"learn"}`, true))
+	var card map[string]any
+	for _, c := range pack["cards"].([]any) {
+		if c.(map[string]any)["direction"] == "productive" {
+			card = c.(map[string]any)
+		}
+	}
+	if card == nil || card["exercise"] != "assemble" || card["term"] == nil || card["options"] != nil {
+		t.Fatalf("frase no produtivo: %+v", card)
+	}
+	tiles := card["tiles"].([]any)
+	if len(tiles) != 5 || card["gloss"] != "Eu gosto da casa vermelha." {
+		t.Fatalf("5 pecas e a traducao como pergunta: %+v", card)
+	}
+	body, _ := json.Marshal(map[string]any{"reviews": []any{map[string]any{
+		"id": uuid.New(), "card_id": card["id"], "exercise": "assemble", "answer": "I like the red house",
+		"shown_at": now.Add(-time.Minute).Format(time.RFC3339), "answered_at": now.Add(-50 * time.Second).Format(time.RFC3339),
+		"difficulty": "medium", "client_seq": 1,
+	}}})
+	rec := post(h, "/api/v1/study/reviews", string(body), true)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("revisao: %d %s", rec.Code, rec.Body.String())
+	}
+	res := decode[map[string][]map[string]any](t, rec)["results"][0]
+	if res["status"] != "applied" || res["correct"] != true {
+		t.Fatalf("o servidor corrige a frase montada: %+v", res)
+	}
+}

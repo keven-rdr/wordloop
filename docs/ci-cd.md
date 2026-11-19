@@ -88,6 +88,7 @@ Existe como **código e testes**; nada está provisionado. O guia do dono, com a
 - **Conferência de configuração:** quando a API muda, o `deploy.sh` roda `api check-config` com a imagem nova antes de backup e migração (valida login social, passkey, e-mail, endereço público e proteções; nunca imprime segredo). Erro = deploy cancelado, código 4, nada alterado. Os `api.env` versionados (`deploy/tst`, `deploy/prd`) são testados contra as mesmas regras.
 - **Restauração:** `restore.sh` (só em banco descartável, com `--disposable`, recusa o banco de produção) e `restore-drill.sh` (ensaio com Postgres em Docker).
 - **Endurecimento da VM:** `harden-vm.sh` (SSH só por chave, `ufw`, `fail2ban`, atualizações, cron do backup); `--check` só confere.
+- **Carga de conteúdo (migrações `00020`–`00023`):** são ~4 MB de SQL em lote (INSERT de 500 linhas, ~50 instruções), pensados para o limite de 900 s do `deploy.sh` e o ~0,15 s por ida e volta do Neon (um INSERT por linha levaria mais de 1 h). O `content-ci.yml` testa as ferramentas e se as migrações geradas estão atualizadas e íntegras; o `api-ci` roda os testes com Postgres. Em prd, o backup roda antes de migrar.
 - **CI dos scripts:** `ops-ci.yml` roda `deploy/scripts/tests/run.sh` (comandos de mentira, sem rede) e o `shellcheck`; o mesmo teste roda em `npm run check` quando algo em `deploy/` muda.
 
 ## Ainda não existe

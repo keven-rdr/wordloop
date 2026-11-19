@@ -33,6 +33,14 @@
   "cloze": {
     "prompt": "Complete a frase com a palavra que falta"
   },
+  "assemble": {
+    "prompt": "Monte a frase em inglês",
+    "answer": "Sua frase",
+    "empty": "Toque nas palavras abaixo, na ordem certa.",
+    "bank": "Palavras para montar a frase",
+    "remove": "Tirar",
+    "clear": "Limpar tudo"
+  },
   "image": {
     "prompt": "Que palavra em inglês a imagem mostra?",
     "alt": "Imagem da palavra que você precisa escrever"

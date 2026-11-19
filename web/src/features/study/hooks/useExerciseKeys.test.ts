@@ -62,4 +62,32 @@ describe('keyAction', () => {
     expect(keyAction('Enter', { card, checked: c })).toEqual({ do: 'grade', grade: {} });
     expect(keyAction('1', { card, checked: c })).toBeUndefined();
   });
+
+  describe('montar frase', () => {
+    const assemble: StudyCard = { ...card, exercise: 'assemble', options: undefined, tiles: ['b', 'a', 'c'] };
+    const open = { remaining: 3, complete: false };
+
+    it('1 a 9 colocam a peça daquela posição do banco; fora do alcance não faz nada', () => {
+      expect(keyAction('1', { card: assemble, assemble: open })).toEqual({ do: 'place', position: 0 });
+      expect(keyAction('3', { card: assemble, assemble: open })).toEqual({ do: 'place', position: 2 });
+      expect(keyAction('4', { card: assemble, assemble: open })).toBeUndefined();
+      expect(keyAction('0', { card: assemble, assemble: open })).toBeUndefined();
+      expect(keyAction('a', { card: assemble, assemble: open })).toBeUndefined(); // A–D são das opções, não das peças
+    });
+
+    it('Backspace desfaz e Enter só verifica com a frase completa', () => {
+      expect(keyAction('Backspace', { card: assemble, assemble: open })).toEqual({ do: 'undo' });
+      expect(keyAction('Enter', { card: assemble, assemble: open })).toBeUndefined();
+      expect(keyAction('Enter', { card: assemble, assemble: { remaining: 0, complete: true } })).toEqual({
+        do: 'verify',
+      });
+    });
+
+    it('depois de verificar valem as teclas da dificuldade, como nos outros exercícios', () => {
+      expect(keyAction('2', { card: assemble, assemble: open, checked: checked({}) })).toEqual({
+        do: 'grade',
+        grade: { difficulty: 'medium' },
+      });
+    });
+  });
 });

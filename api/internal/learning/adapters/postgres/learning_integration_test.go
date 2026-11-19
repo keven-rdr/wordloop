@@ -22,8 +22,8 @@ import (
 
 var now = time.Date(2026, 10, 19, 15, 0, 0, 0, time.UTC)
 
-// fixture sobe um Postgres real com as migracoes e o seed v0 (125 itens em rascunho), cria uma pessoa e publica
-// alguns itens da unidade "casa e familia" para o aluno enxergar.
+// fixture sobe um Postgres real com as migracoes (a carga real ja vem publicada), cria uma pessoa e volta tudo a
+// rascunho, publicando so alguns itens da unidade "casa e familia": assim os testes sabem exatamente o que o aluno ve.
 type fixture struct {
 	pool   *pgxpool.Pool
 	store  *postgres.Store
@@ -46,6 +46,9 @@ func setup(t *testing.T, admin bool) fixture {
 	}
 	var user uuid.UUID
 	if err := pool.QueryRow(ctx, `INSERT INTO app_user (display_name) VALUES ('Ana') RETURNING id`).Scan(&user); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `UPDATE item SET status = 'draft'`); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := pool.Exec(ctx, `UPDATE item SET status = 'published' WHERE natural_key IN

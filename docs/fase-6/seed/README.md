@@ -1,5 +1,7 @@
 # Seed de conteúdo — amostra e plano
 
+> **Atualização (18/11/2026):** a amostra abaixo é histórica (Sprint 0a). O fluxo real de hoje é: `content/seed/gen_sql.py` (seed v0, 125 itens) e o **lote v1** em `content/tools/` (`fetch_sources.py` → `build_v1.py` → `validate.py` → `gen_v1.py`), com 2.000 palavras e 2.100 frases da NGSL e do Tatoeba, migrações em lote `00020`–`00023` e **publicação automática depois da validação**. O `NOTICE.md`, o `NGSL` com `freq_rank` e as fontes estão em [content/NOTICE.md](../../../content/NOTICE.md) e no [ADR 0031](../../adr/0031-fontes-do-conteudo-v1.md). A etapa humana de `reviewed` descrita no plano original **não existe** neste lote.
+
 Pipeline reproduzível: **fonte JSON → `gen_sql.py` → SQL idempotente + SQL de conferência**, o mesmo padrão do `seed-referencias` do Contratos (escrito do zero, sem código de lá).
 
 ## Como rodar (amostra)

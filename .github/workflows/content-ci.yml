@@ -1,0 +1,23 @@
+# CI do conteudo (palavras e frases): valida os dados do lote v1 e testa as ferramentas que os geram e as migracoes
+# geradas (atualizadas em relacao ao JSON, integras como o Postgres veria). Sem rede, sem as fontes baixadas.
+# Python 3 ja vem no ubuntu-latest (as ferramentas so usam a biblioteca padrao).
+# Os testes com Postgres de verdade (contagens, tudo publicado) rodam no api-ci.
+name: content-ci
+on:
+  pull_request:
+    paths: ["content/**", "api/migrations/0002*_content*.sql", ".github/workflows/content-ci.yml"]
+  push:
+    branches: [develop]
+    paths: ["content/**", "api/migrations/0002*_content*.sql"]
+permissions: { contents: read }
+concurrency: { group: "content-ci-${{ github.ref }}", cancel-in-progress: true }
+
+jobs:
+  tools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Valida os dados do lote v1
+        run: python3 content/tools/validate.py
+      - name: Testes das ferramentas e das migracoes geradas
+        run: python3 -m unittest discover -s content/tools

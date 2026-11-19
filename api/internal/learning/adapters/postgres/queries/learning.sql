@@ -25,16 +25,19 @@ LEFT JOIN card cd ON cd.user_id = @user_id AND cd.item_id = i.id AND cd.directio
 WHERE (i.status = 'published' OR @include_drafts::boolean)
   AND i.kind IN ('word', 'expression', 'phrasal_verb', 'sentence')
   AND (cd.id IS NULL OR cd.state = 'new')
-ORDER BY c.slug, u.position NULLS LAST, i.cefr NULLS LAST, lower(term.body), i.id
+ORDER BY c.slug, u.position NULLS LAST, (i.kind = 'sentence'), i.cefr NULLS LAST, lower(term.body), i.id
 LIMIT @row_limit::int;
 
--- O produtivo nasce quando o receptivo chega a S minimo, ha pelo menos um dia (nunca na mesma sessao).
+-- O produtivo nasce quando o receptivo chega a S minimo, ha pelo menos um dia (nunca na mesma sessao). Frases
+-- (montar a frase) tem um minimo proprio, menor.
 -- name: ProductiveItems :many
 SELECT r.item_id
 FROM card r
+JOIN item i ON i.id = r.item_id
 LEFT JOIN card p ON p.user_id = r.user_id AND p.item_id = r.item_id AND p.direction = 'productive'
 WHERE r.user_id = @user_id AND r.direction = 'receptive' AND r.state IN ('review', 'relearning') AND NOT r.suspended
-  AND r.stability >= @min_stability::float8 AND r.last_review_at <= @before::timestamptz
+  AND r.stability >= CASE WHEN i.kind = 'sentence' THEN @min_sentence_stability::float8 ELSE @min_stability::float8 END
+  AND r.last_review_at <= @before::timestamptz
   AND (p.id IS NULL OR p.state = 'new')
 ORDER BY r.stability DESC, r.item_id
 LIMIT @row_limit::int;
@@ -53,7 +56,8 @@ SELECT i.id AS item_id, term.body AS term,
        COALESCE((SELECT m.storage_key FROM item_media im JOIN media m ON m.id = im.media_id
                   WHERE im.item_id = i.id AND im.role = 'context' AND (m.status = 'approved' OR @include_drafts::boolean)
                   ORDER BY im.position LIMIT 1), '')::text AS image_key,
-       COALESCE(u.theme_key, '')::text AS theme
+       COALESCE(u.theme_key, '')::text AS theme,
+       i.kind::text AS kind
 FROM item i
 LEFT JOIN unit u ON u.id = i.unit_id
 JOIN course c ON c.id = i.course_id AND (c.status = 'published' OR @include_drafts::boolean)
