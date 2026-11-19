@@ -101,6 +101,9 @@ func (u SubmitReviews) correct(ctx context.Context, tx Tx, card domain.Card, a d
 	if err != nil {
 		return domain.Verdict{}, false, err
 	}
+	if a.Exercise == domain.Assemble { // sem tolerancia a erro de digitacao: uma peca fora do lugar e erro
+		return domain.CorrectAssembled(term, a.Text), true, nil
+	}
 	// Resposta em branco e "nao sei": conta como erro (nao pode sumir do log, senao o cartao nunca perde forca).
 	return domain.CorrectTyped(term, a.Text), true, nil
 }

@@ -833,10 +833,15 @@ components:
         state: { type: string, enum: [new, learning, review, relearning] }
         exercise:
           type: string
-          enum: [choose, type, cloze, image]
+          enum: [choose, type, cloze, image, assemble]
           description: >
             escolher (receptivo) ou, no produtivo, digitar a palavra a partir da traducao (type), completar a lacuna da
-            frase (cloze) ou digitar a palavra que a imagem mostra (image). O servidor escolhe a variante.
+            frase (cloze), digitar a palavra que a imagem mostra (image) ou montar a frase em ingles com as pecas (assemble,
+            so para itens do tipo frase). O servidor escolhe a variante.
+        tiles:
+          type: array
+          items: { type: string }
+          description: "so para assemble: as palavras da frase em ingles, embaralhadas (nunca na ordem certa), sem pontuacao; a traducao da frase vem em gloss"
         cloze_text: { type: string, description: "so para cloze: a frase de exemplo com a palavra trocada por ____; a traducao da frase vem em example" }
         term: { type: string, description: "o termo em ingles; no exercicio de digitar nao deve aparecer antes da resposta" }
         gloss: { type: string }
@@ -866,7 +871,7 @@ components:
         id: { type: string, format: uuid, description: "gerado no cliente; garante a idempotencia" }
         card_id: { type: string, format: uuid }
         session_id: { type: string, format: uuid }
-        exercise: { type: string, enum: [choose, type, cloze, image], description: "o exercicio que o cartao mostrou; so choose serve ao cartao receptivo, os demais ao produtivo" }
+        exercise: { type: string, enum: [choose, type, cloze, image, assemble], description: "o exercicio que o cartao mostrou; so choose serve ao cartao receptivo, os demais ao produtivo. No assemble, answer traz as pecas na ordem montada, separadas por espaco" }
         source: { type: string, enum: [session, notification, placement, reading], default: session }
         shown_at: { type: string, format: date-time }
         answered_at: { type: string, format: date-time }

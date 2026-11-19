@@ -52,6 +52,10 @@ func studyCard(c domain.PackCard) gen.StudyCard {
 		url := mediaPath + c.Content.ImageKey
 		out.ImageUrl = &url
 	}
+	if len(c.Tiles) > 0 {
+		tiles := c.Tiles
+		out.Tiles = &tiles
+	}
 	if len(c.Options) > 0 {
 		opts := make([]gen.ChoiceOption, 0, len(c.Options))
 		for _, o := range c.Options {

@@ -44,7 +44,7 @@ def main() -> int:
         print(f"baixando {name} ...", flush=True)
         entries.append(download(name, url))
     manifest = {"retrieved_at": date.today().isoformat(), "files": entries}
-    (V1 / "sources.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    (V1 / "sources.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"ok: {len(entries)} arquivos em {CACHE}; manifesto em {V1 / 'sources.json'}")
     return 0
 

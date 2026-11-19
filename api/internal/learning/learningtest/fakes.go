@@ -143,10 +143,10 @@ func (t *tx) NewItems(_ context.Context, _ uuid.UUID, drafts bool, limit int) ([
 	return out, t.fail("NewItems")
 }
 
-func (t *tx) ProductiveItems(_ context.Context, _ uuid.UUID, minS float64, before time.Time, limit int) ([]uuid.UUID, error) {
+func (t *tx) ProductiveItems(_ context.Context, _ uuid.UUID, minS, minSentenceS float64, before time.Time, limit int) ([]uuid.UUID, error) {
 	var out []uuid.UUID
 	for _, c := range t.s.Cards {
-		if c.Direction != domain.Receptive || c.State.Stability < minS || c.State.LastReviewAt.After(before) || c.State.State == srs.StateNew {
+		if c.Direction != domain.Receptive || c.State.Stability < t.minFor(c.ItemID, minS, minSentenceS) || c.State.LastReviewAt.After(before) || c.State.State == srs.StateNew {
 			continue
 		}
 		if p, has := t.hasCard(c.ItemID, domain.Productive); (!has || p.State.State == srs.StateNew) && len(out) < limit {
@@ -155,6 +155,16 @@ func (t *tx) ProductiveItems(_ context.Context, _ uuid.UUID, minS float64, befor
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].String() < out[j].String() })
 	return out, t.fail("ProductiveItems")
+}
+
+// minFor e a estabilidade minima para nascer o produtivo: as frases tem a propria.
+func (t *tx) minFor(item uuid.UUID, minS, minSentenceS float64) float64 {
+	for _, it := range t.s.Items {
+		if it.ID == item && it.Content.Kind == domain.SentenceKind {
+			return minSentenceS
+		}
+	}
+	return minS
 }
 
 func (t *tx) CreateCard(_ context.Context, _ uuid.UUID, item uuid.UUID, dir domain.Direction, _ time.Time) (domain.Card, error) {

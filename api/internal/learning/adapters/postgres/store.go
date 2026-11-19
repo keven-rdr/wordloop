@@ -76,9 +76,9 @@ func (t *txn) NewItems(ctx context.Context, user uuid.UUID, drafts bool, limit i
 	return t.q.NewItems(ctx, db.NewItemsParams{UserID: user, IncludeDrafts: drafts, RowLimit: int32(limit)}) //nolint:gosec // limite pequeno e fixo
 }
 
-func (t *txn) ProductiveItems(ctx context.Context, user uuid.UUID, minS float64, before time.Time, limit int) ([]uuid.UUID, error) {
+func (t *txn) ProductiveItems(ctx context.Context, user uuid.UUID, minS, minSentenceS float64, before time.Time, limit int) ([]uuid.UUID, error) {
 	return t.q.ProductiveItems(ctx, db.ProductiveItemsParams{ //nolint:gosec // limite pequeno e fixo
-		UserID: user, MinStability: minS, Before: ts(before), RowLimit: int32(limit), //nolint:gosec // limite pequeno e fixo
+		UserID: user, MinStability: minS, MinSentenceStability: minSentenceS, Before: ts(before), RowLimit: int32(limit), //nolint:gosec // limite pequeno e fixo
 	})
 }
 
@@ -97,7 +97,7 @@ func (t *txn) Contents(ctx context.Context, items []uuid.UUID, locale string, dr
 	}
 	out := make(map[uuid.UUID]domain.Content, len(rows))
 	for _, r := range rows {
-		out[r.ItemID] = domain.Content{Term: r.Term, Gloss: r.Gloss, Example: r.Example, ExampleGloss: r.ExampleGloss, ImageKey: r.ImageKey, Theme: r.Theme}
+		out[r.ItemID] = domain.Content{Term: r.Term, Gloss: r.Gloss, Example: r.Example, ExampleGloss: r.ExampleGloss, ImageKey: r.ImageKey, Theme: r.Theme, Kind: r.Kind}
 	}
 	return out, nil
 }

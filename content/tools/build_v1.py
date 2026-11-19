@@ -87,7 +87,7 @@ def main() -> int:
         for c in sorted(sentences, key=lambda c: (c.rank, c.pair.eng_id))
     ]
     for name, data in (("units", units), ("words", words), ("sentences", out_sentences)):
-        (V1 / f"{name}.json").write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        (V1 / f"{name}.json").write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
     with_example = sum(1 for w in words if "ex" in w)
     print(f"ok: {len(units)} licoes, {len(words)} palavras ({with_example} com exemplo), {len(out_sentences)} frases")
     return 0

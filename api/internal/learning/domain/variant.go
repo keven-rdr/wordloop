@@ -41,12 +41,18 @@ func variantSlot(c Card) int {
 	return int(h.Sum32() % variantSlots)
 }
 
-// PickExercise escolhe a pergunta do cartao nesta vez. Receptivo sempre escolhe. Produtivo: palavras funcionais com
-// exemplo viram lacuna; nos demais, a 1a fatia e lacuna (se couber, senao imagem), a 2a e imagem (se houver e a
+// SentenceKind e o tipo de item que se monta com pecas.
+const SentenceKind = "sentence"
+
+// PickExercise escolhe a pergunta do cartao nesta vez. Receptivo sempre escolhe. Produtivo: frases com 3 a 9 pecas
+// viram montar frase (Assemble); palavras funcionais com exemplo viram lacuna; nos demais, a 1a fatia e lacuna (se couber, senao imagem), a 2a e imagem (se houver e a
 // estabilidade for menor que ImageFadesAt) e a 3a e digitar a partir da traducao. O segundo retorno e a frase da lacuna.
 func PickExercise(c Card, content Content) (Exercise, string) {
 	if c.Exercise() == Choose {
 		return Choose, ""
+	}
+	if content.Kind == SentenceKind && AssemblePossible(content.Term) {
+		return Assemble, ""
 	}
 	blank, canCloze := Blank(content.Example, content.Term)
 	canImage := content.ImageKey != "" && c.State.Stability < ImageFadesAt
