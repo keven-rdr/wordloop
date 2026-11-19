@@ -1,31 +1,52 @@
 #!/usr/bin/env bash
-# Comando FORCADO da chave SSH de deploy (ver bootstrap-vm.sh). Chamado pelo workflow deploy.yml:
+# Comando FORCADO da chave SSH de deploy (ver bootstrap-vm.sh). Chamado pelos workflows deploy.yml (tst) e deploy-prd.yml:
 #   ssh deploy@VM "<api_tag> <web_tag>" < pacote.tar    ('-' mantem a tag atual)   |   ssh deploy@VM "rollback"
 # O pacote (tar na entrada padrao) traz a configuracao do repositorio e o secrets.env montado pelo CI:
-# compose.yaml, Caddyfile, api.env, secrets.env e deploy.sh. Sem pacote, usa o que ja esta na VM.
-# So aceita tags no formato seguro; nada do que chega pelo SSH vira comando.
+# compose.yaml, Caddyfile, api.env, secrets.env e deploy.sh; e, so na producao, os scripts de backup (backup.sh, lib/*).
+# Sem pacote, usa o que ja esta na VM. So aceita tags no formato seguro; nada do que chega pelo SSH vira comando.
+# Se a VM tem backup.sh e backup.env, faz um backup ANTES de migrar o banco; se o backup falhar, o deploy para.
 # Ao chamar a mao, redirecione a entrada: ssh ... "rollback" < /dev/null
 set -euo pipefail
 
-DIR="${WORDLOOP_DIR:-/srv/wordloop/tst}"
+DIR="${WORDLOOP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 read -r API_TAG WEB_TAG <<<"${SSH_ORIGINAL_COMMAND:-}"
 cd "$DIR"
+
+OPTIONAL_MEMBERS=(backup.sh restore.sh restore-drill.sh lib/common.sh lib/retention.sh) # lista fechada: nada alem disto sai do pacote
+
+install_package() { # install_package TAR PASTA_TEMPORARIA
+  local tar="$1" tmp="$2" m
+  tar -xf "$tar" -C "$tmp" compose.yaml Caddyfile api.env secrets.env deploy.sh
+  install -m 644 "$tmp/compose.yaml" "$tmp/api.env" "$DIR/"
+  # Caddyfile e montado como ARQUIVO no contêiner: gravar no lugar (mesmo inode) para o contêiner enxergar a troca.
+  cat "$tmp/Caddyfile" >"$DIR/Caddyfile"
+  install -m 600 "$tmp/secrets.env" "$DIR/secrets.env"
+  install -m 755 "$tmp/deploy.sh" "$DIR/deploy.sh.new" # vira o deploy.sh no fim: nao troca o script em execucao
+  for m in "${OPTIONAL_MEMBERS[@]}"; do
+    tar -tf "$tar" "$m" >/dev/null 2>&1 || continue
+    tar -xf "$tar" -C "$tmp" "$m"
+    install -D -m 755 "$tmp/$m" "$DIR/$m"
+  done
+}
 
 if [[ ! -t 0 ]]; then
   tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' EXIT
   cat >"$tmp/pacote.tar"
-  if [[ -s "$tmp/pacote.tar" ]]; then
-    tar -xf "$tmp/pacote.tar" -C "$tmp" compose.yaml Caddyfile api.env secrets.env deploy.sh
-    install -m 644 "$tmp/compose.yaml" "$tmp/api.env" "$DIR/"
-    # Caddyfile e montado como ARQUIVO no contêiner: gravar no lugar (mesmo inode) para o contêiner enxergar a troca.
-    cat "$tmp/Caddyfile" >"$DIR/Caddyfile"
-    install -m 600 "$tmp/secrets.env" "$DIR/secrets.env"
-    install -m 755 "$tmp/deploy.sh" "$DIR/deploy.sh.new" # vira o deploy.sh no fim: nao troca o script em execucao
-  fi
+  [[ ! -s "$tmp/pacote.tar" ]] || install_package "$tmp/pacote.tar" "$tmp"
 fi
 
 compose() { docker compose --env-file versions.env "$@"; }
+
+backup_before_migrate() {
+  [[ -x "$DIR/backup.sh" && -f "$DIR/backup.env" ]] || return 0
+  echo "backup do banco antes de migrar" >&2
+  if ! "$DIR/backup.sh"; then
+    cp versions.env.prev versions.env # nada subiu: volta a versao registrada para nao "armar" a nova
+    echo "backup falhou: deploy cancelado, o banco nao foi tocado" >&2
+    exit 3
+  fi
+}
 
 if [[ "${API_TAG:-}" == "rollback" ]]; then
   [[ -f versions.env.prev ]] || { echo "sem versao anterior para voltar" >&2; exit 2; }
@@ -40,6 +61,7 @@ fi
 
 compose pull
 if [[ "${API_TAG:-}" != "rollback" && "${API_TAG:-}" != "-" ]]; then
+  backup_before_migrate
   # Migracoes ANTES de subir a API nova (expand/contract). Nunca no rollback: migracao nao se desfaz.
   # So quando a API muda. O timeout existe porque uma imagem sem o subcomando `migrate` subiria o servidor e ficaria
   # presa; 15 min, porque uma migracao grande e lenta ate o Neon (cada instrucao e uma ida e volta de ~0,15 s):

@@ -39,12 +39,21 @@ O Sprint 5 fechou o ciclo de estudo (progresso, metas, preferências). O Sprint 
 | Exclusão na tela | diálogo de alerta com foco em "Cancelar", Esc fecha, botão só libera com o e-mail digitado (quem confere é o servidor); sucesso chama o logout (para limpar o cookie) e leva ao login; 428 oferece "Sair e entrar de novo" | confirmar com um toque: erro de dedo apaga tudo |
 | Exportação na tela | baixa o JSON direto para o disco (Blob), sem cache de dado pessoal no app; o nome do arquivo usa a data do aparelho | guardar a resposta no cache do TanStack: dado pessoal sobra na memória |
 | Formato da exportação | JSON, entregue na hora | e-mail com link: depende de SMTP, que ainda não existe |
+| Backup | `pg_dump` em formato custom entra direto no `age` por um pipe: **nunca** existe dump em texto claro no disco; chave **pública** na VM, a privada fica com o dono | criptografar depois de gravar: o texto claro passaria pelo disco |
+| Backup só vale se conferido | tamanho conferido no destino, soma `sha256` ao lado, falha avisa o healthchecks (e o silêncio também, pelo próprio serviço) | "copiou, logo está salvo" |
+| Retenção | 14 dias de todos + primeiro de cada uma das 8 semanas; só depois de o novo ser conferido e nunca com menos de 3 na lista; só apaga nomes do padrão do script | script de limpeza genérico: um nome estranho no bucket poderia ser apagado |
+| Restauração | só em banco descartável (`--disposable`), recusa o mesmo servidor e banco do `DATABASE_URL`, confere soma e migrações; `restore-drill.sh` sobe um Postgres em Docker e apaga | restaurar direto "onde der": um erro de variável sobrescreve a produção |
+| Deploy de prd | manual, aprovação no Environment `prd`, só commit de `develop`/`main`, backup antes de migrar (se falhar, para e volta `versions.env`) | automático como tst: produção não deve mudar sem uma pessoa decidir |
+| Documentação da API em prd | desligada no Caddy (404) e conferida no smoke test | expor o Swagger: exigiria CSP com `unsafe-inline` na produção |
+| Endurecimento da VM | script idempotente com `--check`, **trava anti-lockout** (exige chave do admin) e `sshd -t` antes de recarregar, com desfazer | editar `sshd_config` à mão: um erro tranca o dono para fora |
+| Scripts testáveis | `deploy/scripts/tests` com `pg_dump`, `age`, `rclone`, `ufw`, `sshd`, `docker` de mentira no PATH; roda no `npm run check` e no `ops-ci` | testar só na VM: o primeiro teste seria na hora de perder o banco |
+| Chave pública do `age` e banco de prd | ficam como decisão e configuração do dono (`backup.env`, secrets do Environment) | colocar no repositório: o Git não é lugar de segredo nem de escolha de provedor |
 
 ## Checklist de progresso
 - [x] Roadmap: Sprint 5 concluído e Sprint 6 em andamento
 - [x] PR 1: LGPD na API (exportar e excluir: migração 00018, módulo `privacy`, contrato)
 - [x] PR 2: LGPD na web e páginas de privacidade e termos (feature `privacy`: Seus dados, política e termos, links)
-- [ ] PR 3: backup, restauração, prd endurecido e deploy de prd (como código e doc)
+- [x] PR 3: backup, restauração, prd endurecido e deploy de prd (como código e doc: `deploy/scripts`, `deploy/prd`, `deploy-prd.yml`, `ops-ci.yml`, [docs/ops/producao.md](../ops/producao.md))
 - [ ] PR 4: Google com vínculo e e-mails por SMTP (prontos para ligar)
 - [ ] `npm run check` verde em cada PR
 - [ ] PRs abertas (com aprovação do usuário)

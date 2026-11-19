@@ -79,9 +79,19 @@ Achado em aberto: **CLS 0,39 na tela de login** (a página "pula" enquanto carre
 - **Concorrência:** os dois CIs podem chamar o deploy ao mesmo tempo; o `deploy.yml` os serializa. Um push na `develop` nunca cancela o CI (e o deploy) em andamento; só PR cancela execução antiga.
 - Preparo único da VM: `deploy/scripts/bootstrap-vm.sh`. Arquivos de tst em `deploy/tst/` (`versions.env` real fica só na VM).
 
+## Produção (prd) e operação
+
+Existe como **código e testes**; nada está provisionado. O guia do dono, com a sequência de colocação no ar, está em [docs/ops/producao.md](ops/producao.md).
+
+- **Deploy de prd** (`deploy-prd.yml`): só manual (*Actions → deploy-prd*), com **aprovação** no Environment `prd`, e só de commit que está em `develop` ou `main` (tag `sha-` + 40 caracteres). Usa `deploy/prd/` e `deploy/scripts/build-package.sh`; a documentação interativa da API fica desligada e o smoke test confere isso.
+- **Backup antes de migrar:** com `backup.sh` e `backup.env` na VM, o `deploy.sh` faz um backup criptografado (`pg_dump` → `age` → R2) antes de migrar; se falhar, o deploy para (código 3) e o banco não é tocado.
+- **Restauração:** `restore.sh` (só em banco descartável, com `--disposable`, recusa o banco de produção) e `restore-drill.sh` (ensaio com Postgres em Docker).
+- **Endurecimento da VM:** `harden-vm.sh` (SSH só por chave, `ufw`, `fail2ban`, atualizações, cron do backup); `--check` só confere.
+- **CI dos scripts:** `ops-ci.yml` roda `deploy/scripts/tests/run.sh` (comandos de mentira, sem rede) e o `shellcheck`; o mesmo teste roda em `npm run check` quando algo em `deploy/` muda.
+
 ## Ainda não existe
 
-Deploy em prd, promoção por re-etiqueta da imagem, Keycloak fora do dev, backup. Os esqueletos estão em `docs/fase-4/`.
+Promoção por re-etiqueta da imagem (por ora prd usa a mesma tag `sha-` validada em tst), Keycloak fora do dev, observabilidade. Os esqueletos estão em `docs/fase-4/`.
 
 ## Hooks locais (lefthook + commitlint)
 

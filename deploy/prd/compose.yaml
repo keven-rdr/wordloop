@@ -1,0 +1,45 @@
+# prd: Caddy + API + web. Sem Postgres aqui: o banco e EXTERNO (DATABASE_URL em secrets.env); Keycloak entra depois.
+# Na VM, em /srv/wordloop/prd: este arquivo, Caddyfile, api.env, versions.env e secrets.env (modo 600, nunca no Git).
+# Usado pelo deploy.sh: docker compose --env-file versions.env up -d
+# Os limites de memoria valem para a VM de 1 GB; se a VM de producao for maior, ajuste aqui (e so aqui).
+name: wl-prd
+
+volumes: { caddy_data: {}, caddy_config: {} }
+
+x-hardening: &hardening
+  restart: unless-stopped
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+
+services:
+  caddy:
+    <<: *hardening
+    image: caddy:2-alpine
+    read_only: false # o Caddy grava certificados em /data e /config (volumes)
+    cap_add: [NET_BIND_SERVICE]
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment: { PRD_DOMAIN: "${PRD_DOMAIN}" }
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    mem_limit: 96m
+    depends_on: [api, web]
+
+  api:
+    <<: *hardening
+    image: ghcr.io/keven-rdr/wordloop-api:${API_TAG}
+    environment: { APP_ENV: prd, API_ADDR: ":8080" }
+    env_file: [api.env, secrets.env] # api.env (renderizado do Git) e secrets.env (montado pelo CI)
+    mem_limit: 128m
+
+  web:
+    <<: *hardening
+    image: ghcr.io/keven-rdr/wordloop-web:${WEB_TAG}
+    tmpfs: [/tmp]
+    mem_limit: 48m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      retries: 3
