@@ -14,6 +14,8 @@ setup() { # setup: sandbox com um "diretorio de deploy" pronto e docker de menti
   stub docker <<'EOF'
 echo "docker $*" >>"$SB/calls.log"
 [[ -z "${STUB_MIGRATE_FAIL:-}" || "$*" != *migrate* ]] || exit 1
+[[ -z "${STUB_CHECK_FAIL:-}" || "$*" != *check-config* ]] || { echo "erro  login  SESSION_KEY"; exit 1; }
+[[ -z "${STUB_CHECK_OLD_IMAGE:-}" || "$*" != *check-config* ]] || exit 124
 EOF
   unset SSH_ORIGINAL_COMMAND
   export WORDLOOP_DIR="$D"
@@ -79,6 +81,37 @@ assert_eq "$(count_calls migrate)" "0" "nao migrou"
 assert_eq "$(count_calls 'up -d')" "0" "nao subiu"
 assert_contains "$(cat "$D/versions.env")" "API_TAG=1.0.0" "versions.env voltou"
 unset STUB_BACKUP_FAIL
+
+setup "configuracao reprovada: deploy cancelado antes de backup, migracao e subida; versao volta"
+with_backup
+export STUB_CHECK_FAIL=1
+deploy "1.1.0 1.1.0"
+assert_status "$CODE" 4
+assert_contains "$OUT" "SESSION_KEY" "mostra o que o check-config achou"
+assert_contains "$OUT" "configuracao reprovada"
+assert_eq "$(count_calls backup.sh)" "0" "nao fez backup"
+assert_eq "$(count_calls migrate)" "0" "nao migrou"
+assert_eq "$(count_calls 'up -d')" "0" "nao subiu"
+assert_contains "$(cat "$D/versions.env")" "API_TAG=1.0.0" "versions.env voltou"
+unset STUB_CHECK_FAIL
+
+setup "imagem sem check-config (timeout): avisa e segue o deploy"
+export STUB_CHECK_OLD_IMAGE=1
+deploy "1.1.0 1.1.0"
+assert_status "$CODE" 0 "$OUT"
+assert_contains "$OUT" "nao tem check-config"
+assert_eq "$(count_calls migrate)" "1" "seguiu para migrar"
+unset STUB_CHECK_OLD_IMAGE
+
+setup "check-config roda so quando a API muda e nunca no rollback"
+deploy "- 1.1.0"
+assert_status "$CODE" 0 "$OUT"
+printf 'API_TAG=0.9.0\nWEB_TAG=0.9.0\n' >"$D/versions.env.prev"
+deploy rollback
+assert_status "$CODE" 0 "$OUT"
+assert_eq "$(count_calls check-config)" "0"
+deploy "1.2.0 -"
+assert_eq "$(count_calls check-config)" "1" "uma vez, na troca da API"
 
 setup "migracao que falha impede o up"
 export STUB_MIGRATE_FAIL=1

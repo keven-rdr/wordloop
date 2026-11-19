@@ -34,6 +34,16 @@ Tudo aqui foi entregue como **código e testes**; **nada foi provisionado**. Est
 
 **Rollback:** *deploy-prd* com `action: rollback` volta as imagens à versão anterior. Migração **não** se desfaz (expand/contract): se uma migração precisar ser revertida, a saída é restaurar o backup (seção abaixo), com decisão sua.
 
+## Login com Google e e-mail em produção
+
+O código já faz tudo (Google, GitHub e Brevo existem desde o Sprint 3); falta só **ligar por configuração**, com as suas contas. O endereço de retorno dos provedores em produção é `https://<PRD_DOMAIN>/api/v1/auth/callback`.
+
+- **Google:** o mesmo passo a passo de [ci-cd.md](../ci-cd.md#login-social-em-tst), mas com o endereço de retorno de produção. Crie um **cliente OAuth separado do de tst** (o de tst não aceita o domínio de produção) e **publique** a tela de consentimento (*In production*): em modo *Testing* só entram os e-mails que você cadastrar. Secrets do Environment `prd`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e `SESSION_KEY` (`openssl rand -base64 32`; **uma chave diferente da de tst**).
+- **Vínculo por e-mail (como funciona):** entrar com o Google usando um e-mail que já tem conta (de senha, passkey ou convite) leva à **mesma conta**; sem conta, cria uma já com o e-mail confirmado; e-mail não confirmado pelo provedor é recusado; quem ligou o 2FA não entra só pelo Google. A senha continua valendo depois do vínculo. Decisão do dono (15/10/2026): vincula direto, sem pedir confirmação extra, porque o e-mail vem **confirmado pelo Google**.
+- **E-mail (Brevo):** conta no Brevo, domínio remetente verificado (registros DNS de DKIM/SPF que o Brevo mostra), secret `BREVO_API_KEY` e, se o remetente não for `nao-responda@<PRD_DOMAIN>`, a variável `MAIL_FROM` do Environment (um endereço **do domínio verificado**). Links de confirmação valem 24 h e os de recuperação 30 min, uso único.
+- **Conferir antes de ligar:** o `deploy.sh` roda `api check-config` com a imagem nova **antes** de backup e migração e cancela o deploy (código 4, nada alterado) se algo estiver torto: callback em outro domínio, `SESSION_KEY` ausente ou curta, passkey fora da origem, remetente inválido, `MAIL_DRIVER=log` em produção. Você também pode rodar na VM: `docker compose --env-file versions.env run --rm --no-deps api check-config` (mostra o que está ligado, sem imprimir segredo).
+- **Depois do primeiro deploy:** `https://<PRD_DOMAIN>/api/v1/auth/providers` deve listar `google`; entre com o Google numa conta de teste; crie uma conta nova por e-mail e confira que o e-mail chega (e o link vence no prazo). Sem a chave do Brevo, cadastro e recuperação respondem 503 e a tela avisa.
+
 ## Backup e restauração
 
 **Chaves (uma vez, no seu computador, nunca na VM):** `age-keygen -o wl-backup.key`. A linha `# public key: age1...` vai para o `backup.env` da VM; **o arquivo `wl-backup.key` fica com você**, em dois lugares seguros (gerenciador de senhas e um pendrive, por exemplo). **Sem essa chave privada o backup não abre.**

@@ -85,6 +85,7 @@ Existe como **código e testes**; nada está provisionado. O guia do dono, com a
 
 - **Deploy de prd** (`deploy-prd.yml`): só manual (*Actions → deploy-prd*), com **aprovação** no Environment `prd`, e só de commit que está em `develop` ou `main` (tag `sha-` + 40 caracteres). Usa `deploy/prd/` e `deploy/scripts/build-package.sh`; a documentação interativa da API fica desligada e o smoke test confere isso.
 - **Backup antes de migrar:** com `backup.sh` e `backup.env` na VM, o `deploy.sh` faz um backup criptografado (`pg_dump` → `age` → R2) antes de migrar; se falhar, o deploy para (código 3) e o banco não é tocado.
+- **Conferência de configuração:** quando a API muda, o `deploy.sh` roda `api check-config` com a imagem nova antes de backup e migração (valida login social, passkey, e-mail, endereço público e proteções; nunca imprime segredo). Erro = deploy cancelado, código 4, nada alterado. Os `api.env` versionados (`deploy/tst`, `deploy/prd`) são testados contra as mesmas regras.
 - **Restauração:** `restore.sh` (só em banco descartável, com `--disposable`, recusa o banco de produção) e `restore-drill.sh` (ensaio com Postgres em Docker).
 - **Endurecimento da VM:** `harden-vm.sh` (SSH só por chave, `ufw`, `fail2ban`, atualizações, cron do backup); `--check` só confere.
 - **CI dos scripts:** `ops-ci.yml` roda `deploy/scripts/tests/run.sh` (comandos de mentira, sem rede) e o `shellcheck`; o mesmo teste roda em `npm run check` quando algo em `deploy/` muda.

@@ -4,7 +4,8 @@
 # O pacote (tar na entrada padrao) traz a configuracao do repositorio e o secrets.env montado pelo CI:
 # compose.yaml, Caddyfile, api.env, secrets.env e deploy.sh; e, so na producao, os scripts de backup (backup.sh, lib/*).
 # Sem pacote, usa o que ja esta na VM. So aceita tags no formato seguro; nada do que chega pelo SSH vira comando.
-# Se a VM tem backup.sh e backup.env, faz um backup ANTES de migrar o banco; se o backup falhar, o deploy para.
+# Quando a API muda: confere a configuracao (check-config; reprovada = codigo 4) e, se a VM tem backup.sh e backup.env,
+# faz um backup ANTES de migrar o banco; se o backup falhar, o deploy para (codigo 3). Nos dois casos nada foi tocado.
 # Ao chamar a mao, redirecione a entrada: ssh ... "rollback" < /dev/null
 set -euo pipefail
 
@@ -38,11 +39,29 @@ fi
 
 compose() { docker compose --env-file versions.env "$@"; }
 
+revert_versions() { cp versions.env.prev versions.env; } # nada subiu: volta a versao registrada para nao "armar" a nova
+
+# Confere a configuracao (api check-config) com a imagem NOVA, antes de backup, migracao e subida: configuracao torta
+# para o deploy com uma mensagem clara em vez de deixar a API em crash-loop. Imagem antiga (sem o subcomando) sobe o
+# servidor e estoura o timeout (124): so avisa.
+check_config() {
+  local code=0
+  timeout 60 docker compose --env-file versions.env run --rm --no-deps api check-config || code=$?
+  case "$code" in
+    0) return 0 ;;
+    124) echo "aviso: esta imagem da API nao tem check-config; configuracao nao conferida" >&2 ;;
+    *)
+      revert_versions
+      echo "configuracao reprovada (veja os itens marcados como erro acima): deploy cancelado, nada foi alterado" >&2
+      exit 4 ;;
+  esac
+}
+
 backup_before_migrate() {
   [[ -x "$DIR/backup.sh" && -f "$DIR/backup.env" ]] || return 0
   echo "backup do banco antes de migrar" >&2
   if ! "$DIR/backup.sh"; then
-    cp versions.env.prev versions.env # nada subiu: volta a versao registrada para nao "armar" a nova
+    revert_versions
     echo "backup falhou: deploy cancelado, o banco nao foi tocado" >&2
     exit 3
   fi
@@ -61,6 +80,7 @@ fi
 
 compose pull
 if [[ "${API_TAG:-}" != "rollback" && "${API_TAG:-}" != "-" ]]; then
+  check_config
   backup_before_migrate
   # Migracoes ANTES de subir a API nova (expand/contract). Nunca no rollback: migracao nao se desfaz.
   # So quando a API muda. O timeout existe porque uma imagem sem o subcomando `migrate` subiria o servidor e ficaria

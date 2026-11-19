@@ -35,7 +35,8 @@ func realMain(args []string) int {
 	return 0
 }
 
-// execute escolhe o modo: `api migrate` aplica as migracoes e sai; sem argumento, serve a API.
+// execute escolhe o modo: `api migrate` aplica as migracoes e sai; `api check-config` confere a configuracao e sai;
+// sem argumento, serve a API.
 func execute(ctx context.Context, args []string) error {
 	if len(args) > 0 {
 		switch args[0] {
@@ -43,6 +44,8 @@ func execute(ctx context.Context, args []string) error {
 			return migrateUp(ctx)
 		case "create-admin":
 			return createAdmin(ctx, args[1:], os.Stdout)
+		case "check-config":
+			return checkConfig(os.Stdout)
 		}
 	}
 	return serve(ctx)
