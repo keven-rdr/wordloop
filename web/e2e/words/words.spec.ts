@@ -57,7 +57,7 @@ test('da lista de unidades ao baralho: busca, virar o cartão e avançar', async
   await mockApi(page);
   await page.goto('/words');
   await expect(page.getByRole('heading', { name: 'Palavras' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Casa e família/ })).toContainText('2 palavras');
+  await expect(page.getByRole('link', { name: /Casa e família/ })).toContainText('2 itens');
   await page.screenshot({ path: 'test-results/words-units.png' });
 
   await page.getByRole('searchbox').fill('ho');
