@@ -3,6 +3,7 @@ import { Link, Navigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { useUnits } from '../hooks/useUnits';
 import { useWho } from '../hooks/useWho';
+import { themeTitle } from '../themeTitle';
 import { DeckContent } from './DeckContent';
 import { ArrowLeft } from './Icons';
 import { w } from './styles';
@@ -16,7 +17,7 @@ export function DeckPage({ unitId }: Readonly<{ unitId: string }>) {
   if (!ready || who === 'loading') return <div aria-busy="true" />;
 
   const theme = units.find((u) => u.id === unitId)?.theme_key ?? '';
-  const title = theme ? t(`units.theme.${theme}`, { defaultValue: theme }) : t('title');
+  const title = theme ? themeTitle(t, theme) : t('title');
   const back = (
     <Link to="/words" aria-label={t('deck.back')} {...stylex.props(w.back)}>
       <ArrowLeft {...stylex.props(w.icon)} />

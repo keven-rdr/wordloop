@@ -25,7 +25,7 @@ LEFT JOIN card cd ON cd.user_id = @user_id AND cd.item_id = i.id AND cd.directio
 WHERE (i.status = 'published' OR @include_drafts::boolean)
   AND i.kind IN ('word', 'expression', 'phrasal_verb', 'sentence')
   AND (cd.id IS NULL OR cd.state = 'new')
-ORDER BY c.slug, u.position NULLS LAST, i.cefr NULLS LAST, lower(term.body), i.id
+ORDER BY c.slug, u.position NULLS LAST, (i.kind = 'sentence'), i.cefr NULLS LAST, lower(term.body), i.id
 LIMIT @row_limit::int;
 
 -- O produtivo nasce quando o receptivo chega a S minimo, ha pelo menos um dia (nunca na mesma sessao).
