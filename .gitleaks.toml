@@ -1,0 +1,15 @@
+# Configuracao do gitleaks: as regras padrao, mais uma lista de excecoes para o CONTEUDO gerado (palavras e frases).
+# Motivo: frases como "I lost my keys." ficam ao lado de um UUID (a fonte do texto) no SQL gerado, e o detector
+# generico de chave de API (`generic-api-key`) confunde "key" + UUID com um segredo. Os arquivos abaixo sao gerados por
+# content/tools/gen_v1.py a partir de dados publicos (NGSL e Tatoeba) e conferidos por teste; nenhum segredo entra neles.
+title = "wordloop"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "conteudo gerado a partir de dados publicos"
+paths = [
+  '''api/migrations/0002[0-3]_content.*\.sql''',
+  '''content/seed/v1/.*''',
+]
