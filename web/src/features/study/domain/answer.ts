@@ -43,6 +43,24 @@ export function checkTyped(expected: string, typed: string): Outcome {
   return 'wrong';
 }
 
+// Palavras da frase sem a pontuação das pontas (mesma regra do servidor: peças não têm vírgula nem ponto final).
+const EDGE_PUNCTUATION = /^[.,?!;:"()]+|[.,?!;:"()]+$/gu;
+
+function wordsOf(text: string): string[] {
+  return text
+    .split(/\s+/u)
+    .map((word) => normalize(word.replaceAll(EDGE_PUNCTUATION, '')))
+    .filter(Boolean);
+}
+
+// Montar a frase: as mesmas palavras na mesma ordem. Nunca é "quase": uma peça fora do lugar é erro.
+export function checkAssembled(expected: string, assembled: string): Outcome {
+  const want = wordsOf(expected);
+  const got = wordsOf(assembled);
+  const same = got.length === want.length && want.every((word, index) => word === got[index]);
+  return same && got.length > 0 ? 'right' : 'wrong';
+}
+
 export function checkChoice(card: StudyCard, chosenItemId: string): Outcome {
   return chosenItemId === card.item_id ? 'right' : 'wrong';
 }

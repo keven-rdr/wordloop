@@ -29,6 +29,11 @@ O catálogo tinha 105 palavras, 7 expressões, 3 phrasal verbs e 10 frases, e **
 | Publicação | itens novos nascem `published`; o v0 vira `published` por migração própria (`00023`) | exigir um comando de publicar: ninguém o rodaria |
 | Ordem de estudo | por lição; dentro da lição, palavras antes de frases (`NewItems`) | ordem alfabética misturada |
 | Títulos das lições | uma chave i18n `units.lesson` ("Lição A1 · 3") em vez de 70 chaves | uma tradução por lição |
+| Exercício `assemble` | só para itens `sentence` de 3 a 9 palavras no cartão **produtivo**; peças = palavras sem pontuação, embaralhadas de forma estável por cartão e nunca na ordem certa; a primeira palavra vai para minúscula (menos `I`, `Tom`, `Mary`) | mostrar a frase com maiúscula e ponto: entrega a primeira palavra |
+| Correção da montagem | mesmas palavras na mesma ordem, sem diferenciar maiúsculas, acentos nem pontuação das pontas; **nunca "quase"** (servidor e cliente com a mesma regra) | tolerar 1 erro de digitação como no digitar: perdoaria uma palavra errada |
+| Cartão produtivo da frase | nasce com estabilidade ≥ 3 (palavras: 7): sem isso ninguém montaria frases nas primeiras semanas. **Hipótese minha**, vale revisar com dados reais | manter 7 para tudo |
+| Ordem alternativa válida | só a ordem do Tatoeba conta (limitação conhecida) | aceitar variações: exigiria anotar cada frase |
+| Teclado | 1–9 colocam a peça da posição no banco, Backspace desfaz, Enter verifica; a tecla tratada faz `preventDefault` (senão o Enter que verifica ativava, em navegador de verdade, o botão da dificuldade sugerida que ganha o foco logo depois: achado do e2e, vale também para o escolher) | deixar o navegador agir |
 | Frases sem lição do v0 (7 expressões, 3 phrasal verbs, 10 frases) | continuam sem unidade: entram depois de todas as lições | atribuí-las a lições: fora de escopo |
 
 ## Checklist de progresso
@@ -38,12 +43,13 @@ O catálogo tinha 105 palavras, 7 expressões, 3 phrasal verbs e 10 frases, e **
 - [x] API: ordem de estudo (palavras antes de frases); testes de integração com a carga real
 - [x] Web: título das lições (`themeTitle`) e contagem em "itens"
 - [x] CI: `content-ci.yml` e etapa `content` no `npm run check`; ADR 0031 e `content/NOTICE.md`
-- [ ] Parte B: API de montar frase (contrato, migração `00019`, domínio, testes)
-- [ ] Parte C: web de montar frase (componente, teclado, i18n, testes)
+- [x] Parte B: API de montar frase (contrato, migração `00019`, domínio, testes de unidade, HTTP e integração)
+- [x] Parte C: web de montar frase (componente, teclado, i18n, Vitest e Playwright)
 - [ ] `npm run check` verde
 - [ ] PR aberta (com aprovação do usuário)
 
 ## Verificação
 - `python content/tools/validate.py`: 70 lições, 2.000 palavras, 2.100 frases. `python -m unittest discover -s content/tools`: 17 testes (filtros, escolha, validação, migrações). Mutação feita de propósito (trocar um `unit_id`): os testes de migração falham.
 - **Não rodei** os testes de integração com Postgres (sem Docker aqui): compilam com `-tags integration`; o CI roda. Eles conferem a carga real (2.105 palavras, 7 expressões, 3 phrasal verbs, 2.110 frases; nada fora de `published`; todo item com termo e tradução; 76 unidades, todas com itens para o aluno; 4 fontes nos créditos) e a ordem (lição 7 começa pelas palavras). Os testes antigos de visibilidade voltam tudo a rascunho antes de testar a regra.
+- **Montar frase:** `go test -short` (domínio: pecas nunca na ordem certa, correção exata; app: plano com peças, produtivo de frase nasce com S ≥ 3, palavra continua em 7, correção sem "quase", rejeita no receptivo; HTTP: plano devolve `tiles` e o servidor corrige a frase). Web: Vitest (reducer, atalhos, 6 cenários do componente) e **Playwright no Edge: 9 specs passam** (3 novos: toque com alvo de 48 px e sem rolagem horizontal, só teclado, errar). Capturas conferidas. Falta o teste de integração com Postgres (CI): o CHECK da migração `00019` e o log com `assemble`.
 - Pendências do dono: revisão jurídica das licenças (Tatoeba CC BY 2.0 FR em obra CC BY-SA 4.0; texto de IA), qualidade das glosas, contato do responsável nos textos de privacidade.

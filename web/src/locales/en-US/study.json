@@ -33,6 +33,14 @@
   "cloze": {
     "prompt": "Complete the sentence with the missing word"
   },
+  "assemble": {
+    "prompt": "Build the sentence in English",
+    "answer": "Your sentence",
+    "empty": "Tap the words below, in the right order.",
+    "bank": "Words to build the sentence",
+    "remove": "Remove",
+    "clear": "Clear all"
+  },
   "image": {
     "prompt": "Which English word does the image show?",
     "alt": "Picture of the word you need to write"

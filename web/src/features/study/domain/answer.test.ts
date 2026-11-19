@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StudyCard } from '../../../api/generated/types.gen';
-import { checkChoice, checkTyped, normalize, requeue, suggestDifficulty } from './answer';
+import { checkAssembled, checkChoice, checkTyped, normalize, requeue, suggestDifficulty } from './answer';
 
 const card = (id: string): StudyCard => ({
   id,
@@ -73,5 +73,28 @@ describe('requeue', () => {
   it('com fila curta vai para o fim', () => {
     expect(requeue([card('2')], card('1')).map((c) => c.id)).toEqual(['2', '1']);
     expect(requeue([], card('1')).map((c) => c.id)).toEqual(['1']);
+  });
+});
+
+describe('checkAssembled', () => {
+  const expected = "I don't want to go there, Tom.";
+
+  it('aceita as mesmas palavras na mesma ordem, sem diferenciar maiúsculas, acentos nem pontuação das pontas', () => {
+    expect(checkAssembled(expected, "I don't want to go there Tom")).toBe('right');
+    expect(checkAssembled(expected, "i DON'T want to go there tom")).toBe('right');
+    expect(checkAssembled(expected, "  I  don't want to go there, Tom.  ")).toBe('right');
+    expect(checkAssembled('Café, por favor!', 'cafe por favor')).toBe('right');
+  });
+
+  it('nunca é "quase": peça errada, fora de ordem, faltando, sobrando ou em branco é erro', () => {
+    for (const answer of [
+      '',
+      "I don't want to go Tom there",
+      'I dont want to go there Tom',
+      "I don't want to go there",
+      "I don't want to go there Tom Tom",
+    ]) {
+      expect(checkAssembled(expected, answer)).toBe('wrong');
+    }
   });
 });

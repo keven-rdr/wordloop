@@ -167,7 +167,7 @@ Imutável = a aplicação só insere; correções entram como evento `void` que 
 | Ouvir (TTS) → escolher / digitar | desde cedo (seu gargalo é compreensão auditiva) | opcional |
 | PT → digitar EN (produção) | quando S ≥ 7 d | **oculta** |
 | Lacuna (*cloze*) | frases; palavras abstratas e funcionais (*the, of, would*) | contexto, não figura |
-| Montar frase | depois que as palavras estão em review | nenhum |
+| Montar frase | para itens do tipo frase, no cartão produtivo, que nasce com S ≥ 3 (palavras: 7); sem tolerância a erro de digitação | nenhum |
 | Múltipla escolha × digitar | escolha para introdução; **digitar para S ≥ 7 d** | — |
 
 **Contra a muleta:** a imagem aparece **depois** da tentativa por padrão (coerente com Carpenter & Olson); *fading*: a partir de S ≥ 21 d some do exercício. A explicação e "por que errei" (seu pedido) mostram a imagem como contexto.

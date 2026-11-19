@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { themeTitle } from './themeTitle';
 
-// `t` de mentira: devolve a chave e os parâmetros, que é o que a função decide.
-const t = ((key: string, options?: Record<string, unknown>) =>
-  options?.level ? `${key}:${options.level}:${options.n}` : (options?.defaultValue ?? key)) as never;
+// `t` de mentira: devolve a chave com os parâmetros que a função decide, ou o texto cru da tradução ausente.
+const t = ((key: string, options?: { level?: string; n?: number; defaultValue?: string }) => {
+  if (options?.level) return `${key}:${options.level}:${options.n}`;
+  return options?.defaultValue ?? key;
+}) as never;
 
 describe('themeTitle', () => {
   it('usa a chave única das lições, com nível em maiúsculas e número sem zero à esquerda', () => {
