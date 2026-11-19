@@ -95,6 +95,8 @@ jobs:
           printf '%s\n' "$saida"
           if [ "$codigo" -eq 3 ]; then
             echo "::error title=backup falhou, deploy cancelado::o banco nao foi tocado; veja docs/ops/producao.md (backup)"
+          elif [ "$codigo" -eq 4 ]; then
+            echo "::error title=configuracao reprovada, deploy cancelado::o check-config achou erro(s); nada foi alterado. Corrija os secrets/variaveis do Environment prd (itens marcados como erro acima)"
           elif [ "$codigo" -ne 0 ]; then
             echo "::error title=deploy falhou (codigo $codigo)::$(printf '%s' "$saida" | tail -n 8 | tr '\n' ' ')"
           fi
