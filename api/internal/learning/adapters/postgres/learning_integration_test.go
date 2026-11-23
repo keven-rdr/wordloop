@@ -194,11 +194,23 @@ func TestOutOfOrderAnswerReplaysTheLogFromTheDatabase(t *testing.T) {
 	}
 }
 
+// cardFor e o cartao do pacote com o termo dado.
+func cardFor(t *testing.T, pack domain.Pack, term string) domain.Card {
+	t.Helper()
+	for _, c := range pack.Cards {
+		if c.Content.Term == term {
+			return c.Card
+		}
+	}
+	t.Fatalf("o pacote nao tem %q", term)
+	return domain.Card{}
+}
+
 func TestProductiveCardAppearsAfterTheReceptiveGetsStrong(t *testing.T) {
 	f := setup(t, false)
 	ctx := context.Background()
 	pack, _ := f.plan.Run(ctx, app.PlanRequest{Minutes: 15})
-	card := pack.Cards[0].Card
+	card := cardFor(t, pack, "house") // o pacote vem sorteado: o teste digita "house", entao escolhe esse cartao
 	// forca um receptivo forte e revisado ha 3 dias
 	if _, err := f.pool.Exec(ctx, `UPDATE card SET state = 'review', stability = 10, reps = 4, last_review_at = $2, due_at = $3 WHERE id = $1`,
 		card.ID, now.Add(-72*time.Hour), now.Add(7*24*time.Hour)); err != nil {
