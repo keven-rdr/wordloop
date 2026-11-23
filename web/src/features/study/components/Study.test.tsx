@@ -11,10 +11,11 @@ afterEach(() => {
 });
 
 describe('plano', () => {
-  it('pede o tempo escolhido, com o fuso do aparelho, e abre a sessão', async () => {
+  it('usa o tempo da meta da semana, sem perguntar, com o fuso do aparelho, e abre a sessão', async () => {
     const calls = api([house]);
     renderApp('/study');
-    fireEvent.click(await screen.findByRole('button', { name: '15 minutos' }));
+    expect(await screen.findByText('Meta de hoje')).toBeTruthy();
+    expect(screen.getByText('15 minutos')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Começar' }));
     expect(await screen.findByRole('heading', { name: 'house' })).toBeTruthy();
     const plan = calls.find((call) => call.path === '/study/plan');

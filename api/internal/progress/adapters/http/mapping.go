@@ -54,12 +54,12 @@ func heatmap(h domain.Heatmap) gen.Heatmap {
 }
 
 func goalRequest(b gen.GoalRequest) domain.GoalRequest {
-	r := domain.GoalRequest{DailyMinutes: b.DailyMinutes, DaysTarget: b.DaysTarget}
+	r := domain.GoalRequest{DailyMinutes: b.DailyMinutes} // weekdays e ignorado: a meta vale a semana inteira
 	if b.Preset != nil {
 		r.Preset = domain.Preset(*b.Preset)
 	}
-	if b.Weekdays != nil {
-		r.Weekdays = *b.Weekdays
+	if b.DaysTarget != nil {
+		r.DaysTarget = *b.DaysTarget
 	}
 	return r
 }

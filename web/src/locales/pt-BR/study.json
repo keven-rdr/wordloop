@@ -1,6 +1,6 @@
 {
   "title": "Estudar",
-  "lead": "Quanto tempo você quer estudar hoje?",
+  "lead": "O tempo de hoje vem da sua meta da semana.",
   "minutes_one": "{{count}} minuto",
   "minutes_other": "{{count}} minutos",
   "plan": {
@@ -8,6 +8,13 @@
     "loading": "Montando sua sessão…",
     "failed": "Não consegui montar a sessão agora. Tente de novo.",
     "empty": "Não há nada para estudar agora. Volte mais tarde."
+  },
+  "goal": {
+    "today": "Meta de hoje",
+    "change": "Mudar a meta da semana",
+    "needed": "Antes de estudar, escolha a meta desta semana: quanto tempo por dia, de segunda a domingo.",
+    "define": "Escolher a meta da semana",
+    "failed": "Não consegui ler sua meta agora. Esta sessão terá {{count}} minutos."
   },
   "session": {
     "close": "Sair da sessão",

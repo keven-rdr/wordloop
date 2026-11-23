@@ -43,11 +43,35 @@ export const accepted = (req: Request) =>
       }),
     );
 
+// A meta da semana em andamento: o tempo da sessão vem dela (15 minutos por dia).
+export const weeklyGoal = {
+  goal: {
+    id: 'g1',
+    period_start: '2026-11-16',
+    period_end: '2026-11-22',
+    preset: 'steady',
+    daily_minutes: 15,
+    days_target: 7,
+    weekdays: [1, 2, 3, 4, 5, 6, 7],
+  },
+  progress: {
+    days_studied: 1,
+    days_target: 7,
+    minutes_studied: 5,
+    minutes_goal: 105,
+    new_words: 3,
+    days_left: 4,
+    met: false,
+  },
+  ended: false,
+};
+
 export function api(cards: unknown[], reviews: (req: Request) => Response | Promise<Response> = accepted) {
   setStoreForTests(); // cada teste começa com a fila do aparelho vazia
   return stubApi({
     'GET /version': () => json(version),
     'GET /me': () => json(me),
+    'GET /goals/current': () => json(weeklyGoal),
     'POST /study/plan': () => json(pack(cards)),
     'POST /study/reviews': reviews,
   });

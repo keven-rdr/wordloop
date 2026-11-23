@@ -32,6 +32,22 @@ async function mockApi(page: Page, cards: unknown[]) {
       },
     }),
   );
+  await page.route('**/api/v1/goals/current', (route) =>
+    route.fulfill({
+      json: {
+        goal: {
+          id: 'g1',
+          period_start: '2026-11-16',
+          period_end: '2026-11-22',
+          preset: 'steady',
+          daily_minutes: 5,
+          days_target: 7,
+          weekdays: [1, 2, 3, 4, 5, 6, 7],
+        },
+        ended: false,
+      },
+    }),
+  );
   await page.route('**/api/v1/study/plan', (route) =>
     route.fulfill({
       json: { session_id: 'sess-1', cards, new_limit: 8, review_limit: 20, expires_at: '2999-01-01T00:00:00Z' },
@@ -56,7 +72,8 @@ test('exercício de escolher: verificar, dificuldade em um toque e resumo', asyn
   const sent = await mockApi(page, [choose]);
   await page.goto('/study');
   await expect(page.getByRole('heading', { name: 'Estudar' })).toBeVisible();
-  await expectTouchTarget(page, '5 minutos');
+  await expect(page.getByText('Meta de hoje')).toBeVisible(); // o tempo vem da meta da semana: sem perguntar
+  await expectTouchTarget(page, 'Começar');
   await page.getByRole('button', { name: 'Começar' }).click();
 
   await expect(page.getByRole('heading', { name: 'house' })).toBeVisible();

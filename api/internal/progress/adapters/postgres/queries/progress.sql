@@ -39,15 +39,16 @@ LIMIT @max_rows;
 
 -- name: CurrentGoal :one
 -- A meta mais recente: o ciclo aberto ou, se acabou e a pessoa nao abriu outro, o ultimo (nao bloqueia o estudo).
+-- O aberto vem antes: um ciclo antigo de 7 dias corridos pode ter comecado depois da segunda da meta nova.
 SELECT id, period_start, period_end, preset, daily_minutes, days_target, weekdays
 FROM goal_cycle
 WHERE user_id = @user_id
-ORDER BY period_start DESC
+ORDER BY (status = 'active') DESC, period_start DESC
 LIMIT 1;
 
 -- name: CloseOlderGoals :exec
 UPDATE goal_cycle SET status = 'closed'
-WHERE user_id = @user_id AND status = 'active' AND period_start < @period_start;
+WHERE user_id = @user_id AND status = 'active' AND period_start <> @period_start;
 
 -- name: UpsertGoal :one
 -- Um ciclo por (pessoa, dia de inicio): abrir outro no mesmo dia substitui o de hoje.

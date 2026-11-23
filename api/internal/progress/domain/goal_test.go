@@ -7,36 +7,39 @@ import (
 	"github.com/keven-rdr/wordloop/api/internal/progress/domain"
 )
 
-func TestNewGoalOpensASevenDayCycleAndAppliesTheDefaults(t *testing.T) {
-	start := date("2026-10-19")
-	g, err := domain.NewGoal(start, domain.GoalRequest{DailyMinutes: 10, DaysTarget: 5})
-	if err != nil {
-		t.Fatal(err)
+// A meta e da semana: de segunda a domingo, aberta em qualquer dia dela; todos os dias, o mesmo tempo.
+func TestNewGoalCoversTheWeekFromMondayToSundayAndAppliesTheDefaults(t *testing.T) {
+	for _, today := range []string{"2026-10-19", "2026-10-22", "2026-10-25"} { // segunda, quinta e domingo
+		g, err := domain.NewGoal(date(today), domain.GoalRequest{DailyMinutes: 30})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if g.PeriodStart != date("2026-10-19") || g.PeriodEnd != date("2026-10-25") || g.Preset != domain.Custom || g.DaysTarget != 7 || len(g.Weekdays) != 7 {
+			t.Errorf("%s: %+v", today, g)
+		}
 	}
-	if g.PeriodStart != start || g.PeriodEnd != date("2026-10-25") || g.Preset != domain.Custom || len(g.Weekdays) != 7 {
-		t.Errorf("meta: %+v", g)
+	g, err := domain.NewGoal(date("2026-10-26"), domain.GoalRequest{DailyMinutes: 30})
+	if err != nil || g.PeriodStart != date("2026-10-26") || len(g.Weekdays) != 7 {
+		t.Errorf("na segunda seguinte, outra semana: %+v %v", g, err)
 	}
 }
 
-func TestNewGoalSortsTheWeekdaysWithoutTouchingTheRequest(t *testing.T) {
-	asked := []int{5, 1, 3}
-	g, err := domain.NewGoal(date("2026-10-19"), domain.GoalRequest{Preset: domain.Steady, DailyMinutes: 10, DaysTarget: 3, Weekdays: asked})
-	if err != nil || g.Weekdays[0] != 1 || g.Weekdays[2] != 5 || asked[0] != 5 {
-		t.Errorf("ordenou o pedido do chamador ou nao ordenou a meta: %+v %v %v", g.Weekdays, asked, err)
+func TestWeekStartIsTheMonday(t *testing.T) {
+	cases := map[string]string{"2026-11-23": "2026-11-23", "2026-11-24": "2026-11-23", "2026-11-29": "2026-11-23", "2026-11-30": "2026-11-30"}
+	for day, want := range cases {
+		if got := domain.WeekStart(date(day)); got != date(want) {
+			t.Errorf("WeekStart(%s) = %s, esperava %s", day, got.Format("2006-01-02"), want)
+		}
 	}
 }
 
 func TestNewGoalRejectsWhatIsOutOfBounds(t *testing.T) {
 	cases := map[string]domain.GoalRequest{
-		"0 minutos":                      {DailyMinutes: 0, DaysTarget: 3},
-		"241 minutos":                    {DailyMinutes: 241, DaysTarget: 3},
-		"0 dias":                         {DailyMinutes: 10, DaysTarget: 0},
-		"8 dias":                         {DailyMinutes: 10, DaysTarget: 8},
-		"preset desconhecido":            {Preset: "turbo", DailyMinutes: 10, DaysTarget: 3},
-		"dia da semana 0":                {DailyMinutes: 10, DaysTarget: 1, Weekdays: []int{0, 1}},
-		"dia da semana 8":                {DailyMinutes: 10, DaysTarget: 1, Weekdays: []int{8}},
-		"dia da semana repetido":         {DailyMinutes: 10, DaysTarget: 2, Weekdays: []int{1, 1, 2}},
-		"menos dias permitidos que meta": {DailyMinutes: 10, DaysTarget: 4, Weekdays: []int{1, 2, 3}},
+		"0 minutos":           {DailyMinutes: 0, DaysTarget: 3},
+		"241 minutos":         {DailyMinutes: 241, DaysTarget: 3},
+		"8 dias":              {DailyMinutes: 10, DaysTarget: 8},
+		"preset desconhecido": {Preset: "turbo", DailyMinutes: 10, DaysTarget: 3},
+		"dias negativos":      {DailyMinutes: 10, DaysTarget: -1},
 	}
 	for name, req := range cases {
 		if _, err := domain.NewGoal(date("2026-10-19"), req); !errors.Is(err, domain.ErrInvalidGoal) {
@@ -120,7 +123,7 @@ func studyDays(end string, minutes []float64) []domain.Day {
 
 func TestSuggestFallsBackToFixedValuesWithoutEnoughHistory(t *testing.T) {
 	got, fromHistory := domain.Suggest(studyDays("2026-10-19", []float64{10, 12}), date("2026-10-19"))
-	want := []domain.Suggestion{{Preset: domain.Light, DailyMinutes: 5, DaysTarget: 3}, {Preset: domain.Steady, DailyMinutes: 10, DaysTarget: 5}, {Preset: domain.Intense, DailyMinutes: 20, DaysTarget: 7}}
+	want := []domain.Suggestion{{Preset: domain.Light, DailyMinutes: 5, DaysTarget: 7}, {Preset: domain.Steady, DailyMinutes: 10, DaysTarget: 7}, {Preset: domain.Intense, DailyMinutes: 20, DaysTarget: 7}}
 	if fromHistory || len(got) != 3 || got[0] != want[0] || got[1] != want[1] || got[2] != want[2] {
 		t.Errorf("valores iniciais: %v %v", got, fromHistory)
 	}
@@ -140,8 +143,8 @@ func TestSuggestFollowsTheRealTimeAndTheRealFrequency(t *testing.T) {
 	if light.DailyMinutes != 10 || steady.DailyMinutes != 10 || intense.DailyMinutes != 15 {
 		t.Errorf("minutos 0,8x / 1x / p75 (de 5 em 5): %v", got)
 	}
-	if light.DaysTarget != 2 || steady.DaysTarget != 3 || intense.DaysTarget != 4 {
-		t.Errorf("dias por semana ao redor de 3: %v", got)
+	if light.DaysTarget != 7 || steady.DaysTarget != 7 || intense.DaysTarget != 7 {
+		t.Errorf("a meta vale todos os dias da semana: %v", got)
 	}
 }
 
@@ -159,7 +162,7 @@ func TestSuggestStaysInsideTheLimitsAndNeverGetsLighterThanLessStudy(t *testing.
 		if s.DailyMinutes > 240 || s.DaysTarget > 7 || s.DailyMinutes < 5 || s.DaysTarget < 1 {
 			t.Errorf("fora dos limites: %+v", s)
 		}
-		if _, err := domain.NewGoal(date("2026-10-19"), domain.GoalRequest{Preset: s.Preset, DailyMinutes: s.DailyMinutes, DaysTarget: s.DaysTarget}); err != nil {
+		if _, err := domain.NewGoal(date("2026-10-19"), domain.GoalRequest(s)); err != nil {
 			t.Errorf("a sugestao tem que ser uma meta valida: %+v %v", s, err)
 		}
 	}

@@ -1,6 +1,6 @@
 {
   "title": "Study",
-  "lead": "How long do you want to study today?",
+  "lead": "Today's time comes from your weekly goal.",
   "minutes_one": "{{count}} minute",
   "minutes_other": "{{count}} minutes",
   "plan": {
@@ -8,6 +8,13 @@
     "loading": "Building your session…",
     "failed": "I couldn't build the session right now. Try again.",
     "empty": "There is nothing to study right now. Come back later."
+  },
+  "goal": {
+    "today": "Today's goal",
+    "change": "Change the weekly goal",
+    "needed": "Before studying, choose this week's goal: how much time a day, Monday to Sunday.",
+    "define": "Choose this week's goal",
+    "failed": "I couldn't read your goal right now. This session will be {{count}} minutes."
   },
   "session": {
     "close": "Leave the session",

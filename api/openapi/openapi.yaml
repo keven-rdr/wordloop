@@ -596,9 +596,10 @@ paths:
       tags: [progress]
       operationId: getCurrentGoal
       description: >
-        A meta do ciclo e o quanto ja foi cumprido. O ciclo dura 7 dias a partir de quando foi aberto. Passado o
-        fim (ended = true), o progresso e a retrospectiva do ciclo e a meta continua valendo ate a pessoa abrir
-        outra: nao responder nunca bloqueia o estudo. Sem meta ainda, vem so ended = false.
+        A meta da semana e o quanto ja foi cumprido. O ciclo e a semana, de segunda a domingo (no dia de estudo
+        da pessoa), com o mesmo tempo todos os dias. Passado o domingo (ended = true), o progresso e a
+        retrospectiva e o app pergunta a meta da nova semana; a meta antiga continua valendo ate a pessoa
+        responder. Sem meta ainda, vem so ended = false.
       responses:
         "200":
           description: a meta atual (ausente se nunca houve)
@@ -611,9 +612,9 @@ paths:
       tags: [progress]
       operationId: getGoalSuggestions
       description: >
-        Tres sugestoes de meta (leve, constante e intensa) a partir dos ultimos 28 dias: 0,8x, 1x e o percentil 75
-        do tempo real por dia estudado, e os dias por semana ao redor do que a pessoa ja faz. Com menos de 3 dias
-        de estudo no periodo, vem valores iniciais fixos (based_on_history = false).
+        Tres sugestoes de tempo por dia (leve, constante e intensa) a partir dos ultimos 28 dias: 0,8x, 1x e o
+        percentil 75 do tempo real por dia estudado; todas valem os 7 dias da semana. Com menos de 3 dias de
+        estudo no periodo, vem valores iniciais fixos de 5, 10 e 20 minutos (based_on_history = false).
       responses:
         "200":
           description: as sugestoes, da mais leve a mais intensa
@@ -626,9 +627,9 @@ paths:
       tags: [progress]
       operationId: startGoal
       description: >
-        Abre um novo ciclo de 7 dias a partir de hoje (dia de estudo da pessoa); o ciclo anterior e encerrado,
-        cumprido ou nao. "Manter a mesma" e reenviar os mesmos valores. Se ja ha um ciclo aberto hoje, ele e
-        substituido.
+        Abre a meta da semana atual: de segunda a domingo (no dia de estudo da pessoa), mesmo se aberta no meio
+        da semana. O ciclo anterior e encerrado, cumprido ou nao. "Manter a mesma" e reenviar os mesmos valores.
+        Abrir de novo na mesma semana substitui a meta da semana.
       parameters:
         - { $ref: "#/components/parameters/CsrfHeader" }
       requestBody:
@@ -989,12 +990,12 @@ components:
         correct: { type: integer }
     GoalRequest:
       type: object
-      required: [daily_minutes, days_target]
+      required: [daily_minutes]
       properties:
         preset: { type: string, enum: [light, steady, intense, custom], description: "ausente = custom" }
-        daily_minutes: { type: integer, minimum: 1, maximum: 240 }
-        days_target: { type: integer, minimum: 1, maximum: 7, description: "dias de estudo por ciclo" }
-        weekdays: { type: array, description: "dias da semana permitidos, 1 = segunda a 7 = domingo; ausente = todos", items: { type: integer, minimum: 1, maximum: 7 } }
+        daily_minutes: { type: integer, minimum: 1, maximum: 240, description: "o tempo de estudo de cada dia, de segunda a domingo" }
+        days_target: { type: integer, minimum: 1, maximum: 7, description: "dias de estudo na semana para cumprir a meta; ausente = 7" }
+        weekdays: { type: array, deprecated: true, description: "ignorado: a meta vale todos os dias da semana", items: { type: integer, minimum: 1, maximum: 7 } }
     Goal:
       type: object
       required: [id, period_start, period_end, daily_minutes, days_target, weekdays]

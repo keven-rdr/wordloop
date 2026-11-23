@@ -103,7 +103,7 @@ func TestSuggestUsesTheLastFourWeeks(t *testing.T) {
 		s.Rows = append(s.Rows, domain.Day{Date: date("2026-10-19").AddDate(0, 0, -i*3), Reviews: 5, ActiveMS: 600_000})
 	}
 	got, fromHistory, err := goals(s).Suggest(context.Background())
-	if err != nil || !fromHistory || len(got) != 3 || got[1].DailyMinutes != 10 || got[1].DaysTarget != 2 {
+	if err != nil || !fromHistory || len(got) != 3 || got[1].DailyMinutes != 10 || got[1].DaysTarget != 7 {
 		t.Errorf("sugestoes: %v %v %v", got, fromHistory, err)
 	}
 	_, fromHistory, err = goals(progresstest.New()).Suggest(context.Background())

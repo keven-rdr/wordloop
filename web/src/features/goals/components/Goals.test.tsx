@@ -22,9 +22,9 @@ const heatmap = { from: '2026-07-28', to: '2026-10-19', days: [] };
 const suggestions = {
   based_on_history: true,
   suggestions: [
-    { preset: 'light', daily_minutes: 5, days_target: 2 },
-    { preset: 'steady', daily_minutes: 10, days_target: 3 },
-    { preset: 'intense', daily_minutes: 20, days_target: 4 },
+    { preset: 'light', daily_minutes: 5, days_target: 7 },
+    { preset: 'steady', daily_minutes: 10, days_target: 7 },
+    { preset: 'intense', daily_minutes: 20, days_target: 7 },
   ],
 };
 const goal = {
@@ -113,16 +113,17 @@ describe('cartão da meta no Início', () => {
 });
 
 describe('tela de metas', () => {
-  it('escolher uma sugestão manda os valores dela e volta ao Início', async () => {
+  it('escolher uma sugestão manda o tempo por dia dela e volta ao Início', async () => {
     const calls = api();
     renderApp('/goals');
     expect(await screen.findByText('Sugestões baseadas no seu ritmo das últimas 4 semanas.')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Defina sua meta da semana' })).toBeTruthy();
+    expect(screen.getByText('20 min por dia, de segunda a domingo')).toBeTruthy();
     fireEvent.click(screen.getByRole('radio', { name: /Intensa/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Começar' }));
 
     await waitFor(() => expect(posted(calls)).toHaveLength(1));
-    expect(posted(calls)[0]?.body).toEqual({ preset: 'intense', daily_minutes: 20, days_target: 4 });
+    expect(posted(calls)[0]?.body).toEqual({ preset: 'intense', daily_minutes: 20 });
     expect(posted(calls)[0]?.headers.get('X-Requested-With')).toBe('XMLHttpRequest');
     expect(await screen.findByRole('link', { name: /Estudar agora/ })).toBeTruthy();
   });
@@ -132,7 +133,15 @@ describe('tela de metas', () => {
     renderApp('/goals');
     fireEvent.click(await screen.findByRole('button', { name: 'Começar' }));
     await waitFor(() => expect(posted(calls)).toHaveLength(1));
-    expect(posted(calls)[0]?.body).toMatchObject({ preset: 'steady', daily_minutes: 10, days_target: 3 });
+    expect(posted(calls)[0]?.body).toEqual({ preset: 'steady', daily_minutes: 10 });
+  });
+
+  it('vindo de Estudar (sem meta na semana), salvar volta para Estudar', async () => {
+    const calls = api();
+    renderApp('/goals?from=study');
+    fireEvent.click(await screen.findByRole('button', { name: 'Começar' }));
+    await waitFor(() => expect(posted(calls)).toHaveLength(1));
+    expect(await screen.findByRole('heading', { name: 'Estudar' })).toBeTruthy();
   });
 
   it('sem histórico, avisa que as sugestões são para começar', async () => {
@@ -145,11 +154,11 @@ describe('tela de metas', () => {
     const calls = api();
     renderApp('/goals');
     fireEvent.click(await screen.findByRole('radio', { name: 'Personalizar' }));
+    expect(screen.queryByLabelText('Dias por semana')).toBeNull();
     fireEvent.change(screen.getByLabelText('Minutos por dia'), { target: { value: '25' } });
-    fireEvent.change(screen.getByLabelText('Dias por semana'), { target: { value: '6' } });
     fireEvent.click(screen.getByRole('button', { name: 'Começar' }));
     await waitFor(() => expect(posted(calls)).toHaveLength(1));
-    expect(posted(calls)[0]?.body).toEqual({ preset: 'custom', daily_minutes: 25, days_target: 6 });
+    expect(posted(calls)[0]?.body).toEqual({ preset: 'custom', daily_minutes: 25 });
   });
 
   it('personalizar com valor fora do limite mostra o erro e não deixa começar', async () => {
@@ -157,9 +166,7 @@ describe('tela de metas', () => {
     renderApp('/goals');
     fireEvent.click(await screen.findByRole('radio', { name: 'Personalizar' }));
     fireEvent.change(screen.getByLabelText('Minutos por dia'), { target: { value: '500' } });
-    fireEvent.change(screen.getByLabelText('Dias por semana'), { target: { value: '9' } });
     expect(screen.getByText('Use de 1 a 240 minutos')).toBeTruthy();
-    expect(screen.getByText('Use de 1 a 7 dias')).toBeTruthy();
     const start = screen.getByRole('button', { name: 'Começar' });
     expect((start as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(start);
@@ -185,12 +192,7 @@ describe('meta em andamento, retrospectiva e falhas na tela de metas', () => {
     expect(screen.getByText('6')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Manter a mesma' }));
     await waitFor(() => expect(posted(calls)).toHaveLength(1));
-    expect(posted(calls)[0]?.body).toEqual({
-      preset: 'steady',
-      daily_minutes: 10,
-      days_target: 5,
-      weekdays: [1, 2, 3, 4, 5, 6, 7],
-    });
+    expect(posted(calls)[0]?.body).toEqual({ preset: 'steady', daily_minutes: 10 });
   });
 
   it('ciclo não cumprido tem retrospectiva com incentivo', async () => {

@@ -28,6 +28,22 @@ async function mockApi(page: Page) {
       },
     }),
   );
+  await page.route('**/api/v1/goals/current', (route) =>
+    route.fulfill({
+      json: {
+        goal: {
+          id: 'g1',
+          period_start: '2026-11-16',
+          period_end: '2026-11-22',
+          preset: 'steady',
+          daily_minutes: 5,
+          days_target: 7,
+          weekdays: [1, 2, 3, 4, 5, 6, 7],
+        },
+        ended: false,
+      },
+    }),
+  );
   await page.route('**/api/v1/study/plan', (route) =>
     route.fulfill({
       json: {

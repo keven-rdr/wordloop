@@ -1,63 +1,52 @@
 import { describe, expect, it } from 'vitest';
 import type { Goal, GoalSuggestion } from '../../../api/generated/types.gen';
-import { daysOf, daysPercent, isLastDay, keepRequest, minutesOf, percentOf, requestOf } from './choice';
+import { daysPercent, isLastDay, keepRequest, minutesOf, percentOf, requestOf } from './choice';
 
 const suggestions: GoalSuggestion[] = [
-  { preset: 'light', daily_minutes: 5, days_target: 2 },
-  { preset: 'steady', daily_minutes: 10, days_target: 3 },
-  { preset: 'intense', daily_minutes: 20, days_target: 4 },
+  { preset: 'light', daily_minutes: 5, days_target: 7 },
+  { preset: 'steady', daily_minutes: 10, days_target: 7 },
+  { preset: 'intense', daily_minutes: 20, days_target: 7 },
 ];
 
 describe('requestOf', () => {
-  it('uma sugestão vira o pedido com o mesmo nome, minutos e dias', () => {
-    expect(requestOf('steady', suggestions, { minutes: '', days: '' })).toEqual({
-      preset: 'steady',
-      daily_minutes: 10,
-      days_target: 3,
-    });
+  it('uma sugestão vira o pedido com o mesmo nome e minutos (a meta vale todos os dias)', () => {
+    expect(requestOf('steady', suggestions, { minutes: '' })).toEqual({ preset: 'steady', daily_minutes: 10 });
   });
 
   it('personalizar usa o que foi digitado e vale custom', () => {
-    expect(requestOf('custom', suggestions, { minutes: '25', days: '6' })).toEqual({
-      preset: 'custom',
-      daily_minutes: 25,
-      days_target: 6,
-    });
+    expect(requestOf('custom', suggestions, { minutes: '25' })).toEqual({ preset: 'custom', daily_minutes: 25 });
   });
 
   it.each([
-    ['vazio', '', ''],
-    ['minutos 0', '0', '3'],
-    ['minutos 241', '241', '3'],
-    ['dias 0', '10', '0'],
-    ['dias 8', '10', '8'],
-    ['decimal', '10.5', '3'],
-    ['texto', 'dez', '3'],
-    ['só espaços', '  ', '3'],
-  ])('personalizar inválido (%s) não gera pedido', (_name, minutes, days) => {
-    expect(requestOf('custom', suggestions, { minutes, days })).toBeUndefined();
+    ['vazio', ''],
+    ['minutos 0', '0'],
+    ['minutos 241', '241'],
+    ['decimal', '10.5'],
+    ['texto', 'dez'],
+    ['só espaços', '  '],
+  ])('personalizar inválido (%s) não gera pedido', (_name, minutes) => {
+    expect(requestOf('custom', suggestions, { minutes })).toBeUndefined();
   });
 
   it('os limites valem', () => {
-    expect(requestOf('custom', suggestions, { minutes: '1', days: '1' })).toBeDefined();
-    expect(requestOf('custom', suggestions, { minutes: '240', days: '7' })).toBeDefined();
+    expect(requestOf('custom', suggestions, { minutes: '1' })).toBeDefined();
+    expect(requestOf('custom', suggestions, { minutes: '240' })).toBeDefined();
   });
 
   it('sugestão que o servidor não mandou não gera pedido', () => {
-    expect(requestOf('light', [], { minutes: '5', days: '2' })).toBeUndefined();
+    expect(requestOf('light', [], { minutes: '5' })).toBeUndefined();
   });
 });
 
 describe('campos de personalizar', () => {
-  it('lê minutos e dias separadamente', () => {
-    expect(minutesOf({ minutes: '30', days: 'x' })).toBe(30);
-    expect(daysOf({ minutes: 'x', days: '5' })).toBe(5);
-    expect(minutesOf({ minutes: '', days: '' })).toBeUndefined();
+  it('lê os minutos por dia', () => {
+    expect(minutesOf({ minutes: '30' })).toBe(30);
+    expect(minutesOf({ minutes: '' })).toBeUndefined();
   });
 });
 
 describe('keepRequest', () => {
-  it('repete os mesmos valores da meta, inclusive os dias da semana', () => {
+  it('repete o mesmo tempo por dia da meta', () => {
     const goal: Goal = {
       id: 'g1',
       period_start: '2026-10-12',
@@ -67,7 +56,7 @@ describe('keepRequest', () => {
       days_target: 4,
       weekdays: [1, 3, 5, 6],
     };
-    expect(keepRequest(goal)).toEqual({ preset: 'intense', daily_minutes: 20, days_target: 4, weekdays: [1, 3, 5, 6] });
+    expect(keepRequest(goal)).toEqual({ preset: 'intense', daily_minutes: 20 });
   });
 });
 
