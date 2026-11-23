@@ -35,7 +35,7 @@ async function mockApi(page: Page) {
         cards: [sentence],
         new_limit: 8,
         review_limit: 20,
-        expires_at: '2026-11-19T04:00:00Z',
+        expires_at: '2999-01-01T00:00:00Z',
       },
     }),
   );

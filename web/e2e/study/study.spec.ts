@@ -34,7 +34,7 @@ async function mockApi(page: Page, cards: unknown[]) {
   );
   await page.route('**/api/v1/study/plan', (route) =>
     route.fulfill({
-      json: { session_id: 'sess-1', cards, new_limit: 8, review_limit: 20, expires_at: '2026-11-19T04:00:00Z' },
+      json: { session_id: 'sess-1', cards, new_limit: 8, review_limit: 20, expires_at: '2999-01-01T00:00:00Z' },
     }),
   );
   await page.route('**/api/v1/study/reviews', (route) => {
