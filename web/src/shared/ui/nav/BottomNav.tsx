@@ -1,12 +1,10 @@
 import * as stylex from '@stylexjs/stylex';
-import { Link, useRouterState } from '@tanstack/react-router';
-import type { ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Link } from '@tanstack/react-router';
 import { brand } from '../tokens/brand.stylex';
 import { color, radius, size, space } from '../tokens/color.stylex';
 import { bp } from '../tokens/media.stylex';
-import { Avatar } from './Avatar';
-import { CardsIcon, HomeIcon, StudyIcon } from './Icons';
+import { NavGlyph, useNavState } from './items';
+import type { NavItem } from './types';
 
 const styles = stylex.create({
   bar: {
@@ -30,7 +28,7 @@ const styles = stylex.create({
     display: 'flex',
     flexGrow: 1,
     width: '100%',
-    maxWidth: '40rem',
+    maxWidth: size.content,
     marginInline: 'auto',
     boxSizing: 'border-box',
   },
@@ -61,7 +59,7 @@ const styles = stylex.create({
       position: 'absolute',
       top: 0,
       insetInline: space.lg,
-      height: '3px',
+      height: size.marker,
       borderBottomLeftRadius: radius.full,
       borderBottomRightRadius: radius.full,
       backgroundColor: color.link,
@@ -71,47 +69,31 @@ const styles = stylex.create({
   icon: { width: '1.5rem', height: '1.5rem' },
 });
 
-type Props = Readonly<{ name: string; pictureUrl?: string }>;
+type Props = Readonly<{ items: readonly NavItem[]; name: string; pictureUrl?: string }>;
 
-const inside = (path: string, base: string) => path === base || path.startsWith(`${base}/`);
-
-type TabProps = Readonly<{
-  to: '/' | '/settings' | '/study' | '/words';
-  active: boolean;
-  label: string;
-  children: ReactNode;
-}>;
-
-function NavTab({ to, active, label, children }: TabProps) {
+// Menu inferior (mobile e tablet): os itens vêm do registro das features, em ordem.
+export function BottomNav({ items, name, pictureUrl }: Props) {
+  const nav = useNavState(items);
   return (
-    <li {...stylex.props(styles.cell)}>
-      <Link to={to} aria-current={active ? 'page' : undefined} {...stylex.props(styles.item, active && styles.active)}>
-        <span {...stylex.props(styles.slot)}>{children}</span>
-        {label}
-      </Link>
-    </li>
-  );
-}
-
-export function BottomNav({ name, pictureUrl }: Props) {
-  const { t } = useTranslation('common');
-  const path = useRouterState({ select: (state) => state.location.pathname });
-  const onSettings = inside(path, '/settings') || inside(path, '/passkeys');
-  return (
-    <nav aria-label={t('nav.label')} {...stylex.props(styles.bar)}>
+    <nav aria-label={nav.title} {...stylex.props(styles.bar)}>
       <ul {...stylex.props(styles.list)}>
-        <NavTab to="/settings" active={onSettings} label={t('nav.profile')}>
-          <Avatar name={name} pictureUrl={pictureUrl} />
-        </NavTab>
-        <NavTab to="/" active={path === '/'} label={t('nav.home')}>
-          <HomeIcon {...stylex.props(styles.icon)} />
-        </NavTab>
-        <NavTab to="/study" active={inside(path, '/study')} label={t('nav.study')}>
-          <StudyIcon {...stylex.props(styles.icon)} />
-        </NavTab>
-        <NavTab to="/words" active={inside(path, '/words')} label={t('nav.words')}>
-          <CardsIcon {...stylex.props(styles.icon)} />
-        </NavTab>
+        {items.map((item) => {
+          const active = nav.active(item);
+          return (
+            <li key={item.id} {...stylex.props(styles.cell)}>
+              <Link
+                to={item.to}
+                aria-current={active ? 'page' : undefined}
+                {...stylex.props(styles.item, active && styles.active)}
+              >
+                <span {...stylex.props(styles.slot)}>
+                  <NavGlyph item={item} name={name} pictureUrl={pictureUrl} {...stylex.props(styles.icon)} />
+                </span>
+                {nav.label(item)}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );
