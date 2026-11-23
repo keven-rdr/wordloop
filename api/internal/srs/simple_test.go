@@ -74,6 +74,23 @@ func TestSimpleV1FirstAnswers(t *testing.T) {
 	}
 }
 
+// "Ja sabia" no primeiro contato manda a palavra para ~3 semanas; depois disso vale como facil.
+func TestSimpleV1KnownOnFirstSightJumpsToThreeWeeks(t *testing.T) {
+	known := Review{Correct: true, Difficulty: DifficultyKnown}
+	next, err := noFuzzV1.Next(CardState{ID: "x", State: StateNew}, known, day(0))
+	if err != nil || next.Stability != KnownStability || next.State != StateReview || next.Lapses != 0 || next.Reps != 1 {
+		t.Fatalf("ja sabia: %+v %v", next, err)
+	}
+	near(t, "intervalo", daysBetween(day(0), next.DueAt), 21, 1e-9)
+	later, err := noFuzzV1.Next(next, known, day(21))
+	if err != nil || later.Stability != 42 { // depois do 1o contato vale facil (Good no reconhecimento): 21 x 2
+		t.Errorf("ja sabia depois do primeiro contato vale facil: %+v %v", later, err)
+	}
+	if c, err := Replay(noFuzzV1, "x", []Answer{{Review: known, At: day(0)}}); err != nil || c.Stability != KnownStability {
+		t.Errorf("o replay do log reproduz o ja sabia: %+v %v", c, err)
+	}
+}
+
 func TestSimpleV1GrowthCapAndCeiling(t *testing.T) {
 	c := CardState{ID: "x", State: StateReview, Stability: 10, Reps: 2, LastReviewAt: day(0), DueAt: day(10)}
 	next, _ := noFuzzV1.Next(c, easy, day(100)) // muito atrasado: (10 + 45) * 3 = 165, mas o teto e 3x

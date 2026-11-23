@@ -91,3 +91,13 @@ describe('keyAction', () => {
     });
   });
 });
+
+describe('keyAction: "Já sabia"', () => {
+  it('no primeiro contato a tecla 4 é "Já sabia"; depois dele não existe', () => {
+    expect(keyAction('4', { card, checked: checked({ firstSight: true }) })).toEqual({
+      do: 'grade',
+      grade: { difficulty: 'known' },
+    });
+    expect(keyAction('4', { card, checked: checked({}) })).toBeUndefined();
+  });
+});

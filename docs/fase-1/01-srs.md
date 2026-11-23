@@ -96,6 +96,7 @@ Valores de m e do fator 0,25 são `[PREMISSA]`, a calibrar por simulação (seç
 Seu mapeamento está correto. Duas regras minhas `[PREMISSA]`, a validar com dados:
 1. **Easy só vale em exercício de produção** (digitar, ouvir→digitar). Em reconhecimento (múltipla escolha) "Fácil" conta como Good, pois escolher é mais fácil que lembrar e infla S. Isso responde à ilusão de competência.
 2. **Dica, explicação ou imagem vistas antes de responder** limitam a nota a Hard.
+3. **"Já sabia"** (2026-11-23, `docs/features/2026-11-23-estudo-variado.md`): no **primeiro contato** com a palavra (cartão novo, múltipla escolha, acerto, sem ajuda) há um 4º botão. Ele vale **Easy** com **S = 21 dias** (a palavra volta em ~3 semanas) e o cartão produtivo (digitar), que nasce no dia seguinte, confere se ela era mesmo conhecida. É um sinal explícito, não autoavaliação: por isso não fere a regra 1. Num cartão que já teve resposta (sessão retomada, outro aparelho) vale como "Fácil"; no exercício de produção ou com ajuda é inválido. Medido no simulador: tornar "Fácil" = Easy no primeiro contato baixava a retenção do aluno "mediano" (0,888 → 0,861) e foi descartado.
 
 **Tempo de resposta não altera a nota.** Ele só pré-seleciona a sugestão: ≤ 0,6× a sua mediana para aquele tipo de exercício → Fácil; ≥ 1,5× → Difícil; senão Médio. Você pode trocar. Guardo `sugerido` e `escolhido` para medir o viés de ancoragem depois.
 
@@ -104,7 +105,7 @@ Seu mapeamento está correto. Duas regras minhas `[PREMISSA]`, a validar com dad
 ### 4.5 Lapsos, sanguessugas, atrasos, limites
 - **Lapso** só em review/relearning. **Sanguessuga**: ≥ 6 lapsos `[PREMISSA]` (Anki: 8 `[VERIFICAR]`). Ação: **nunca suspender em silêncio**; oferecer trocar imagem/frase-contexto ou reescrever.
 - **Atraso**: FSRS já embute o crédito via R; no `simple_v1`, 50% do atraso.
-- **Novos por dia**: derivado da meta de minutos do dia: `novos ≈ minutos / 5` (60 min → 12) `[PREMISSA]`, com teto 20 e **zero novos se a fila de revisão passa de 2× a meta** (proteção contra avalanche). Revisões: sem teto, ordenadas por **menor R**.
+- **Novos por dia**: derivado do tempo da sessão (a meta diária): `novos = 6 + 0,65 × minutos` (5 min → 9; 15 → 16; 30 → 26; 60 → 45), com teto 45 e **metade se a fila de revisão passa de 2× a meta** (proteção contra avalanche). Os cartões produtivos têm cota própria (metade das novas). 1 em cada 5 novas vem de lições adiante (desafio). Revisões: até 4 por minuto, ordenadas por **menor R**. (Revisado em 2026-11-23: `minutos / 5` dava 1 palavra nova em 5 minutos.)
 - **Meta dinâmica:** os limites são recalculados quando o usuário define a meta no início do ciclo.
 
 ### 4.6 Fila e notificação-desafio

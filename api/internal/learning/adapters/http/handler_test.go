@@ -88,10 +88,15 @@ func TestPlanReturnsThePackWithContentAndOptions(t *testing.T) {
 	}
 	pack := decode[map[string]any](t, rec)
 	cards := pack["cards"].([]any)
-	if len(cards) != 3 || pack["new_limit"].(float64) != 3 || pack["review_limit"].(float64) != 60 || pack["session_id"] == "" {
+	if len(cards) != 4 || pack["new_limit"].(float64) != 16 || pack["review_limit"].(float64) != 60 || pack["session_id"] == "" {
 		t.Fatalf("pacote: %s", rec.Body.String())
 	}
-	first := cards[0].(map[string]any)
+	byTerm := map[string]map[string]any{}
+	for _, c := range cards {
+		card := c.(map[string]any)
+		byTerm[card["term"].(string)] = card
+	}
+	first := byTerm["house"] // a ordem muda a cada sessao: procura pelo termo
 	if first["term"] != "house" || first["gloss"] != "casa" || first["exercise"] != "choose" || first["direction"] != "receptive" ||
 		first["state"] != "new" || first["image_url"] != "/media/openmoji/1F3E0.svg" || len(first["options"].([]any)) != 4 {
 		t.Errorf("carta: %+v", first)
@@ -99,7 +104,7 @@ func TestPlanReturnsThePackWithContentAndOptions(t *testing.T) {
 	if ex := first["example"].(map[string]any); ex["text"] != "This is a big house." || ex["translation"] != "Esta é uma casa grande." {
 		t.Errorf("exemplo: %+v", ex)
 	}
-	if second := cards[1].(map[string]any); second["image_url"] != nil || second["example"] != nil {
+	if second := byTerm["cat"]; second["image_url"] != nil || second["example"] != nil {
 		t.Errorf("sem imagem nem exemplo, os campos nao aparecem: %+v", second)
 	}
 }
@@ -139,7 +144,8 @@ func TestPlanValidation(t *testing.T) {
 		csrf bool
 	}{
 		"sem o cabecalho anti-CSRF": {`{"minutes":15}`, false},
-		"minutos fora da lista":     {`{"minutes":10}`, true},
+		"minutos abaixo de 5":       {`{"minutes":4}`, true},
+		"minutos acima de 240":      {`{"minutes":241}`, true},
 		"modo desconhecido":         {`{"minutes":15,"mode":"tudo"}`, true},
 		"corpo quebrado":            {`{"minutes":`, true},
 		"sem corpo":                 {``, true},

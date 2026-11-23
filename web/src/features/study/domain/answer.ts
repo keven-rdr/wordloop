@@ -2,9 +2,18 @@ import type { ReviewInput, StudyCard } from '../../../api/generated/types.gen';
 
 export type Difficulty = NonNullable<ReviewInput['difficulty']>;
 export type ErrorKind = NonNullable<ReviewInput['error_kind']>;
+// O que o app sugere pelo tempo de resposta (nunca "Já sabia": esse só a pessoa escolhe).
+export type SuggestedDifficulty = NonNullable<ReviewInput['difficulty_suggested']>;
 
 // Ordem dos botões = ordem das teclas 1, 2 e 3.
 export const DIFFICULTIES: readonly Difficulty[] = ['hard', 'medium', 'easy'];
+
+// No primeiro contato com a palavra, um 4º botão (tecla 4): "Já sabia", que a manda para daqui a ~3 semanas.
+const FIRST_SIGHT: readonly Difficulty[] = [...DIFFICULTIES, 'known'];
+
+export function difficultiesFor(firstSight: boolean): readonly Difficulty[] {
+  return firstSight ? FIRST_SIGHT : DIFFICULTIES;
+}
 export const ERROR_KINDS: readonly ErrorKind[] = ['no_idea', 'almost', 'slip'];
 
 // Resultado provisório, só para dar feedback na hora. Quem corrige de verdade é o servidor.
@@ -65,7 +74,7 @@ export function checkChoice(card: StudyCard, chosenItemId: string): Outcome {
   return chosenItemId === card.item_id ? 'right' : 'wrong';
 }
 
-export function suggestDifficulty(responseMs: number, exercise: StudyCard['exercise']): Difficulty {
+export function suggestDifficulty(responseMs: number, exercise: StudyCard['exercise']): SuggestedDifficulty {
   const extra = exercise === 'choose' ? 0 : TYPING_EXTRA_MS;
   if (responseMs <= EASY_WITHIN_MS + extra) return 'easy';
   if (responseMs <= MEDIUM_WITHIN_MS + extra) return 'medium';

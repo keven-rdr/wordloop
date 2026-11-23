@@ -72,8 +72,12 @@ func (t *txn) DueCards(ctx context.Context, user uuid.UUID, now time.Time, limit
 	return out, nil
 }
 
-func (t *txn) NewItems(ctx context.Context, user uuid.UUID, drafts bool, limit int) ([]uuid.UUID, error) {
-	return t.q.NewItems(ctx, db.NewItemsParams{UserID: user, IncludeDrafts: drafts, RowLimit: int32(limit)}) //nolint:gosec // limite pequeno e fixo
+func (t *txn) NewItems(ctx context.Context, user uuid.UUID, drafts bool, seed uuid.UUID, limit int) ([]uuid.UUID, error) {
+	return t.q.NewItems(ctx, db.NewItemsParams{UserID: user, IncludeDrafts: drafts, Seed: seed.String(), RowLimit: int32(limit)}) //nolint:gosec // limite pequeno e fixo
+}
+
+func (t *txn) StretchItems(ctx context.Context, user uuid.UUID, drafts bool, seed uuid.UUID, limit int) ([]uuid.UUID, error) {
+	return t.q.StretchItems(ctx, db.StretchItemsParams{UserID: user, IncludeDrafts: drafts, Seed: seed.String(), RowLimit: int32(limit)}) //nolint:gosec // limite pequeno e fixo
 }
 
 func (t *txn) ProductiveItems(ctx context.Context, user uuid.UUID, minS, minSentenceS float64, before time.Time, limit int) ([]uuid.UUID, error) {
@@ -102,8 +106,8 @@ func (t *txn) Contents(ctx context.Context, items []uuid.UUID, locale string, dr
 	return out, nil
 }
 
-func (t *txn) Distractors(ctx context.Context, item uuid.UUID, locale string, drafts bool, n int) ([]domain.Option, error) {
-	rows, err := t.q.Distractors(ctx, db.DistractorsParams{ItemID: item, Locale: locale, IncludeDrafts: drafts, RowLimit: int32(n)}) //nolint:gosec // n pequeno e fixo
+func (t *txn) Distractors(ctx context.Context, item uuid.UUID, locale string, drafts bool, seed uuid.UUID, n int) ([]domain.Option, error) {
+	rows, err := t.q.Distractors(ctx, db.DistractorsParams{ItemID: item, Locale: locale, IncludeDrafts: drafts, Seed: seed.String(), RowLimit: int32(n)}) //nolint:gosec // n pequeno e fixo
 	if err != nil {
 		return nil, fmt.Errorf("ler distratores: %w", err)
 	}
@@ -116,7 +120,7 @@ func (t *txn) Distractors(ctx context.Context, item uuid.UUID, locale string, dr
 
 func (t *txn) CreateSession(ctx context.Context, id, user uuid.UUID, mode domain.Mode, minutes int, now, expires time.Time) error {
 	return t.q.CreateSession(ctx, db.CreateSessionParams{
-		ID: id, UserID: user, Mode: string(mode), Minutes: int16(minutes), Now: ts(now), Expires: ts(expires), //nolint:gosec // minutos validados (5 a 60)
+		ID: id, UserID: user, Mode: string(mode), Minutes: int16(minutes), Now: ts(now), Expires: ts(expires), //nolint:gosec // minutos validados (5 a 240)
 	})
 }
 

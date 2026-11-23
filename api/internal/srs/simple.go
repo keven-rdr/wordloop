@@ -11,6 +11,9 @@ const (
 	lateCredit   = 0.5  // metade do atraso conta
 	growthCapN   = 5    // nas 5 primeiras revisoes S' <= 3*S [PREMISSA: Fase 1, secao 6]
 	growthCap    = 3.0
+	// KnownStability e a estabilidade de quem marcou "ja sabia" no primeiro contato: a palavra volta em ~3 semanas, e
+	// o cartao produtivo (digitar), que nasce no dia seguinte, confere se ela era mesmo conhecida.
+	KnownStability = 21.0
 )
 
 var (
@@ -38,7 +41,7 @@ func (SimpleV1) Retrievability(c CardState, now time.Time) float64 {
 
 // Next aplica a resposta ao cartao: pura e determinista.
 func (s SimpleV1) Next(c CardState, r Review, now time.Time) (CardState, error) {
-	g, err := r.Grade()
+	g, err := r.GradeOn(c)
 	if err != nil {
 		return c, err
 	}
@@ -49,8 +52,8 @@ func (s SimpleV1) Next(c CardState, r Review, now time.Time) (CardState, error) 
 	next.Reps++
 	next.LastReviewAt = now
 	switch {
-	case c.State == StateNew || c.State == "" || c.State == StateLearning:
-		first(&next, c, g)
+	case c.IsNew() || c.State == StateLearning:
+		first(&next, c, r, g)
 	case g.Lapse():
 		next.Stability = math.Max(1, lapseFactor*c.Stability)
 		next.Lapses++
@@ -66,13 +69,17 @@ func (s SimpleV1) Next(c CardState, r Review, now time.Time) (CardState, error) 
 	return next, nil
 }
 
-// first trata a 1a resposta (ou a graduacao de um cartao em aprendizado): so conta como lapso em review.
-func first(next *CardState, c CardState, g Grade) {
+// first trata a 1a resposta (ou a graduacao de um cartao em aprendizado): so conta como lapso em review. "Ja sabia" no
+// primeiro contato comeca em KnownStability.
+func first(next *CardState, c CardState, r Review, g Grade) {
 	if g.Lapse() {
 		next.Stability, next.State = 1, StateLearning
 		return
 	}
 	next.Stability = math.Max(c.Stability, firstStability[g])
+	if r.Known() && r.Correct && c.IsNew() {
+		next.Stability = KnownStability
+	}
 	next.State = StateReview
 	next.SinceLapse = c.SinceLapse + 1
 }

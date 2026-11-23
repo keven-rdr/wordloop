@@ -47,7 +47,7 @@ func (u SubmitReviews) decide(ctx context.Context, tx Tx, v domain.Viewer, a dom
 		return decided{}, domain.ReasonInvalidAnswer, err
 	}
 	rev := review(a, verdict)
-	grade, err := rev.Grade()
+	grade, err := rev.GradeOn(card.State)
 	if err != nil {
 		return decided{}, domain.ReasonInvalidAnswer, nil
 	}

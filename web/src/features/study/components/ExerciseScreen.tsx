@@ -2,7 +2,7 @@ import * as stylex from '@stylexjs/stylex';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StudyCard } from '../../../api/generated/types.gen';
-import { DIFFICULTIES, ERROR_KINDS } from '../domain/answer';
+import { difficultiesFor, ERROR_KINDS } from '../domain/answer';
 import { asksDifficulty, type Checked } from '../hooks/sessionReducer';
 import { useAnswerState } from '../hooks/useAnswerState';
 import { type Grade, useExerciseKeys } from '../hooks/useExerciseKeys';
@@ -79,7 +79,7 @@ function Verdict({
       {ask === 'difficulty' && checked && (
         <DifficultyPicker
           kind="difficulty"
-          values={DIFFICULTIES}
+          values={difficultiesFor(checked.firstSight === true)}
           suggested={checked.suggested}
           onPick={(difficulty) => onGrade({ difficulty })}
         />

@@ -111,3 +111,24 @@ describe('sessionReducer: montar frase', () => {
     expect(wrong.checked?.outcome).toBe('wrong'); // "quase" não existe aqui
   });
 });
+
+describe('sessionReducer: "Já sabia"', () => {
+  it('"Já sabia" só no primeiro contato: cartão novo de escolher, 1ª tentativa, sem dica', () => {
+    const right = (state: ReturnType<typeof begin>) =>
+      sessionReducer(state, { type: 'check', now: T0 + 1000, chosenItemId: 'i1' });
+    expect(right(begin(choose)).checked?.firstSight).toBe(true);
+    expect(right(begin({ ...choose, state: 'review' })).checked?.firstSight).toBe(false);
+    expect(right(sessionReducer(begin(choose), { type: 'hint' })).checked?.firstSight).toBe(false);
+    expect(sessionReducer(begin(typed), { type: 'check', now: T0, answer: 'mother' }).checked?.firstSight).toBe(false);
+    // errou e o cartão voltou na fila: na 2ª tentativa já não é o primeiro contato
+    let state = sessionReducer(begin(choose), { type: 'check', now: T0 + 1000, chosenItemId: 'i2' });
+    state = sessionReducer(state, { type: 'grade', now: T0 + 1500, id: 'r1', errorKind: 'no_idea' });
+    expect(right(state).checked?.firstSight).toBe(false);
+  });
+
+  it('"Já sabia" vai como known na resposta', () => {
+    let state = sessionReducer(begin(choose), { type: 'check', now: T0 + 1000, chosenItemId: 'i1' });
+    state = sessionReducer(state, { type: 'grade', now: T0 + 1500, id: 'r1', difficulty: 'known' });
+    expect(state.reviews[0]).toMatchObject({ client_correct: true, difficulty: 'known' });
+  });
+});

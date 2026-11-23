@@ -511,10 +511,13 @@ paths:
       tags: [learning]
       operationId: planSession
       description: >
-        Monta a sessao de estudo para "quanto tempo hoje?": as revisoes vencidas (menor retencao primeiro, ate o
-        limite do tempo) e as palavras novas (minutos / 5, ate 8; nenhuma se a fila de revisoes passar de 2x o
-        limite). Palavras novas ganham o cartao receptivo aqui; o produtivo nasce quando o receptivo chega a S >= 7 d.
-        Itens em rascunho so entram para administradores. O pacote traz o conteudo, para estudar sem rede.
+        Monta a sessao de estudo para o tempo do dia (5 a 240 minutos): as revisoes vencidas (4 por minuto, menor
+        retencao primeiro) e as palavras novas (6 + 0,65 por minuto, ate 45: 5 min = 9, 15 = 16, 30 = 26, 60 = 45;
+        metade se a fila de revisoes passar de 2x o limite). As novas seguem as licoes, sorteadas dentro da licao, e
+        1 em cada 5 vem de licoes adiante (desafio). Os cartoes produtivos (digitar, montar) tem cota propria (metade
+        das novas) e nascem quando o receptivo chega a S >= 7 d. A ordem dos cartoes, das alternativas e os
+        distratores mudam a cada sessao. Itens em rascunho so entram para administradores. O pacote traz o
+        conteudo, para estudar sem rede.
       parameters:
         - { $ref: "#/components/parameters/CsrfHeader" }
       requestBody:
@@ -810,7 +813,7 @@ components:
       type: object
       required: [minutes]
       properties:
-        minutes: { type: integer, enum: [5, 15, 30, 60] }
+        minutes: { type: integer, minimum: 5, maximum: 240, description: "tempo da sessao (a meta diaria)" }
         mode: { type: string, enum: [review, learn, mixed], default: mixed }
         tz: { type: string, description: "fuso IANA do aparelho (ex.: America/Sao_Paulo); guardado se for valido e a pessoa deixou o fuso acompanhar o aparelho (tz_auto)" }
         locale: { type: string, enum: [pt-BR, en-US], default: pt-BR, description: "idioma da traducao" }
@@ -883,7 +886,13 @@ components:
         explanation_viewed: { type: boolean }
         image_before_answer: { type: boolean }
         difficulty_suggested: { type: string, enum: [hard, medium, easy] }
-        difficulty: { type: string, enum: [hard, medium, easy], description: "so vale quando acertou" }
+        difficulty:
+          type: string
+          enum: [hard, medium, easy, known]
+          description: >
+            so vale quando acertou. known e o "ja sabia": so no primeiro contato com a palavra (cartao novo), no
+            exercicio choose e sem dica, explicacao ou imagem; a palavra volta em ~3 semanas. Fora disso a resposta e
+            rejeitada com invalid_answer.
         error_kind: { type: string, enum: [no_idea, almost, slip], description: "so vale quando errou" }
         device_id: { type: string, format: uuid }
         client_seq: { type: integer }

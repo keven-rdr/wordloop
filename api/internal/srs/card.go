@@ -20,6 +20,8 @@ const (
 	DifficultyHard   Difficulty = "hard"
 	DifficultyMedium Difficulty = "medium"
 	DifficultyEasy   Difficulty = "easy"
+	// DifficultyKnown e o "ja sabia": so no primeiro contato, no reconhecimento e com acerto (Review.GradeOn).
+	DifficultyKnown Difficulty = "known"
 )
 
 type ErrorKind string
@@ -63,3 +65,6 @@ var (
 	ErrInvalidReview = errors.New("srs: resposta invalida")
 	ErrTimeTravel    = errors.New("srs: resposta anterior a ultima revisao")
 )
+
+// IsNew diz se o cartao ainda nao teve resposta (o primeiro contato com a palavra).
+func (c CardState) IsNew() bool { return c.State == StateNew || c.State == "" }

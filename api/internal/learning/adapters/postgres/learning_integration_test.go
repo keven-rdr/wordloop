@@ -82,8 +82,8 @@ func TestPlanCreatesReceptiveCardsOnlyForPublishedItemsAndIsStable(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(pack.Cards) != 5 || pack.NewLimit != 6 {
-		t.Fatalf("aluno: so os 5 itens publicados (30 min = 6 novas): %d cartoes, limite %d", len(pack.Cards), pack.NewLimit)
+	if len(pack.Cards) != 5 || pack.NewLimit != 26 {
+		t.Fatalf("aluno: so os 5 itens publicados (30 min = 26 novas): %d cartoes, limite %d", len(pack.Cards), pack.NewLimit)
 	}
 	for _, c := range pack.Cards {
 		if c.Content.Term == "" || c.Content.Gloss == "" || c.Card.Direction != domain.Receptive || len(c.Options) == 0 {
@@ -116,8 +116,15 @@ func TestPlanCreatesReceptiveCardsOnlyForPublishedItemsAndIsStable(t *testing.T)
 func TestAdminAlsoGetsDraftItems(t *testing.T) {
 	f := setup(t, true)
 	pack, err := f.plan.Run(context.Background(), app.PlanRequest{Minutes: 60})
-	if err != nil || len(pack.Cards) != 8 {
-		t.Fatalf("admin: ate o teto de 8 novas, incluindo rascunhos: %d %v", len(pack.Cards), err)
+	if err != nil || len(pack.Cards) != 45 {
+		t.Fatalf("admin: ate o teto de 45 novas, incluindo rascunhos: %d %v", len(pack.Cards), err)
+	}
+	seen := map[uuid.UUID]bool{}
+	for _, c := range pack.Cards {
+		if seen[c.Card.ItemID] {
+			t.Fatalf("item repetido no pacote (licao + desafio): %s", c.Content.Term)
+		}
+		seen[c.Card.ItemID] = true
 	}
 }
 
