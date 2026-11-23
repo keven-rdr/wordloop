@@ -7,6 +7,7 @@ import {
   type ErrorKind,
   type Outcome,
   requeue,
+  type SuggestedDifficulty,
   suggestDifficulty,
 } from '../domain/answer';
 
@@ -17,7 +18,9 @@ export type Checked = Readonly<{
   chosenItemId?: string;
   hintUsed: boolean;
   answeredAt: number;
-  suggested: Difficulty;
+  suggested: SuggestedDifficulty;
+  // Primeiro contato com a palavra (cartão novo de escolher, 1ª tentativa na sessão, sem dica): pode "Já sabia".
+  firstSight?: boolean;
 }>;
 
 export type SessionState = Readonly<{
@@ -47,6 +50,11 @@ function outcomeOf(card: StudyCard, action: CheckAction): Outcome {
   return checkTyped(card.term, action.answer ?? '');
 }
 
+function isFirstSight(state: SessionState, card: StudyCard): boolean {
+  const triedBefore = state.reviews.some((review) => review.card_id === card.id);
+  return card.state === 'new' && card.exercise === 'choose' && !state.hintUsed && !triedBefore;
+}
+
 function check(state: SessionState, action: CheckAction): SessionState {
   const card = state.queue[0];
   if (!card || state.checked) return state;
@@ -59,6 +67,7 @@ function check(state: SessionState, action: CheckAction): SessionState {
     hintUsed: state.hintUsed,
     answeredAt: action.now,
     suggested,
+    firstSight: isFirstSight(state, card),
   };
   return { ...state, checked };
 }

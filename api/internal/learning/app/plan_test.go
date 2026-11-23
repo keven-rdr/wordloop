@@ -3,6 +3,7 @@ package app_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -28,6 +29,15 @@ func words(terms ...string) []learningtest.Item {
 	return items
 }
 
+// many cria n itens com termos e traducoes distintos.
+func many(n int) []learningtest.Item {
+	items := make([]learningtest.Item, 0, n)
+	for i := 0; i < n; i++ {
+		items = append(items, learningtest.Item{ID: uuid.New(), Content: domain.Content{Term: fmt.Sprintf("w%d", i), Gloss: fmt.Sprintf("g%d", i)}})
+	}
+	return items
+}
+
 func store(terms ...string) *learningtest.Store { return learningtest.New(words(terms...)...) }
 
 func planner(s *learningtest.Store, who domain.Viewer) app.PlanSession {
@@ -46,25 +56,31 @@ func TestPlanRequiresASession(t *testing.T) {
 	}
 }
 
-func TestPlanCreatesTheNextNewCardsInOrderWithContentAndOptions(t *testing.T) {
-	s := store("house", "cat", "dog", "tree", "water")
-	pack, err := planner(s, student).Run(context.Background(), app.PlanRequest{Minutes: 15})
+func TestPlanCreatesTheNextNewCardsWithContentAndOptions(t *testing.T) {
+	s := learningtest.New(many(12)...)
+	pack, err := planner(s, student).Run(context.Background(), app.PlanRequest{Minutes: 5})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pack.NewLimit != 3 || pack.ReviewLimit != 60 || len(pack.Cards) != 3 || len(s.Sessions) != 1 || pack.SessionID != s.Sessions[0] {
-		t.Fatalf("15 minutos: 3 novas e 60 revisoes: %+v", pack)
+	if pack.NewLimit != 9 || pack.ReviewLimit != 20 || len(pack.Cards) != 9 || len(s.Sessions) != 1 || pack.SessionID != s.Sessions[0] {
+		t.Fatalf("5 minutos: 9 novas e 20 revisoes: %d cartoes, %+v", len(pack.Cards), pack)
 	}
-	for i, want := range []string{"house", "cat", "dog"} {
-		c := pack.Cards[i]
-		if c.Content.Term != want || c.Card.Direction != domain.Receptive || c.Card.State.State != srs.StateNew || c.Card.Exercise() != domain.Choose {
+	seen := map[uuid.UUID]bool{}
+	for i, c := range pack.Cards {
+		if c.Card.Direction != domain.Receptive || c.Card.State.State != srs.StateNew || c.Card.Exercise() != domain.Choose || seen[c.Card.ItemID] {
 			t.Errorf("carta %d: %+v", i, c)
 		}
+		seen[c.Card.ItemID] = true
 		if len(c.Options) != 4 || !contains(c.Options, c.Card.ItemID) {
 			t.Errorf("a pergunta de escolher tem a resposta certa e 3 distratores: %+v", c.Options)
 		}
 	}
-	if !pack.ExpiresAt.After(now) || len(s.Cards) != 3 {
+	for _, it := range s.Items[:9] { // as 9 primeiras da ordem de estudo (o duble ignora a semente)
+		if !seen[it.ID] {
+			t.Errorf("faltou %s, que vem antes na ordem de estudo", it.Content.Term)
+		}
+	}
+	if !pack.ExpiresAt.After(now) || len(s.Cards) != 9 {
 		t.Errorf("validade e cartoes criados: %v %d", pack.ExpiresAt, len(s.Cards))
 	}
 }
@@ -76,26 +92,6 @@ func contains(opts []domain.Option, item uuid.UUID) bool {
 		}
 	}
 	return false
-}
-
-func TestPlanIsStableAndDoesNotDuplicateUnansweredCards(t *testing.T) {
-	s := store("house", "cat", "dog", "tree")
-	p := planner(s, student)
-	first, _ := p.Run(context.Background(), app.PlanRequest{Minutes: 15})
-	second, err := p.Run(context.Background(), app.PlanRequest{Minutes: 15})
-	if err != nil || len(s.Cards) != 3 || len(second.Cards) != 3 {
-		t.Fatalf("o segundo plano reaproveita os cartoes ainda nao respondidos: %d cartoes %v", len(s.Cards), err)
-	}
-	for i := range first.Cards {
-		if first.Cards[i].Card.ID != second.Cards[i].Card.ID {
-			t.Errorf("carta %d trocou de id", i)
-		}
-		for j := range first.Cards[i].Options {
-			if first.Cards[i].Options[j].ItemID != second.Cards[i].Options[j].ItemID {
-				t.Errorf("a ordem das alternativas muda entre planos (carta %d)", i)
-			}
-		}
-	}
 }
 
 func TestPlanModes(t *testing.T) {
@@ -146,35 +142,38 @@ func addDue(s *learningtest.Store, item uuid.UUID, stability float64, reviewedDa
 	return c
 }
 
-func TestPlanOrdersDueCardsByLowestRetrievabilityAndCapsThem(t *testing.T) {
-	s := store("house", "cat", "dog")
-	fresh := addDue(s, s.Items[0].ID, 5, 6, 1)   // revisado ha 6 dias com S=5: R mais alta
-	stale := addDue(s, s.Items[1].ID, 2, 20, 18) // revisado ha 20 dias com S=2: R baixissima
-	mid := addDue(s, s.Items[2].ID, 4, 9, 5)
+// Com mais vencidas do que cabem (5 minutos = 20 revisoes), ficam as de menor retencao; a de R mais alta sai.
+func TestPlanKeepsTheLowestRetrievabilityDueCardsWithinTheBudget(t *testing.T) {
+	s := learningtest.New(many(21)...)
+	fresh := addDue(s, s.Items[0].ID, 5, 6, 1) // revisado ha 6 dias com S=5: R mais alta
+	for _, it := range s.Items[1:] {
+		addDue(s, it.ID, 2, 20, 18) // revisados ha 20 dias com S=2: R baixissima
+	}
 	pack, err := planner(s, student).Run(context.Background(), app.PlanRequest{Minutes: 5, Mode: domain.ModeReview})
-	if err != nil || len(pack.Cards) != 3 {
+	if err != nil || len(pack.Cards) != 20 {
 		t.Fatalf("revisoes: %d %v", len(pack.Cards), err)
 	}
-	got := []uuid.UUID{pack.Cards[0].Card.ID, pack.Cards[1].Card.ID, pack.Cards[2].Card.ID}
-	if got[0] != stale.ID || got[1] != mid.ID || got[2] != fresh.ID {
-		t.Errorf("a menor retencao vem primeiro: %v", got)
-	}
-	if pack.Cards[0].Mastery <= 0 || pack.Cards[0].Mastery >= 1 {
-		t.Errorf("dominio entre 0 e 1: %v", pack.Cards[0].Mastery)
+	for _, c := range pack.Cards {
+		if c.Card.ID == fresh.ID {
+			t.Error("a revisao de R mais alta fica para depois")
+		}
+		if c.Mastery <= 0 || c.Mastery >= 1 {
+			t.Errorf("dominio entre 0 e 1: %v", c.Mastery)
+		}
 	}
 }
 
-func TestPlanLimitsReviewsToTheTimeBudgetAndStopsNewWordsOnAvalanche(t *testing.T) {
+func TestPlanLimitsReviewsToTheTimeBudgetAndHalvesNewWordsOnAvalanche(t *testing.T) {
 	s := learningtest.New(words("house")...)
 	for i := 0; i < 50; i++ { // 5 minutos = 20 revisoes; 50 vencidas > 2 x 20: avalanche
 		addDue(s, uuid.New(), 2, 10, 5)
 	}
 	pack, _ := planner(s, student).Run(context.Background(), app.PlanRequest{Minutes: 5})
-	if pack.ReviewLimit != 20 || pack.NewLimit != 0 {
-		t.Fatalf("sem novas na avalanche: %+v", pack)
+	if pack.ReviewLimit != 20 || pack.NewLimit != 4 {
+		t.Fatalf("na avalanche as novas caem pela metade (9 -> 4): %+v", pack)
 	}
-	// as vencidas que nao tem item no catalogo ficam de fora do pacote (conteudo indisponivel)
-	if len(pack.Cards) != 0 {
+	// as vencidas que nao tem item no catalogo ficam de fora do pacote (conteudo indisponivel); sobra a nova
+	if len(pack.Cards) != 1 || pack.Cards[0].Content.Term != "house" {
 		t.Errorf("cartoes sem conteudo nao entram: %d", len(pack.Cards))
 	}
 }
@@ -201,15 +200,36 @@ func TestPlanCreatesTheProductiveCardOnlyAfterTheReceptiveIsStrongAndOldEnough(t
 	}
 }
 
+// Os produtivos tem cota propria: nao tiram a vaga das palavras novas.
+func TestPlanProductiveCardsDoNotTakeTheNewWordsSlots(t *testing.T) {
+	s := learningtest.New(many(30)...)
+	for _, it := range s.Items[:10] {
+		addDue(s, it.ID, 10, 3, -5) // receptivos fortes, nao vencidos: viram produtivos
+	}
+	pack, err := planner(s, student).Run(context.Background(), app.PlanRequest{Minutes: 5, Mode: domain.ModeLearn})
+	if err != nil {
+		t.Fatal(err)
+	}
+	count := map[domain.Direction]int{}
+	for _, c := range pack.Cards {
+		count[c.Card.Direction]++
+	}
+	if count[domain.Receptive] != 9 || count[domain.Productive] != 5 {
+		t.Errorf("5 minutos: 9 novas e 5 produtivos: %+v", count)
+	}
+}
+
 func TestPlanRejectsBadInputAndPropagatesFailures(t *testing.T) {
 	p := planner(store("house"), student)
-	if _, err := p.Run(context.Background(), app.PlanRequest{Minutes: 7}); !errors.Is(err, domain.ErrInvalidMinutes) {
-		t.Errorf("minutos invalidos: %v", err)
+	for _, m := range []int{4, 241} {
+		if _, err := p.Run(context.Background(), app.PlanRequest{Minutes: m}); !errors.Is(err, domain.ErrInvalidMinutes) {
+			t.Errorf("minutos invalidos (%d): %v", m, err)
+		}
 	}
 	if _, err := p.Run(context.Background(), app.PlanRequest{Minutes: 5, Mode: "tudo"}); !errors.Is(err, domain.ErrInvalidMode) {
 		t.Errorf("modo invalido: %v", err)
 	}
-	for _, method := range []string{"Settings", "DueCards", "NewItems", "ProductiveItems", "CreateCard", "CreateSession", "Contents", "Distractors"} {
+	for _, method := range []string{"Settings", "DueCards", "NewItems", "StretchItems", "ProductiveItems", "CreateCard", "CreateSession", "Contents", "Distractors"} {
 		s := store("house", "cat")
 		addDue(s, s.Items[0].ID, 10, 3, 1) // garante que ProductiveItems/DueCards sao usados
 		s.FailOn = method

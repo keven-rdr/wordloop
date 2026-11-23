@@ -82,8 +82,8 @@ func TestPlanCreatesReceptiveCardsOnlyForPublishedItemsAndIsStable(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(pack.Cards) != 5 || pack.NewLimit != 6 {
-		t.Fatalf("aluno: so os 5 itens publicados (30 min = 6 novas): %d cartoes, limite %d", len(pack.Cards), pack.NewLimit)
+	if len(pack.Cards) != 5 || pack.NewLimit != 26 {
+		t.Fatalf("aluno: so os 5 itens publicados (30 min = 26 novas): %d cartoes, limite %d", len(pack.Cards), pack.NewLimit)
 	}
 	for _, c := range pack.Cards {
 		if c.Content.Term == "" || c.Content.Gloss == "" || c.Card.Direction != domain.Receptive || len(c.Options) == 0 {
@@ -116,8 +116,15 @@ func TestPlanCreatesReceptiveCardsOnlyForPublishedItemsAndIsStable(t *testing.T)
 func TestAdminAlsoGetsDraftItems(t *testing.T) {
 	f := setup(t, true)
 	pack, err := f.plan.Run(context.Background(), app.PlanRequest{Minutes: 60})
-	if err != nil || len(pack.Cards) != 8 {
-		t.Fatalf("admin: ate o teto de 8 novas, incluindo rascunhos: %d %v", len(pack.Cards), err)
+	if err != nil || len(pack.Cards) != 45 {
+		t.Fatalf("admin: ate o teto de 45 novas, incluindo rascunhos: %d %v", len(pack.Cards), err)
+	}
+	seen := map[uuid.UUID]bool{}
+	for _, c := range pack.Cards {
+		if seen[c.Card.ItemID] {
+			t.Fatalf("item repetido no pacote (licao + desafio): %s", c.Content.Term)
+		}
+		seen[c.Card.ItemID] = true
 	}
 }
 
@@ -187,11 +194,23 @@ func TestOutOfOrderAnswerReplaysTheLogFromTheDatabase(t *testing.T) {
 	}
 }
 
+// cardFor e o cartao do pacote com o termo dado.
+func cardFor(t *testing.T, pack domain.Pack, term string) domain.Card {
+	t.Helper()
+	for _, c := range pack.Cards {
+		if c.Content.Term == term {
+			return c.Card
+		}
+	}
+	t.Fatalf("o pacote nao tem %q", term)
+	return domain.Card{}
+}
+
 func TestProductiveCardAppearsAfterTheReceptiveGetsStrong(t *testing.T) {
 	f := setup(t, false)
 	ctx := context.Background()
 	pack, _ := f.plan.Run(ctx, app.PlanRequest{Minutes: 15})
-	card := pack.Cards[0].Card
+	card := cardFor(t, pack, "house") // o pacote vem sorteado: o teste digita "house", entao escolhe esse cartao
 	// forca um receptivo forte e revisado ha 3 dias
 	if _, err := f.pool.Exec(ctx, `UPDATE card SET state = 'review', stability = 10, reps = 4, last_review_at = $2, due_at = $3 WHERE id = $1`,
 		card.ID, now.Add(-72*time.Hour), now.Add(7*24*time.Hour)); err != nil {

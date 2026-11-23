@@ -67,18 +67,18 @@ func (u PlanSession) plan(ctx context.Context, tx Tx, v domain.Viewer, req PlanR
 	if err != nil {
 		return domain.Pack{}, err
 	}
-	cards := u.byLowestR(due, now)[:min(len(due), limits.Reviews)]
-	fresh, err := u.newCards(ctx, tx, v, limits.New, now)
+	id := u.NewID() // tambem e a semente da sessao: ordem, palavras novas e distratores mudam a cada sessao
+	reviews := u.byLowestR(due, now)[:min(len(due), limits.Reviews)]
+	fresh, err := u.newCards(ctx, tx, v, limits, now, id)
 	if err != nil {
 		return domain.Pack{}, err
 	}
-	cards = append(cards, fresh...)
-	id := u.NewID()
+	cards := domain.Mix(reviews, fresh, id)
 	expires := domain.Expiry(now)
 	if err := tx.CreateSession(ctx, id, v.UserID, req.Mode, req.Minutes, now, expires); err != nil {
 		return domain.Pack{}, err
 	}
-	packed, err := u.fill(ctx, tx, v, cards, req.Locale)
+	packed, err := u.fill(ctx, tx, v, cards, req.Locale, id)
 	if err != nil {
 		return domain.Pack{}, err
 	}
@@ -109,29 +109,51 @@ func (u PlanSession) byLowestR(cards []domain.Card, now time.Time) []domain.Card
 	return cards
 }
 
-// newCards cria os cartoes novos da sessao: primeiro os produtivos que ja podem nascer, depois os receptivos.
-func (u PlanSession) newCards(ctx context.Context, tx Tx, v domain.Viewer, limit int, now time.Time) ([]domain.Card, error) {
-	if limit == 0 {
-		return nil, nil
-	}
-	var out []domain.Card
-	productive, err := tx.ProductiveItems(ctx, v.UserID, domain.ProductiveFrom, domain.ProductiveFromSentence, now.Add(-24*time.Hour), limit)
-	if err != nil {
-		return nil, err
-	}
-	for _, item := range productive {
-		c, err := tx.CreateCard(ctx, v.UserID, item, domain.Productive, now)
+// newCards cria os cartoes novos da sessao: os produtivos que ja podem nascer (cota propria) e as palavras novas
+// (da licao atual e algumas de desafio, de licoes adiante).
+func (u PlanSession) newCards(ctx context.Context, tx Tx, v domain.Viewer, l domain.Limits, now time.Time, seed uuid.UUID) ([]domain.Card, error) {
+	var productive []uuid.UUID
+	if l.Productive > 0 {
+		var err error
+		productive, err = tx.ProductiveItems(ctx, v.UserID, domain.ProductiveFrom, domain.ProductiveFromSentence, now.Add(-24*time.Hour), l.Productive)
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, c)
 	}
-	items, err := tx.NewItems(ctx, v.UserID, v.SeesDrafts(), limit-len(out))
+	fresh, err := u.newItems(ctx, tx, v, l.New, seed)
 	if err != nil {
 		return nil, err
 	}
+	out, err := u.create(ctx, tx, v.UserID, productive, domain.Productive, now)
+	if err != nil {
+		return nil, err
+	}
+	receptive, err := u.create(ctx, tx, v.UserID, fresh, domain.Receptive, now)
+	return append(out, receptive...), err
+}
+
+// newItems escolhe as n palavras novas: as da licao atual em ordem sorteada e 1 em 5 de desafio.
+func (u PlanSession) newItems(ctx context.Context, tx Tx, v domain.Viewer, n int, seed uuid.UUID) ([]uuid.UUID, error) {
+	if n == 0 {
+		return nil, nil
+	}
+	main, err := tx.NewItems(ctx, v.UserID, v.SeesDrafts(), seed, n)
+	if err != nil {
+		return nil, err
+	}
+	var stretch []uuid.UUID
+	if k := domain.StretchCount(n); k > 0 {
+		if stretch, err = tx.StretchItems(ctx, v.UserID, v.SeesDrafts(), seed, k); err != nil {
+			return nil, err
+		}
+	}
+	return domain.PickNew(main, stretch, n), nil
+}
+
+func (u PlanSession) create(ctx context.Context, tx Tx, user uuid.UUID, items []uuid.UUID, dir domain.Direction, now time.Time) ([]domain.Card, error) {
+	out := make([]domain.Card, 0, len(items))
 	for _, item := range items {
-		c, err := tx.CreateCard(ctx, v.UserID, item, domain.Receptive, now)
+		c, err := tx.CreateCard(ctx, user, item, dir, now)
 		if err != nil {
 			return nil, err
 		}

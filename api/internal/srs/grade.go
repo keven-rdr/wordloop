@@ -17,6 +17,7 @@ func (g Grade) Lapse() bool { return g == Again }
 //   - errou: Again; mas "foi distracao" ou erro de digitacao vale Hard sem lapso;
 //   - acertou: a dificuldade dificil/media/facil vira Hard/Good/Easy;
 //   - Easy so em exercicio de producao (em reconhecimento conta como Good);
+//   - "ja sabia" (DifficultyKnown) vale Easy e manda a palavra para longe (veja GradeOn);
 //   - dica, explicacao ou imagem vistas antes de responder limitam a nota a Hard.
 func (r Review) Grade() (Grade, error) {
 	if !r.Correct {
@@ -31,6 +32,26 @@ func (r Review) Grade() (Grade, error) {
 	}
 	return g, nil
 }
+
+// GradeOn e a nota da resposta dada ao cartao c. "Ja sabia" so vale no primeiro contato com a palavra (cartao novo),
+// no reconhecimento, com acerto e sem ajuda (dica, explicacao, imagem): e o sinal explicito de "essa eu ja conhecia",
+// nao uma autoavaliacao. Num cartao que ja teve resposta (sessao retomada, outro aparelho) vale como "facil"; no
+// exercicio de producao ou com ajuda e invalido.
+func (r Review) GradeOn(c CardState) (Grade, error) {
+	if !r.Known() || !r.Correct {
+		return r.Grade()
+	}
+	if r.Production || r.Hint || r.Explained || r.ImageBefore {
+		return 0, ErrInvalidReview
+	}
+	if !c.IsNew() {
+		r.Difficulty = DifficultyEasy
+	}
+	return r.Grade()
+}
+
+// Known diz se a pessoa marcou "ja sabia".
+func (r Review) Known() bool { return r.Difficulty == DifficultyKnown }
 
 func (r Review) wrongGrade() Grade {
 	if r.ErrorKind == ErrorSlip || r.Typo {
@@ -50,6 +71,8 @@ func (r Review) rightGrade() (Grade, error) {
 			return Easy, nil
 		}
 		return Good, nil
+	case DifficultyKnown:
+		return Easy, nil
 	}
 	return 0, ErrInvalidReview
 }

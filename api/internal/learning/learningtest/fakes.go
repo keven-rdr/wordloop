@@ -50,6 +50,7 @@ type Store struct {
 	Sessions []uuid.UUID
 	FailOn   string // nome do metodo que deve falhar (para testar o erro)
 	Related  map[uuid.UUID]uuid.UUID
+	Stretch  []uuid.UUID // o que StretchItems devolve (as palavras de desafio), se ainda novas
 }
 
 var _ app.Repository = (*Store)(nil)
@@ -132,7 +133,8 @@ func (t *tx) hasCard(item uuid.UUID, dir domain.Direction) (*domain.Card, bool) 
 	return nil, false
 }
 
-func (t *tx) NewItems(_ context.Context, _ uuid.UUID, drafts bool, limit int) ([]uuid.UUID, error) {
+// NewItems ignora a semente: os testes de app dependem da ordem dos itens.
+func (t *tx) NewItems(_ context.Context, _ uuid.UUID, drafts bool, _ uuid.UUID, limit int) ([]uuid.UUID, error) {
 	var out []uuid.UUID
 	for _, it := range t.s.Items {
 		c, has := t.hasCard(it.ID, domain.Receptive)
@@ -141,6 +143,16 @@ func (t *tx) NewItems(_ context.Context, _ uuid.UUID, drafts bool, limit int) ([
 		}
 	}
 	return out, t.fail("NewItems")
+}
+
+func (t *tx) StretchItems(_ context.Context, _ uuid.UUID, _ bool, _ uuid.UUID, limit int) ([]uuid.UUID, error) {
+	var out []uuid.UUID
+	for _, id := range t.s.Stretch {
+		if c, has := t.hasCard(id, domain.Receptive); (!has || c.State.State == srs.StateNew) && len(out) < limit {
+			out = append(out, id)
+		}
+	}
+	return out, t.fail("StretchItems")
 }
 
 func (t *tx) ProductiveItems(_ context.Context, _ uuid.UUID, minS, minSentenceS float64, before time.Time, limit int) ([]uuid.UUID, error) {
@@ -189,7 +201,7 @@ func (t *tx) Contents(_ context.Context, items []uuid.UUID, _ string, drafts boo
 	return out, t.fail("Contents")
 }
 
-func (t *tx) Distractors(_ context.Context, item uuid.UUID, _ string, drafts bool, n int) ([]domain.Option, error) {
+func (t *tx) Distractors(_ context.Context, item uuid.UUID, _ string, drafts bool, _ uuid.UUID, n int) ([]domain.Option, error) {
 	var out []domain.Option
 	for _, it := range t.s.Items {
 		if it.ID != item && t.visible(it, drafts) && len(out) < n && t.s.Related[item] != it.ID {

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { StudyCard } from '../../../api/generated/types.gen';
-import { DIFFICULTIES, type Difficulty, ERROR_KINDS, type ErrorKind } from '../domain/answer';
+import { type Difficulty, difficultiesFor, ERROR_KINDS, type ErrorKind } from '../domain/answer';
 import { asksDifficulty, type Checked } from './sessionReducer';
 
 const LETTERS = ['a', 'b', 'c', 'd'];
@@ -50,14 +50,15 @@ function afterCheck(key: string, checked: Checked): KeyAction | undefined {
   if (!ask) return key === 'enter' ? { do: 'grade', grade: {} } : undefined;
   if (ask === 'difficulty') {
     if (key === 'enter') return { do: 'grade', grade: { difficulty: checked.suggested } };
-    const difficulty = DIFFICULTIES[slot];
+    const difficulty = difficultiesFor(checked.firstSight === true)[slot];
     return difficulty ? { do: 'grade', grade: { difficulty } } : undefined;
   }
   const errorKind = ERROR_KINDS[slot];
   return errorKind ? { do: 'grade', grade: { errorKind } } : undefined;
 }
 
-// Atalhos (desktop): A–D ou 1–4 escolhem, Enter verifica/continua, 1–3 respondem a dificuldade; na montagem da frase,
+// Atalhos (desktop): A–D ou 1–4 escolhem, Enter verifica/continua, 1–3 respondem a dificuldade (4 = "Já sabia" no
+// primeiro contato); na montagem da frase,
 // 1–9 colocam peças e Backspace desfaz.
 export function keyAction(key: string, context: Context): KeyAction | undefined {
   const lower = key.toLowerCase();

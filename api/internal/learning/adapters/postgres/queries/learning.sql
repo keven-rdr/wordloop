@@ -15,6 +15,7 @@ ORDER BY due_at, id
 LIMIT @row_limit::int;
 
 -- Proximos itens para estudar: sem cartao receptivo, ou com um cartao que nasceu num plano e nunca foi respondido.
+-- Segue as licoes (palavras antes das frases), mas dentro da licao a ordem muda a cada sessao (semente).
 -- name: NewItems :many
 SELECT i.id
 FROM item i
@@ -25,7 +26,27 @@ LEFT JOIN card cd ON cd.user_id = @user_id AND cd.item_id = i.id AND cd.directio
 WHERE (i.status = 'published' OR @include_drafts::boolean)
   AND i.kind IN ('word', 'expression', 'phrasal_verb', 'sentence')
   AND (cd.id IS NULL OR cd.state = 'new')
-ORDER BY c.slug, u.position NULLS LAST, (i.kind = 'sentence'), i.cefr NULLS LAST, lower(term.body), i.id
+ORDER BY c.slug, u.position NULLS LAST, (i.kind = 'sentence'), hashtext(i.id::text || @seed::text), i.id
+LIMIT @row_limit::int;
+
+-- Desafio: palavras ainda nao vistas de licoes adiante (duas ou mais depois da primeira licao pendente), sorteadas
+-- pela semente da sessao. Deixa a sessao mais dificil sem pular a ordem das licoes.
+-- name: StretchItems :many
+WITH pending AS (
+    SELECT i.id, u.position, min(u.position) OVER (PARTITION BY i.course_id) AS frontier
+    FROM item i
+    JOIN course c ON c.id = i.course_id AND (c.status = 'published' OR @include_drafts::boolean)
+    JOIN item_text term ON term.item_id = i.id AND term.role = 'term' AND term.position = 0 AND term.locale = c.studied_locale
+    JOIN unit u ON u.id = i.unit_id
+    LEFT JOIN card cd ON cd.user_id = @user_id AND cd.item_id = i.id AND cd.direction = 'receptive'
+    WHERE (i.status = 'published' OR @include_drafts::boolean)
+      AND i.kind IN ('word', 'expression', 'phrasal_verb')
+      AND (cd.id IS NULL OR cd.state = 'new')
+)
+SELECT p.id
+FROM pending p
+WHERE p.position > p.frontier + 1
+ORDER BY hashtext(p.id::text || @seed::text), p.id
 LIMIT @row_limit::int;
 
 -- O produtivo nasce quando o receptivo chega a S minimo, ha pelo menos um dia (nunca na mesma sessao). Frases
@@ -69,7 +90,7 @@ LEFT JOIN item_text exg ON exg.item_id = i.id AND exg.role = 'example_gloss' AND
 WHERE i.id = ANY(@ids::uuid[]) AND (i.status = 'published' OR @include_drafts::boolean);
 
 -- Distratores: mesmo curso e tipo, mesma unidade primeiro, sem ligacao semantica com o item e sem a mesma traducao
--- (senao haveria duas respostas certas). A ordem e fixa por par, sem acaso.
+-- (senao haveria duas respostas certas). A ordem muda com a semente da sessao: outros distratores a cada sessao.
 -- name: Distractors :many
 SELECT o.id AS item_id, COALESCE(og.body, ogd.body, '')::text AS gloss
 FROM item me
@@ -85,7 +106,7 @@ WHERE me.id = @item_id
   AND lower(COALESCE(og.body, ogd.body, '')) <> lower(COALESCE(mg.body, mgd.body, ''))
   AND NOT EXISTS (SELECT 1 FROM item_relation r
                    WHERE (r.from_item_id = me.id AND r.to_item_id = o.id) OR (r.from_item_id = o.id AND r.to_item_id = me.id))
-ORDER BY (o.unit_id IS NOT DISTINCT FROM me.unit_id) DESC, hashtext(o.id::text || me.id::text), o.id
+ORDER BY (o.unit_id IS NOT DISTINCT FROM me.unit_id) DESC, hashtext(o.id::text || me.id::text || @seed::text), o.id
 LIMIT @row_limit::int;
 
 -- name: CreateSession :exec

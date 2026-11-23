@@ -58,6 +58,7 @@
     "hard": "Hard",
     "medium": "Medium",
     "easy": "Easy",
+    "known": "Knew it",
     "suggested": "suggested"
   },
   "errorKind": {

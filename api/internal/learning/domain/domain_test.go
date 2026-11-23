@@ -42,14 +42,16 @@ func TestPlanLimits(t *testing.T) {
 		due     int
 		want    Limits
 	}{
-		{5, ModeMixed, 0, Limits{Reviews: 20, New: 1}},
-		{15, ModeMixed, 10, Limits{Reviews: 60, New: 3}},
-		{30, ModeMixed, 0, Limits{Reviews: 120, New: 6}},
-		{60, ModeMixed, 0, Limits{Reviews: 240, New: 8}}, // 60/5 = 12, mas o teto inicial e 8
+		{5, ModeMixed, 0, Limits{Reviews: 20, New: 9, Productive: 5}},
+		{10, ModeMixed, 0, Limits{Reviews: 40, New: 13, Productive: 7}},
+		{15, ModeMixed, 10, Limits{Reviews: 60, New: 16, Productive: 8}},
+		{30, ModeMixed, 0, Limits{Reviews: 120, New: 26, Productive: 13}},
+		{60, ModeMixed, 0, Limits{Reviews: 240, New: 45, Productive: 23}},
+		{240, ModeMixed, 0, Limits{Reviews: 960, New: 45, Productive: 23}}, // teto de 45 novas
 		{15, ModeReview, 0, Limits{Reviews: 60, New: 0}},
-		{15, ModeLearn, 0, Limits{Reviews: 0, New: 3}},
-		{15, ModeMixed, 121, Limits{Reviews: 60, New: 0}}, // fila acima de 2x o limite: sem novas
-		{15, ModeMixed, 120, Limits{Reviews: 60, New: 3}}, // exatamente 2x ainda entra
+		{15, ModeLearn, 0, Limits{Reviews: 0, New: 16, Productive: 8}},
+		{15, ModeMixed, 121, Limits{Reviews: 60, New: 8, Productive: 4}},  // fila acima de 2x o limite: metade das novas
+		{15, ModeMixed, 120, Limits{Reviews: 60, New: 16, Productive: 8}}, // exatamente 2x ainda entra inteiro
 	}
 	for _, c := range cases {
 		got, err := PlanLimits(c.minutes, c.mode, c.due)
@@ -57,8 +59,10 @@ func TestPlanLimits(t *testing.T) {
 			t.Errorf("PlanLimits(%d, %s, %d) = %+v %v, esperava %+v", c.minutes, c.mode, c.due, got, err, c.want)
 		}
 	}
-	if _, err := PlanLimits(10, ModeMixed, 0); !errors.Is(err, ErrInvalidMinutes) {
-		t.Errorf("10 minutos: %v", err)
+	for _, m := range []int{0, 4, 241} {
+		if _, err := PlanLimits(m, ModeMixed, 0); !errors.Is(err, ErrInvalidMinutes) {
+			t.Errorf("%d minutos: %v", m, err)
+		}
 	}
 	if _, err := PlanLimits(15, "tudo", 0); !errors.Is(err, ErrInvalidMode) {
 		t.Errorf("modo invalido: %v", err)

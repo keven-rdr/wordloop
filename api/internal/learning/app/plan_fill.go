@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"hash/fnv"
 	"sort"
 
 	"github.com/google/uuid"
@@ -12,7 +11,7 @@ import (
 )
 
 // fill junta cada cartao ao conteudo do catalogo; cartoes cujo item nao esta mais visivel ficam de fora.
-func (u PlanSession) fill(ctx context.Context, tx Tx, v domain.Viewer, cards []domain.Card, locale string) ([]domain.PackCard, error) {
+func (u PlanSession) fill(ctx context.Context, tx Tx, v domain.Viewer, cards []domain.Card, locale string, seed uuid.UUID) ([]domain.PackCard, error) {
 	ids := make([]uuid.UUID, 0, len(cards))
 	for _, c := range cards {
 		ids = append(ids, c.ItemID)
@@ -33,7 +32,7 @@ func (u PlanSession) fill(ctx context.Context, tx Tx, v domain.Viewer, cards []d
 			pc.Tiles = domain.Tiles(c, content.Term)
 		}
 		if pc.Exercise == domain.Choose {
-			if pc.Options, err = u.options(ctx, tx, v, c, content, locale); err != nil {
+			if pc.Options, err = u.options(ctx, tx, v, c, content, locale, seed); err != nil {
 				return nil, err
 			}
 		}
@@ -42,20 +41,15 @@ func (u PlanSession) fill(ctx context.Context, tx Tx, v domain.Viewer, cards []d
 	return out, nil
 }
 
-// options monta a resposta certa e os distratores, numa ordem fixa por cartao (o mesmo cartao, a mesma ordem).
-func (u PlanSession) options(ctx context.Context, tx Tx, v domain.Viewer, c domain.Card, content domain.Content, locale string) ([]domain.Option, error) {
-	others, err := tx.Distractors(ctx, c.ItemID, locale, v.SeesDrafts(), optionCount)
+// options monta a resposta certa e os distratores, numa ordem que muda a cada sessao (a resposta nao fica sempre no
+// mesmo lugar) e e a mesma dentro da sessao.
+func (u PlanSession) options(ctx context.Context, tx Tx, v domain.Viewer, c domain.Card, content domain.Content, locale string, seed uuid.UUID) ([]domain.Option, error) {
+	others, err := tx.Distractors(ctx, c.ItemID, locale, v.SeesDrafts(), seed, optionCount)
 	if err != nil {
 		return nil, err
 	}
 	opts := append([]domain.Option{{ItemID: c.ItemID, Gloss: content.Gloss}}, others...)
-	sort.Slice(opts, func(i, j int) bool { return orderKey(c.ID, opts[i].ItemID) < orderKey(c.ID, opts[j].ItemID) })
+	key := func(o domain.Option) uint32 { return domain.SeedKey(seed, c.ID, o.ItemID) }
+	sort.Slice(opts, func(i, j int) bool { return key(opts[i]) < key(opts[j]) })
 	return opts, nil
-}
-
-func orderKey(card, item uuid.UUID) uint32 {
-	h := fnv.New32a()
-	_, _ = h.Write(card[:])
-	_, _ = h.Write(item[:])
-	return h.Sum32()
 }

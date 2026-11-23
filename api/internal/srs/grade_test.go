@@ -34,6 +34,42 @@ func TestGradeMapping(t *testing.T) {
 	}
 }
 
+// "Ja sabia" vale Easy no primeiro contato, no reconhecimento, com acerto e sem ajuda; ja respondido, vale facil.
+func TestGradeOnAcceptsKnownOnlyOnTheFirstUnaidedRecognition(t *testing.T) {
+	known := Review{Correct: true, Difficulty: DifficultyKnown}
+	if g, err := known.GradeOn(CardState{State: StateNew}); err != nil || g != Easy {
+		t.Errorf("ja sabia no cartao novo: %v %v", g, err)
+	}
+	if g, err := known.GradeOn(CardState{}); err != nil || g != Easy {
+		t.Errorf("cartao sem estado tambem e novo: %v %v", g, err)
+	}
+	invalid := map[string]struct {
+		c CardState
+		r Review
+	}{
+		"producao":   {CardState{State: StateNew}, Review{Correct: true, Difficulty: DifficultyKnown, Production: true}},
+		"com dica":   {CardState{State: StateNew}, Review{Correct: true, Difficulty: DifficultyKnown, Hint: true}},
+		"com imagem": {CardState{State: StateNew}, Review{Correct: true, Difficulty: DifficultyKnown, ImageBefore: true}},
+		"explicado":  {CardState{State: StateNew}, Review{Correct: true, Difficulty: DifficultyKnown, Explained: true}},
+	}
+	for name, c := range invalid {
+		if _, err := c.r.GradeOn(c.c); !errors.Is(err, ErrInvalidReview) {
+			t.Errorf("%s: esperava ErrInvalidReview, veio %v", name, err)
+		}
+	}
+	for _, st := range []State{StateReview, StateLearning, StateRelearning} { // ja respondido: vale como facil
+		if g, err := known.GradeOn(CardState{State: st}); err != nil || g != Good {
+			t.Errorf("ja sabia em %s vale facil (Good no reconhecimento): %v %v", st, g, err)
+		}
+	}
+	if g, err := (Review{Difficulty: DifficultyKnown}).GradeOn(CardState{State: StateNew}); err != nil || g != Again {
+		t.Errorf("errou: a dificuldade nao vale: %v %v", g, err)
+	}
+	if g, err := (Review{Correct: true, Difficulty: DifficultyEasy}).GradeOn(CardState{State: StateNew}); err != nil || g != Good {
+		t.Errorf("facil no reconhecimento continua Good, mesmo no cartao novo: %v %v", g, err)
+	}
+}
+
 func TestGradeRejectsMissingDifficultyOnCorrect(t *testing.T) {
 	for _, d := range []Difficulty{"", "otimo"} {
 		if _, err := (Review{Correct: true, Difficulty: d}).Grade(); !errors.Is(err, ErrInvalidReview) {
