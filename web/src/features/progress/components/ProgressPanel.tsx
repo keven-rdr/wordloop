@@ -23,9 +23,9 @@ export function ProgressPanel() {
   const neverStudied = data.streak === 0 && data.known_words === 0 && heatmap.data.days.length === 0;
   return (
     <section aria-label={t('title')} {...stylex.props(p.panel)}>
-      <h2 {...stylex.props(p.heading)}>{t('title')}</h2>
+      <h2 {...stylex.props(p.heading, p.full)}>{t('title')}</h2>
       {neverStudied ? (
-        <p {...stylex.props(p.muted)}>{t('empty')}</p>
+        <p {...stylex.props(p.muted, p.full)}>{t('empty')}</p>
       ) : (
         <>
           <StreakCard dashboard={data} />

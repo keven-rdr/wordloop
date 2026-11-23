@@ -6,8 +6,7 @@ import { ProgressPanel } from '../features/progress/components/ProgressPanel';
 // O Início junta os atalhos (auth), a meta (goals) e o painel de progresso (progress): as features não se importam.
 export const Route = createFileRoute('/_app/')({
   component: () => (
-    <HomePage>
-      <GoalCard />
+    <HomePage goal={<GoalCard />}>
       <ProgressPanel />
     </HomePage>
   ),

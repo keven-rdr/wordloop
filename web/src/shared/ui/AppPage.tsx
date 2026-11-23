@@ -1,11 +1,14 @@
 import * as stylex from '@stylexjs/stylex';
 import type { ReactNode } from 'react';
-import { space } from './tokens/color.stylex';
+import { size, space } from './tokens/color.stylex';
+import { bp } from './tokens/media.stylex';
 
 const styles = stylex.create({
-  page: { padding: space.md, maxWidth: '48rem', marginInline: 'auto', width: '100%', boxSizing: 'border-box' },
+  page: { padding: space.md, maxWidth: size.page, marginInline: 'auto', width: '100%', boxSizing: 'border-box' },
+  wide: { maxWidth: { default: size.page, [bp.desktop]: size.wide } },
 });
 
-export function AppPage({ children }: Readonly<{ children: ReactNode }>) {
-  return <div {...stylex.props(styles.page)}>{children}</div>;
+// `wide`: no desktop a página pode ir até `size.wide` (no mobile e no tablet nada muda).
+export function AppPage({ children, wide }: Readonly<{ children: ReactNode; wide?: boolean }>) {
+  return <div {...stylex.props(styles.page, wide && styles.wide)}>{children}</div>;
 }

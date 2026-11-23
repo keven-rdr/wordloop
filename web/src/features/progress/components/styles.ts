@@ -1,9 +1,18 @@
 import * as stylex from '@stylexjs/stylex';
 import { color, radius, space } from '../../../shared/ui/tokens/color.stylex';
+import { bp } from '../../../shared/ui/tokens/media.stylex';
 
-// Cartões do painel: simples, de baixo contraste de borda, em coluna única (mobile-first).
+// Cartões do painel: simples, de baixo contraste de borda, em coluna única (mobile-first); no desktop, duas colunas.
 export const p = stylex.create({
-  panel: { display: 'flex', flexDirection: 'column', gap: space.md },
+  panel: {
+    display: { default: 'flex', [bp.desktop]: 'grid' },
+    flexDirection: 'column',
+    gridTemplateColumns: { default: 'none', [bp.desktop]: 'repeat(2, minmax(0, 1fr))' },
+    alignItems: { default: 'stretch', [bp.desktop]: 'start' },
+    gap: space.md,
+  },
+  // Título e convite ocupam a linha toda da grade (no mobile não muda nada).
+  full: { gridColumn: '1 / -1' },
   card: {
     display: 'flex',
     flexDirection: 'column',

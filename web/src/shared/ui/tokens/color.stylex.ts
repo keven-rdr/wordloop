@@ -32,4 +32,11 @@ export const size = stylex.defineVars({
   touch: '48px',
   card: '420px',
   nav: '4.5rem',
+  // Larguras do conteúdo: coluna de leitura (mobile e estudo), página comum e página larga (desktop).
+  content: '40rem',
+  page: '48rem',
+  wide: '72rem',
+  // Menu lateral (desktop) e a marca do item ativo nos menus.
+  sideNav: '15rem',
+  marker: '3px',
 });
