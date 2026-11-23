@@ -1,9 +1,8 @@
 import * as stylex from '@stylexjs/stylex';
-import { Link } from '@tanstack/react-router';
 import { brand } from '../tokens/brand.stylex';
 import { color, radius, size, space } from '../tokens/color.stylex';
 import { bp } from '../tokens/media.stylex';
-import { NavGlyph, useNavState } from './items';
+import { MainNav } from './MainNav';
 import type { NavItem } from './types';
 
 const styles = stylex.create({
@@ -72,30 +71,15 @@ const styles = stylex.create({
 type Props = Readonly<{ items: readonly NavItem[]; name: string; pictureUrl?: string }>;
 
 // Menu lateral fixo (desktop): os mesmos itens do menu inferior, com rótulo ao lado do ícone.
-export function SideNav({ items, name, pictureUrl }: Props) {
-  const nav = useNavState(items);
-  return (
-    <nav aria-label={nav.title} {...stylex.props(styles.bar)}>
-      <p {...stylex.props(styles.brand)}>{nav.appName}</p>
-      <ul {...stylex.props(styles.list)}>
-        {items.map((item) => {
-          const active = nav.active(item);
-          return (
-            <li key={item.id}>
-              <Link
-                to={item.to}
-                aria-current={active ? 'page' : undefined}
-                {...stylex.props(styles.item, active && styles.active)}
-              >
-                <span {...stylex.props(styles.slot)}>
-                  <NavGlyph item={item} name={name} pictureUrl={pictureUrl} {...stylex.props(styles.icon)} />
-                </span>
-                {nav.label(item)}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
-  );
+export function SideNav(props: Props) {
+  const look = {
+    bar: styles.bar,
+    brand: styles.brand,
+    list: styles.list,
+    item: styles.item,
+    active: styles.active,
+    slot: styles.slot,
+    icon: styles.icon,
+  };
+  return <MainNav {...props} look={look} />;
 }
