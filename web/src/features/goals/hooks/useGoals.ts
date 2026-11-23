@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import {
   getCurrentGoalOptions,
   getCurrentGoalQueryKey,
@@ -17,16 +17,17 @@ export const useCurrentGoal = () => useQuery(getCurrentGoalOptions());
 // As 3 sugestões (leve, constante, intensa).
 export const useSuggestions = () => useQuery(getGoalSuggestionsOptions());
 
-// Abre um ciclo novo e volta ao Início, já com a meta nova no cache.
+// Abre a meta da semana e volta ao Início (ou a Estudar, se a meta foi pedida antes de estudar), já com a meta no cache.
 export function useStartGoal() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const search: { from?: string } = useSearch({ strict: false });
   const mutation = useMutation({
     ...startGoalMutation(),
     networkMode: 'always', // sem rede falha na hora e mostra o aviso, em vez de ficar pausada
     onSuccess: (current) => {
       queryClient.setQueryData(getCurrentGoalQueryKey(), current);
-      void navigate({ to: '/' });
+      void navigate({ to: search.from === 'study' ? '/study' : '/' });
     },
   });
   const start = (body: GoalRequest) => mutation.mutate({ headers: csrfHeaders, body });

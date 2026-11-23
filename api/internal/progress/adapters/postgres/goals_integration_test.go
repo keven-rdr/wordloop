@@ -14,7 +14,7 @@ import (
 
 func (f fixture) goal(t *testing.T, user uuid.UUID, start string, minutes, days int) domain.Goal {
 	t.Helper()
-	g, err := domain.NewGoal(day(start), domain.GoalRequest{Preset: domain.Steady, DailyMinutes: minutes, DaysTarget: days, Weekdays: []int{1, 2, 3, 4, 5}})
+	g, err := domain.NewGoal(day(start), domain.GoalRequest{Preset: domain.Steady, DailyMinutes: minutes, DaysTarget: days})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +43,7 @@ func (f fixture) statuses(t *testing.T, user uuid.UUID) []string {
 	return out
 }
 
-func TestGoalIsSavedAndReadBackWithItsWeekdays(t *testing.T) {
+func TestGoalIsSavedAndReadBackForTheWholeWeek(t *testing.T) {
 	f := setup(t)
 	ctx := context.Background()
 	if _, found, err := f.store.CurrentGoal(ctx, f.user); err != nil || found {
@@ -55,7 +55,7 @@ func TestGoalIsSavedAndReadBackWithItsWeekdays(t *testing.T) {
 		t.Fatalf("meta: %+v %v %v", got, found, err)
 	}
 	if got.PeriodStart != day("2026-10-19") || got.PeriodEnd != day("2026-10-25") || got.Preset != domain.Steady ||
-		got.DailyMinutes != 10 || got.DaysTarget != 5 || !slices.Equal(got.Weekdays, []int{1, 2, 3, 4, 5}) {
+		got.DailyMinutes != 10 || got.DaysTarget != 5 || !slices.Equal(got.Weekdays, []int{1, 2, 3, 4, 5, 6, 7}) {
 		t.Errorf("campos: %+v", got)
 	}
 }
@@ -95,6 +95,25 @@ func TestTheNewestStartWinsEvenIfItWasWrittenFirst(t *testing.T) {
 	got, found, err := f.store.CurrentGoal(context.Background(), f.user)
 	if err != nil || !found || got.DailyMinutes != 20 {
 		t.Errorf("o mais recente por inicio: %+v %v %v", got, found, err)
+	}
+}
+
+// Um ciclo antigo de 7 dias corridos (aberto numa quarta) comeca depois da segunda da meta nova: a meta da semana
+// o fecha e passa a ser a atual.
+func TestTheWeeklyGoalReplacesAnOldRollingCycleThatStartedLaterInTheWeek(t *testing.T) {
+	f := setup(t)
+	f.exec(t, `INSERT INTO goal_cycle (user_id, period_start, period_end, daily_minutes, days_target, status)
+		VALUES ($1, '2026-10-21', '2026-10-27', 10, 3, 'active')`, f.user)
+	weekly := f.goal(t, f.user, "2026-10-23", 30, 7) // sexta: a meta vale de segunda (19) a domingo (25)
+	if weekly.PeriodStart != day("2026-10-19") {
+		t.Fatalf("a meta comeca na segunda: %+v", weekly)
+	}
+	if got := f.statuses(t, f.user); !slices.Equal(got, []string{"active", "closed"}) {
+		t.Errorf("o ciclo antigo fecha: %v", got)
+	}
+	got, _, err := f.store.CurrentGoal(context.Background(), f.user)
+	if err != nil || got.ID != weekly.ID || got.DailyMinutes != 30 {
+		t.Errorf("vale a meta da semana: %+v %v", got, err)
 	}
 }
 

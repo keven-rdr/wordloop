@@ -1,16 +1,14 @@
 import type { Goal, GoalProgress, GoalRequest, GoalSuggestion } from '../../../api/generated/types.gen';
 
-// Limites da meta (os mesmos do servidor, que é quem decide).
+// Limites da meta (os mesmos do servidor, que é quem decide). A meta é o tempo de cada dia, de segunda a domingo.
 export const MIN_MINUTES = 1;
 export const MAX_MINUTES = 240;
-export const MIN_DAYS = 1;
-export const MAX_DAYS = 7;
 
 // A escolha na tela: uma das 3 sugestões ou "personalizar".
 export type Choice = GoalSuggestion['preset'] | 'custom';
 
-// O que a pessoa digitou em "personalizar" (campos de texto: podem estar vazios ou errados).
-export type Custom = Readonly<{ minutes: string; days: string }>;
+// O que a pessoa digitou em "personalizar" (campo de texto: pode estar vazio ou errado).
+export type Custom = Readonly<{ minutes: string }>;
 
 const inRange = (text: string, min: number, max: number) => {
   const value = Number(text);
@@ -18,9 +16,8 @@ const inRange = (text: string, min: number, max: number) => {
 };
 
 export const minutesOf = (custom: Custom) => inRange(custom.minutes, MIN_MINUTES, MAX_MINUTES);
-export const daysOf = (custom: Custom) => inRange(custom.days, MIN_DAYS, MAX_DAYS);
 
-// O pedido da escolha atual; vazio se "personalizar" tem campo inválido.
+// O pedido da escolha atual; vazio se "personalizar" tem campo inválido. Vale todos os dias da semana.
 export function requestOf(
   choice: Choice,
   suggestions: readonly GoalSuggestion[],
@@ -28,22 +25,14 @@ export function requestOf(
 ): GoalRequest | undefined {
   if (choice === 'custom') {
     const minutes = minutesOf(custom);
-    const days = daysOf(custom);
-    return minutes === undefined || days === undefined
-      ? undefined
-      : { preset: 'custom', daily_minutes: minutes, days_target: days };
+    return minutes === undefined ? undefined : { preset: 'custom', daily_minutes: minutes };
   }
   const picked = suggestions.find((suggestion) => suggestion.preset === choice);
-  return picked && { preset: picked.preset, daily_minutes: picked.daily_minutes, days_target: picked.days_target };
+  return picked && { preset: picked.preset, daily_minutes: picked.daily_minutes };
 }
 
-// "Manter a mesma": os mesmos valores da meta que acabou, para um ciclo novo.
-export const keepRequest = (goal: Goal): GoalRequest => ({
-  preset: goal.preset,
-  daily_minutes: goal.daily_minutes,
-  days_target: goal.days_target,
-  weekdays: goal.weekdays,
-});
+// "Manter a mesma": o mesmo tempo por dia da meta que acabou, para a semana nova.
+export const keepRequest = (goal: Goal): GoalRequest => ({ preset: goal.preset, daily_minutes: goal.daily_minutes });
 
 // Quanto da barra está cheio (0 a 100).
 export const percentOf = (done: number, total: number) =>

@@ -2,16 +2,7 @@ import * as stylex from '@stylexjs/stylex';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Goal, GoalSuggestion, GoalSuggestions } from '../../../api/generated/types.gen';
-import {
-  type Choice,
-  type Custom,
-  daysOf,
-  keepRequest,
-  MAX_DAYS,
-  MAX_MINUTES,
-  minutesOf,
-  requestOf,
-} from '../domain/choice';
+import { type Choice, type Custom, keepRequest, MAX_MINUTES, minutesOf, requestOf } from '../domain/choice';
 import { useStartGoal } from '../hooks/useGoals';
 import { c, g } from './styles';
 
@@ -20,7 +11,6 @@ const names = { light: 'preset.light', steady: 'preset.steady', intense: 'preset
 function CustomFields({ custom, onChange }: Readonly<{ custom: Custom; onChange: (next: Custom) => void }>) {
   const { t } = useTranslation('goals');
   const minutesOk = minutesOf(custom) !== undefined;
-  const daysOk = daysOf(custom) !== undefined;
   return (
     <div {...stylex.props(c.fields)}>
       <label {...stylex.props(c.field)}>
@@ -34,18 +24,6 @@ function CustomFields({ custom, onChange }: Readonly<{ custom: Custom; onChange:
           {...stylex.props(c.input)}
         />
         {!minutesOk && <span {...stylex.props(g.error)}>{t('choose.errorMinutes', { max: MAX_MINUTES })}</span>}
-      </label>
-      <label {...stylex.props(c.field)}>
-        <span {...stylex.props(c.label)}>{t('choose.days')}</span>
-        <input
-          type="text"
-          inputMode="numeric"
-          value={custom.days}
-          aria-invalid={!daysOk}
-          onChange={(event) => onChange({ ...custom, days: event.target.value })}
-          {...stylex.props(c.input)}
-        />
-        {!daysOk && <span {...stylex.props(g.error)}>{t('choose.errorDays', { max: MAX_DAYS })}</span>}
       </label>
     </div>
   );
@@ -74,9 +52,7 @@ function OptionList({ suggestions, choice, onChoose }: OptionsProps) {
           />
           <span {...stylex.props(c.optionText)}>
             <span {...stylex.props(c.optionName)}>{t(names[item.preset])}</span>
-            <span {...stylex.props(g.text)}>
-              {t('choose.detail', { minutes: item.daily_minutes, count: item.days_target })}
-            </span>
+            <span {...stylex.props(g.text)}>{t('choose.detail', { minutes: item.daily_minutes })}</span>
           </span>
         </label>
       ))}
@@ -100,7 +76,7 @@ type Props = Readonly<{ suggestions: GoalSuggestions; goal?: Goal; ended: boolea
 export function GoalChooser({ suggestions, goal, ended }: Props) {
   const { t } = useTranslation('goals');
   const [choice, setChoice] = useState<Choice>('steady');
-  const [custom, setCustom] = useState<Custom>({ minutes: '10', days: '3' });
+  const [custom, setCustom] = useState<Custom>({ minutes: '30' });
   const { start, saving, failed } = useStartGoal();
   const request = requestOf(choice, suggestions.suggestions, custom);
   return (

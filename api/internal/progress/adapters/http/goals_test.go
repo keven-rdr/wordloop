@@ -45,7 +45,7 @@ func TestStartAndReadTheCurrentGoal(t *testing.T) {
 		t.Fatalf("sem meta: %d %s", empty.Code, empty.Body.String())
 	}
 
-	rec := send(h, http.MethodPost, "/api/v1/goals", `{"preset":"steady","daily_minutes":10,"days_target":5,"weekdays":[1,2,3,4,5]}`, true)
+	rec := send(h, http.MethodPost, "/api/v1/goals", `{"preset":"steady","daily_minutes":10}`, true)
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
 	}
@@ -54,10 +54,10 @@ func TestStartAndReadTheCurrentGoal(t *testing.T) {
 		t.Fatalf("corpo: %v %s", err, rec.Body.String())
 	}
 	if cur.Goal.PeriodStart.Format("2006-01-02") != "2026-10-19" || cur.Goal.PeriodEnd.Format("2006-01-02") != "2026-10-25" ||
-		*cur.Goal.Preset != gen.GoalPresetSteady || len(cur.Goal.Weekdays) != 5 {
+		*cur.Goal.Preset != gen.GoalPresetSteady || len(cur.Goal.Weekdays) != 7 || cur.Goal.DaysTarget != 7 {
 		t.Errorf("meta: %+v", cur.Goal)
 	}
-	if p := cur.Progress; p.DaysStudied != 1 || p.MinutesStudied != 2 || p.NewWords != 2 || p.MinutesGoal != 50 || p.DaysLeft != 6 || p.Met {
+	if p := cur.Progress; p.DaysStudied != 1 || p.MinutesStudied != 2 || p.NewWords != 2 || p.MinutesGoal != 70 || p.DaysLeft != 6 || p.Met {
 		t.Errorf("progresso: %+v", p)
 	}
 
@@ -77,8 +77,7 @@ func TestStartGoalRejectsBadRequests(t *testing.T) {
 		"sem o cabecalho de protecao": {`{"daily_minutes":10,"days_target":5}`, false},
 		"minutos demais":              {`{"daily_minutes":999,"days_target":5}`, true},
 		"dias demais":                 {`{"daily_minutes":10,"days_target":9}`, true},
-		"dia da semana invalido":      {`{"daily_minutes":10,"days_target":1,"weekdays":[0]}`, true},
-		"menos dias permitidos":       {`{"daily_minutes":10,"days_target":4,"weekdays":[1,2]}`, true},
+		"menos de 1 minuto":           {`{"daily_minutes":0}`, true},
 		"preset desconhecido":         {`{"preset":"turbo","daily_minutes":10,"days_target":3}`, true},
 		"corpo ilegivel":              {`nao e json`, true},
 		"faltam campos":               {`{}`, true},

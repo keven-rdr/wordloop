@@ -6,10 +6,15 @@ import { savePack } from '../offline/queue';
 import { csrfHeaders } from './csrf';
 import { packKey } from './summary';
 
-export const PLAN_MINUTES = [5, 15, 30, 60] as const;
-export type PlanMinutes = (typeof PLAN_MINUTES)[number];
+// Limites do tempo de uma sessão (os do servidor). A meta aceita a partir de 1 minuto; a sessão mínima é de 5.
+export const MIN_SESSION_MINUTES = 5;
+export const MAX_SESSION_MINUTES = 240;
 
-// "Quanto tempo hoje?": pede o pacote ao servidor, guarda na memória e abre a sessão.
+// O tempo da sessão de hoje: o da meta da semana, dentro dos limites da sessão.
+export const sessionMinutes = (dailyMinutes: number) =>
+  Math.min(MAX_SESSION_MINUTES, Math.max(MIN_SESSION_MINUTES, Math.round(dailyMinutes)));
+
+// Pede o pacote ao servidor com o tempo da meta, guarda na memória e abre a sessão.
 export function useStudyPlan() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -24,11 +29,11 @@ export function useStudyPlan() {
       void navigate({ to: '/study/session/$id', params: { id: pack.session_id } });
     },
   });
-  const start = (minutes: PlanMinutes) =>
+  const start = (dailyMinutes: number) =>
     mutation.mutate({
       headers: csrfHeaders,
       body: {
-        minutes,
+        minutes: sessionMinutes(dailyMinutes),
         mode: 'mixed',
         tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
         locale: i18n.language === 'en-US' ? 'en-US' : 'pt-BR',

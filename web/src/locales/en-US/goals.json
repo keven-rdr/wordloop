@@ -1,6 +1,6 @@
 {
   "title": "Goals",
-  "subtitle": "How much do you want to study each week?",
+  "subtitle": "How much time a day do you want to study this week?",
   "failed": "I couldn't load your goals right now.",
   "page": {
     "current": "Your goal",
@@ -47,12 +47,9 @@
     "legend": "Choose a goal",
     "fromHistory": "Suggestions based on your pace over the last 4 weeks.",
     "initial": "Suggestions to get started. They adjust to your pace after a few days of study.",
-    "detail_one": "{{minutes}} min a day, {{count}} day a week",
-    "detail_other": "{{minutes}} min a day, {{count}} days a week",
+    "detail": "{{minutes}} min a day, Monday to Sunday",
     "minutes": "Minutes per day",
-    "days": "Days per week",
     "errorMinutes": "Use 1 to {{max}} minutes",
-    "errorDays": "Use 1 to {{max}} days",
     "start": "Start",
     "keep": "Keep the same",
     "saving": "Saving…",

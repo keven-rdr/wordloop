@@ -3,9 +3,9 @@ import { expect, type Page, test } from '@playwright/test';
 const suggestions = {
   based_on_history: true,
   suggestions: [
-    { preset: 'light', daily_minutes: 5, days_target: 2 },
-    { preset: 'steady', daily_minutes: 10, days_target: 3 },
-    { preset: 'intense', daily_minutes: 20, days_target: 4 },
+    { preset: 'light', daily_minutes: 5, days_target: 7 },
+    { preset: 'steady', daily_minutes: 10, days_target: 7 },
+    { preset: 'intense', daily_minutes: 20, days_target: 7 },
   ],
 };
 const goal = {
@@ -89,7 +89,22 @@ test('sem meta: o cartão do Início leva à escolha, e começar volta ao Iníci
   await expect(page.getByText('0 de 4 dias estudados')).toBeVisible();
   await expect(page.getByText('Faltam 6 dias')).toBeVisible();
   await page.screenshot({ path: 'test-results/goals-home.png', fullPage: true });
-  expect(posts).toEqual([{ preset: 'intense', daily_minutes: 20, days_target: 4 }]);
+  expect(posts).toEqual([{ preset: 'intense', daily_minutes: 20 }]);
+});
+
+test('na segunda (meta da semana acabou), Estudar pede a meta antes e volta com o tempo dela', async ({ page }) => {
+  const posts = await mockApi(page, { goal, ended: true });
+  await page.goto('/study');
+  await page.getByRole('link', { name: 'Escolher a meta da semana' }).click();
+
+  await expect(page).toHaveURL(/\/goals\?from=study$/);
+  await page.getByText('Intensa').click();
+  await page.getByRole('button', { name: 'Começar' }).click();
+
+  await expect(page).toHaveURL(/\/study$/);
+  await expect(page.getByText('Meta de hoje')).toBeVisible();
+  await expect(page.getByText('20 minutos')).toBeVisible();
+  expect(posts).toEqual([{ preset: 'intense', daily_minutes: 20 }]);
 });
 
 test('a tela de metas tem alvos de toque de 48 px e cabe na largura do aparelho', async ({ page }) => {
