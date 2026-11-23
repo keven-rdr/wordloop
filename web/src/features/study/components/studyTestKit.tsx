@@ -31,7 +31,7 @@ export const pack = (cards: unknown[]) => ({
   cards,
   new_limit: 8,
   review_limit: 20,
-  expires_at: '2026-11-19T04:00:00Z',
+  expires_at: '2999-01-01T00:00:00Z', // longe no futuro: o pacote nunca vence durante os testes
 });
 export const accepted = (req: Request) =>
   req
