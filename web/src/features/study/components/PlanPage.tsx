@@ -1,5 +1,5 @@
 import * as stylex from '@stylexjs/stylex';
-import { useQuery } from '@tanstack/react-query';
+import { onlineManager, useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { getCurrentGoalOptions } from '../../../api/generated/@tanstack/react-query.gen';
@@ -61,11 +61,16 @@ function StartToday({ minutes, note }: StartProps) {
 // estuda o mínimo em vez de travar.
 export function PlanPage() {
   const { t, ready } = useTranslation('study');
-  const current = useQuery(getCurrentGoalOptions());
+  // Sem rede, a consulta falha na hora (sem pausar nem repetir) e a tela cai no mínimo, com o aviso de conexão.
+  const current = useQuery({
+    ...getCurrentGoalOptions(),
+    networkMode: 'always',
+    retry: (failures) => onlineManager.isOnline() && failures < 2,
+  });
   if (!ready || current.isPending) return <div aria-busy="true" />;
   return (
     <BrandScreen title={t('title')} subtitle={t('lead')}>
-      <Today current={current.isError ? undefined : current.data} />
+      <Today current={current.data /* numa falha de nova leitura, vale a meta já carregada */} />
     </BrandScreen>
   );
 }

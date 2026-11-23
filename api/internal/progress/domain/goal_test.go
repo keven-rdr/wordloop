@@ -162,7 +162,7 @@ func TestSuggestStaysInsideTheLimitsAndNeverGetsLighterThanLessStudy(t *testing.
 		if s.DailyMinutes > 240 || s.DaysTarget > 7 || s.DailyMinutes < 5 || s.DaysTarget < 1 {
 			t.Errorf("fora dos limites: %+v", s)
 		}
-		if _, err := domain.NewGoal(date("2026-10-19"), domain.GoalRequest{Preset: s.Preset, DailyMinutes: s.DailyMinutes, DaysTarget: s.DaysTarget}); err != nil {
+		if _, err := domain.NewGoal(date("2026-10-19"), domain.GoalRequest(s)); err != nil {
 			t.Errorf("a sugestao tem que ser uma meta valida: %+v %v", s, err)
 		}
 	}
