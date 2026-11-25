@@ -18,7 +18,7 @@ Uma única máquina de estados. **Só avance quando o gate do estado atual passa
 | 4 | **BUILD** | implemente seguindo `docs/guides/new-feature.md`; marque o checklist do documento vivo | checklist do doc em dia |
 | 5 | **VERIFY** | `npm run check`; leia a saída inteira | check **verde**; se falhar, volte a BUILD |
 | 6 | **REVIEW** | `/code-review`; corrija o que for relevante | sem achados abertos |
-| 7 | **PR** | commits Conventional; `gh pr create --base develop` com o template `.github/pull_request_template.md` (Contexto e objetivo / O que foi feito / Decisões relevantes / Como testar; **sem lista de arquivos**) | descrição preenchida; usuário aprovou publicar |
+| 7 | **PR** | commits Conventional; `/wl-push` (push + link da PR preenchido) ou, com o `gh` instalado, `gh pr create --base develop` com o template `.github/pull_request_template.md` (Contexto e objetivo / O que foi feito / Decisões relevantes / Como testar; **sem lista de arquivos**) | descrição preenchida; usuário aprovou publicar |
 | 8 | **DONE** | cole o resultado do `check` e o link da PR | só aqui diga "concluído" |
 
 ## Regras do fluxo
