@@ -2,8 +2,8 @@ import * as stylex from '@stylexjs/stylex';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import type { MyScore } from '../../../api/generated/types.gen';
+import { panel } from '../../../shared/ui/panelStyles';
 import { useScore } from '../hooks/useLeaderboard';
-import { l } from './styles';
 
 // Quanto do nível atual já foi feito (0 a 100).
 export const levelPercent = (s: MyScore) =>
@@ -20,25 +20,16 @@ export function ScoreCard() {
   const s = score.data;
   const missing = Math.max(0, s.next_level - s.total_points);
   return (
-    <section aria-labelledby="score-card" {...stylex.props(l.card)}>
-      <h2 id="score-card" {...stylex.props(l.title)}>
+    <section aria-labelledby="score-card" {...stylex.props(panel.card)}>
+      <h2 id="score-card" {...stylex.props(panel.title)}>
         {t('score.title')}
       </h2>
-      <p {...stylex.props(l.big)}>{t('score.week', { count: s.week_points })}</p>
-      <p {...stylex.props(l.text)}>{t('score.levelLine', { level: s.level, count: s.total_points })}</p>
-      <div
-        role="progressbar"
-        aria-label={t('score.bar')}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={levelPercent(s)}
-        {...stylex.props(l.track)}
-      >
-        <div {...stylex.props(l.fill(levelPercent(s)))} />
-      </div>
-      <p {...stylex.props(l.text)}>{t('score.toNext', { count: missing, next: s.level + 1 })}</p>
-      <p {...stylex.props(l.text)}>{t('score.days', { count: s.week_days_met })}</p>
-      <Link to="/ranking" {...stylex.props(l.action, l.secondary)}>
+      <p {...stylex.props(panel.big)}>{t('score.week', { count: s.week_points })}</p>
+      <p {...stylex.props(panel.text)}>{t('score.levelLine', { level: s.level, count: s.total_points })}</p>
+      <progress aria-label={t('score.bar')} max={100} value={levelPercent(s)} {...stylex.props(panel.progress)} />
+      <p {...stylex.props(panel.text)}>{t('score.toNext', { count: missing, next: s.level + 1 })}</p>
+      <p {...stylex.props(panel.text)}>{t('score.days', { count: s.week_days_met })}</p>
+      <Link to="/ranking" {...stylex.props(panel.action, panel.secondary)}>
         {t('score.see')}
       </Link>
     </section>

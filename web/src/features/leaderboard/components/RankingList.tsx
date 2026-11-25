@@ -1,6 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { useTranslation } from 'react-i18next';
 import type { Leaderboard, LeaderboardEntry } from '../../../api/generated/types.gen';
+import { panel } from '../../../shared/ui/panelStyles';
 import { l } from './styles';
 
 function Row({ entry }: Readonly<{ entry: LeaderboardEntry }>) {
@@ -30,11 +31,11 @@ export function RankingList({ board }: Readonly<{ board: Leaderboard }>) {
         </ol>
       )}
       {board.me && !meListed && (
-        <section aria-label={t('mine')} {...stylex.props(l.section)}>
+        <section aria-label={t('mine')} {...stylex.props(panel.section)}>
           <ul {...stylex.props(l.list)}>
             <Row entry={board.me} />
           </ul>
-          {!board.me.nickname && <p {...stylex.props(l.text)}>{t('hiddenNote')}</p>}
+          {!board.me.nickname && <p {...stylex.props(panel.text)}>{t('hiddenNote')}</p>}
         </section>
       )}
     </>

@@ -1,6 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { useTranslation } from 'react-i18next';
 import type { GoalProgress } from '../../../api/generated/types.gen';
+import { panel } from '../../../shared/ui/panelStyles';
 import { g } from './styles';
 
 function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
@@ -17,11 +18,11 @@ export function Retrospective({ progress }: Readonly<{ progress: GoalProgress }>
   const { t } = useTranslation('goals');
   const text = progress.met ? 'retro.met' : 'retro.missed';
   return (
-    <section aria-labelledby="goal-retro" {...stylex.props(g.card)}>
-      <h2 id="goal-retro" {...stylex.props(g.title)}>
+    <section aria-labelledby="goal-retro" {...stylex.props(panel.card)}>
+      <h2 id="goal-retro" {...stylex.props(panel.title)}>
         {t('page.retro')}
       </h2>
-      <p {...stylex.props(progress.met ? g.good : g.big)}>
+      <p {...stylex.props(progress.met ? panel.good : panel.big)}>
         {t(text, { done: progress.days_studied, count: progress.days_target })}
       </p>
       <ul {...stylex.props(g.stats)}>

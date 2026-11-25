@@ -2,6 +2,7 @@ import * as stylex from '@stylexjs/stylex';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BrandScreen } from '../../../shared/ui/BrandScreen';
+import { panel } from '../../../shared/ui/panelStyles';
 import { type Period, useBoard, useProfile } from '../hooks/useLeaderboard';
 import { JoinRanking } from './JoinRanking';
 import { Podium } from './Podium';
@@ -35,16 +36,12 @@ function Board({ period }: Readonly<{ period: Period }>) {
   const board = useBoard(period);
   if (board.isPending) return <div aria-busy="true" />;
   if (board.isError) {
-    return (
-      <p role="status" {...stylex.props(l.error)}>
-        {t('failed')}
-      </p>
-    );
+    return <output {...stylex.props(panel.status, panel.error)}>{t('failed')}</output>;
   }
   const data = board.data;
   return (
-    <section aria-label={t(`tabs.${period}`)} {...stylex.props(l.section)}>
-      {data.entries.length === 0 && <p {...stylex.props(l.text)}>{t('empty')}</p>}
+    <section aria-label={t(`tabs.${period}`)} {...stylex.props(panel.section)}>
+      {data.entries.length === 0 && <p {...stylex.props(panel.text)}>{t('empty')}</p>}
       {data.entries.length > 0 && <Podium entries={data.entries} />}
       <RankingList board={data} />
     </section>

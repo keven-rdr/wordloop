@@ -104,7 +104,7 @@ describe('cartão de pontos no Início', () => {
     expect(await screen.findByText('120 pontos nesta semana')).toBeTruthy();
     expect(screen.getByText('Faltam 190 pontos para o nível 4')).toBeTruthy();
     expect(screen.getByText('Meta cumprida em 2 de 7 dias')).toBeTruthy();
-    expect(screen.getByRole('progressbar', { name: 'Progresso do nível' }).getAttribute('aria-valuenow')).toBe('5');
+    expect((screen.getByRole('progressbar', { name: 'Progresso do nível' }) as HTMLProgressElement).value).toBe(5);
     fireEvent.click(screen.getByRole('link', { name: 'Ver o ranking' }));
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Ranking' })).toBeTruthy());
   });

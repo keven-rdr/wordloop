@@ -2,9 +2,10 @@ import * as stylex from '@stylexjs/stylex';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Goal, GoalSuggestion, GoalSuggestions } from '../../../api/generated/types.gen';
+import { panel } from '../../../shared/ui/panelStyles';
 import { type Choice, type Custom, keepRequest, MAX_MINUTES, minutesOf, requestOf } from '../domain/choice';
 import { useStartGoal } from '../hooks/useGoals';
-import { c, g } from './styles';
+import { c } from './styles';
 
 const names = { light: 'preset.light', steady: 'preset.steady', intense: 'preset.intense' } as const;
 
@@ -14,16 +15,16 @@ function CustomFields({ custom, onChange }: Readonly<{ custom: Custom; onChange:
   return (
     <div {...stylex.props(c.fields)}>
       <label {...stylex.props(c.field)}>
-        <span {...stylex.props(c.label)}>{t('choose.minutes')}</span>
+        <span {...stylex.props(panel.label)}>{t('choose.minutes')}</span>
         <input
           type="text"
           inputMode="numeric"
           value={custom.minutes}
           aria-invalid={!minutesOk}
           onChange={(event) => onChange({ ...custom, minutes: event.target.value })}
-          {...stylex.props(c.input)}
+          {...stylex.props(panel.input)}
         />
-        {!minutesOk && <span {...stylex.props(g.error)}>{t('choose.errorMinutes', { max: MAX_MINUTES })}</span>}
+        {!minutesOk && <span {...stylex.props(panel.error)}>{t('choose.errorMinutes', { max: MAX_MINUTES })}</span>}
       </label>
     </div>
   );
@@ -52,7 +53,7 @@ function OptionList({ suggestions, choice, onChoose }: OptionsProps) {
           />
           <span {...stylex.props(c.optionText)}>
             <span {...stylex.props(c.optionName)}>{t(names[item.preset])}</span>
-            <span {...stylex.props(g.text)}>{t('choose.detail', { minutes: item.daily_minutes })}</span>
+            <span {...stylex.props(panel.text)}>{t('choose.detail', { minutes: item.daily_minutes })}</span>
           </span>
         </label>
       ))}
@@ -80,12 +81,14 @@ export function GoalChooser({ suggestions, goal, ended }: Props) {
   const { start, saving, failed } = useStartGoal();
   const request = requestOf(choice, suggestions.suggestions, custom);
   return (
-    <div {...stylex.props(g.section)}>
-      <p {...stylex.props(g.text)}>{suggestions.based_on_history ? t('choose.fromHistory') : t('choose.initial')}</p>
+    <div {...stylex.props(panel.section)}>
+      <p {...stylex.props(panel.text)}>
+        {suggestions.based_on_history ? t('choose.fromHistory') : t('choose.initial')}
+      </p>
       <OptionList suggestions={suggestions.suggestions} choice={choice} onChoose={setChoice} />
       {choice === 'custom' && <CustomFields custom={custom} onChange={setCustom} />}
       {failed && (
-        <p role="alert" {...stylex.props(g.error)}>
+        <p role="alert" {...stylex.props(panel.error)}>
           {t('choose.failed')}
         </p>
       )}
@@ -93,7 +96,7 @@ export function GoalChooser({ suggestions, goal, ended }: Props) {
         type="button"
         disabled={!request || saving}
         onClick={() => request && start(request)}
-        {...stylex.props(c.action, c.block)}
+        {...stylex.props(panel.action, c.block)}
       >
         {saving ? t('choose.saving') : t('choose.start')}
       </button>
@@ -102,7 +105,7 @@ export function GoalChooser({ suggestions, goal, ended }: Props) {
           type="button"
           disabled={saving}
           onClick={() => start(keepRequest(goal))}
-          {...stylex.props(c.action, c.secondary, c.block)}
+          {...stylex.props(panel.action, panel.secondary, c.block)}
         >
           {t('choose.keep')}
         </button>

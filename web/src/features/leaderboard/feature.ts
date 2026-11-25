@@ -1,5 +1,5 @@
+import { TrophyIcon } from '../../shared/ui/nav/Icons';
 import type { NavItem } from '../../shared/ui/nav/types';
-import { TrophyIcon } from './components/TrophyIcon';
 
 // Ranking entre Estudar (30) e Palavras (40).
 const nav: readonly NavItem[] = [
