@@ -1,6 +1,7 @@
 package main
 
-// Ligacao dos modulos de quem estuda: estudo (learning), progresso (progress) e os direitos sobre os dados (privacy).
+// Ligacao dos modulos de quem estuda: estudo (learning), progresso (progress), ranking (leaderboard) e os direitos
+// sobre os dados (privacy).
 // Os tres descobrem quem pede pela sessao do modulo de identidade, e os modulos nunca se importam.
 
 import (
@@ -13,6 +14,10 @@ import (
 	identityhttp "github.com/keven-rdr/wordloop/api/internal/identity/adapters/http"
 	identity "github.com/keven-rdr/wordloop/api/internal/identity/app"
 	identitydomain "github.com/keven-rdr/wordloop/api/internal/identity/domain"
+	leaderboardhttp "github.com/keven-rdr/wordloop/api/internal/leaderboard/adapters/http"
+	leaderboardpg "github.com/keven-rdr/wordloop/api/internal/leaderboard/adapters/postgres"
+	leaderboard "github.com/keven-rdr/wordloop/api/internal/leaderboard/app"
+	leaderboarddomain "github.com/keven-rdr/wordloop/api/internal/leaderboard/domain"
 	learninghttp "github.com/keven-rdr/wordloop/api/internal/learning/adapters/http"
 	learningpg "github.com/keven-rdr/wordloop/api/internal/learning/adapters/postgres"
 	learning "github.com/keven-rdr/wordloop/api/internal/learning/app"
@@ -77,6 +82,26 @@ func buildProgress(pool *pgxpool.Pool, who identityhttp.Handler) progresshttp.Ha
 		Heatmap:   progress.GetHeatmap{Identity: identity, Reader: reader},
 		Goals:     progress.GoalService{Identity: identity, Reader: reader, Goals: reader},
 	}
+}
+
+// rankingIdentity descobre quem pergunta pelo ranking.
+type rankingIdentity struct{ who principals }
+
+func (v rankingIdentity) Who(ctx context.Context) (leaderboarddomain.Viewer, error) {
+	p, err := v.who(ctx)
+	if errors.Is(err, identity.ErrNoSession) {
+		return leaderboarddomain.Viewer{}, leaderboard.ErrNoSession
+	}
+	if err != nil {
+		return leaderboarddomain.Viewer{}, err
+	}
+	return leaderboarddomain.Viewer{UserID: p.User.ID}, nil
+}
+
+func buildLeaderboard(pool *pgxpool.Pool, who identityhttp.Handler) leaderboardhttp.Handler {
+	return leaderboardhttp.Handler{Service: leaderboard.Service{
+		Identity: rankingIdentity{who: who.Principal}, Store: leaderboardpg.NewStore(pool),
+	}}
 }
 
 // privacyIdentity descobre quem pede a exportacao ou a exclusao dos dados, e desde quando a sessao esta autenticada.

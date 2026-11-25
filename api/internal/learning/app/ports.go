@@ -49,6 +49,8 @@ type Tx interface {
 	// LockCard trava o cartao da pessoa para atualizar (false se nao existe ou e de outra pessoa).
 	LockCard(ctx context.Context, user, card uuid.UUID) (domain.Card, bool, error)
 	ExpectedTerm(ctx context.Context, item uuid.UUID) (string, error)
+	// ItemLevel e o nivel CEFR do item (vazio se nao tem), para os pontos da resposta.
+	ItemLevel(ctx context.Context, item uuid.UUID) (string, error)
 	// InsertReview grava a linha do log; false se o UUID ja existia (reenvio).
 	InsertReview(ctx context.Context, row domain.LogRow) (bool, error)
 	SaveCard(ctx context.Context, card domain.Card) error

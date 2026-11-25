@@ -135,6 +135,10 @@ func (t *txn) LockCard(ctx context.Context, user, id uuid.UUID) (domain.Card, bo
 	return card(db.DueCardsRow(r)), true, nil
 }
 
+func (t *txn) ItemLevel(ctx context.Context, item uuid.UUID) (string, error) {
+	return t.q.ItemLevel(ctx, item)
+}
+
 func (t *txn) ExpectedTerm(ctx context.Context, item uuid.UUID) (string, error) {
 	return t.q.ExpectedTerm(ctx, item)
 }

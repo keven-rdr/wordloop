@@ -29,9 +29,10 @@ Os 27 primeiros foram gerados por `gen_adrs.py` em 2026-10-06 (**não rode de no
 | 0023 | [Cobertura de vocabulário por texto como métrica de leitura](0023-cobertura-de-vocabulario-por-texto-como-metrica.md) | `fase-2/02-pedagogia-conteudo.md` |
 | 0024 | [Licenças: código MIT e conteúdo CC BY-SA 4.0](0024-licencas-codigo-mit-e-conteudo-cc-by-sa-4-0.md) | `fase-2/02-pedagogia-conteudo.md; fase-4/04-engenharia.md` |
 | 0025 | [Kit de instruções para IA: `AGENTS.md` canônico, hook e skill](0025-kit-de-instrucoes-para-ia-agents-md-canonico-hook.md) | `fase-4/04-engenharia.md; fase-4/kit-ia/` |
-| 0026 | [Experiência: sem XP, ranking nem mascote; sequência por revisão; barra de 4 itens](0026-experiencia-sem-xp-ranking-nem-mascote-sequencia.md) | `fase-5/05-ux-ui-fluxos.md` |
+| 0026 | [Experiência: sem XP, ranking nem mascote; sequência por revisão; barra de 4 itens](0026-experiencia-sem-xp-ranking-nem-mascote-sequencia.md) (revisada em parte pelo 0032) | `fase-5/05-ux-ui-fluxos.md` |
 | 0027 | [TypeScript 7 nativo (`tsc`) com alias TS 6 para as ferramentas](0027-typescript-7-nativo-tsc-com-alias-ts-6-para-as.md) | `sprint-0a/spike-report.md` |
 | 0028 | [Contas próprias sem senha: passkeys, depois Google e GitHub vinculados](0028-contas-proprias-sem-senha-passkeys-depois-google-github.md) (revisada em parte pelo 0029) | `features/2026-10-14-contas-proprias.md` |
 | 0029 | [Senha guardada só como hash Argon2id, ao lado da passkey](0029-senha-como-hash-argon2id-ao-lado-da-passkey.md) | `features/2026-10-16-senha-do-admin.md` |
 | 0030 | [Versão automática por componente, com bump de patch gravado na `develop`](0030-versao-automatica-por-componente-com-bump-na-develop.md) | `ci-cd.md` |
 | 0031 | [Fontes do conteúdo v1: NGSL (vocabulário) e Tatoeba (frases e traduções)](0031-fontes-do-conteudo-v1.md) | `features/2026-11-18-conteudo-e-montar-frases.md` |
+| 0032 | [Gamificação: pontos, nível e pódio com apelido opcional](0032-gamificacao-pontos-nivel-e-podio.md) (revisa em parte o 0026) | `features/2026-11-25-gamificacao.md` |

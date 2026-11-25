@@ -12,6 +12,11 @@ export const color = stylex.defineVars({
   link: { default: '#5B3FC4', '@media (prefers-color-scheme: dark)': '#B9A7F7' },
   success: '#2E9E4F',
   danger: { default: '#C23737', '@media (prefers-color-scheme: dark)': '#FF8A8A' },
+  // Medalhas do pódio (1º, 2º e 3º lugar), iguais nos dois temas; o texto sobre elas é `text` escuro.
+  gold: '#F2C94C',
+  silver: '#C9CED6',
+  bronze: '#D9955B',
+  onMedal: '#1A1530',
 });
 
 export const space = stylex.defineVars({

@@ -1,6 +1,6 @@
 # ADR 0026 — Experiência: sem XP, ranking nem mascote; sequência por revisão; barra de 4 itens
 
-**Status:** aceita (2026-10-06)
+**Status:** aceita (2026-10-06); revisada em parte pelo [ADR 0032](0032-gamificacao-pontos-nivel-e-podio.md) (pontos, nível e pódio)
 
 ## Contexto
 Meta é motivar a voltar e melhorar, não cumprir minutos; sem culpa.

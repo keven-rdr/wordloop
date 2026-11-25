@@ -50,7 +50,7 @@ describe('Menu lateral (desktop)', () => {
     expect(screen.getAllByRole('navigation', { name: 'Menu principal' })).toHaveLength(1);
     expect(within(nav).getByText('wordloop')).toBeInTheDocument();
     const links = within(nav).getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual(['APerfil', 'Início', 'Estudar', 'Palavras']);
+    expect(links.map((link) => link.textContent)).toEqual(['APerfil', 'Início', 'Estudar', 'Ranking', 'Palavras']);
     expect(within(nav).getByRole('link', { name: 'Palavras' })).toHaveAttribute('aria-current', 'page');
   });
 

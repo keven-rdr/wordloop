@@ -14,6 +14,9 @@ func TestExportBringsEverythingOfThePersonAndNoSecret(t *testing.T) {
 	f := setup(t)
 	ana := f.person(t, "Ana", "ana@example.com")
 	f.person(t, "Bia", "bia@example.com") // os dados de outra pessoa nao entram
+	if _, err := f.pool.Exec(context.Background(), `INSERT INTO leaderboard_profile (user_id, nickname, visible) VALUES ($1, 'ana_1', true)`, ana); err != nil {
+		t.Fatal(err)
+	}
 
 	out, err := f.store.Export(context.Background(), ana)
 	if err != nil {
@@ -43,6 +46,10 @@ func TestExportBringsEverythingOfThePersonAndNoSecret(t *testing.T) {
 	var prefs map[string]any
 	if err := json.Unmarshal(data["preferences"], &prefs); err != nil || prefs["theme"] != "dark" {
 		t.Errorf("preferencias: %v %v", prefs, err)
+	}
+	var ranking map[string]any
+	if err := json.Unmarshal(data["ranking"], &ranking); err != nil || ranking["nickname"] != "ana_1" || ranking["visible"] != true {
+		t.Errorf("perfil do ranking: %v %v", ranking, err)
 	}
 	var cards []map[string]any
 	if err := json.Unmarshal(data["cards"], &cards); err != nil || cards[0]["term"] != "house" || cards[0]["item"] != "word|house|noun|1" {

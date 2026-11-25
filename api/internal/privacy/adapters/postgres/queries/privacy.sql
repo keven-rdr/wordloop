@@ -24,8 +24,10 @@ SELECT jsonb_build_object(
         SELECT id, period_start, period_end, preset, daily_minutes, days_target, weekdays, status, created_at
         FROM goal_cycle WHERE user_id = @user_id) g),
     'study_days', (SELECT COALESCE(jsonb_agg(to_jsonb(d) ORDER BY d.local_date), '[]'::jsonb) FROM (
-        SELECT local_date, active_ms, reviews, correct, lapses, new_items, known_lexemes
+        SELECT local_date, active_ms, reviews, correct, lapses, new_items, known_lexemes, points
         FROM study_day WHERE user_id = @user_id) d),
+    'ranking', (SELECT to_jsonb(r) FROM (
+        SELECT nickname, visible, updated_at FROM leaderboard_profile WHERE user_id = @user_id) r),
     'study_sessions', (SELECT COALESCE(jsonb_agg(to_jsonb(x) ORDER BY x.started_at), '[]'::jsonb) FROM (
         SELECT id, mode, planned_minutes, started_at, expires_at
         FROM study_session WHERE user_id = @user_id) x),
@@ -59,7 +61,7 @@ DELETE FROM review_log WHERE user_id = @user_id;
 
 -- name: EraseAccount :execrows
 -- O resto sai por ON DELETE CASCADE: vinculos, passkeys, sessoes, desafios, tokens, preferencias, cartoes,
--- sessoes de estudo, dias de estudo e metas.
+-- sessoes de estudo, dias de estudo, metas e o perfil do ranking.
 DELETE FROM app_user WHERE id = @user_id;
 
 -- name: RecordErasure :exec

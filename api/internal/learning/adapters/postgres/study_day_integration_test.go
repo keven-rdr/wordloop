@@ -43,4 +43,13 @@ func TestSubmitSumsTheAnswerIntoTheStudyDayOnceAndInTheSameTransaction(t *testin
 	if count(t, f.pool, `SELECT count(*) FROM study_day`) != 1 {
 		t.Error("as duas respostas do mesmo dia ficam numa linha so")
 	}
+	// Pontos: o acerto pelo nivel do item mais 2 pelo erro; o reenvio nao soma de novo.
+	var cefr string
+	if err := f.pool.QueryRow(ctx, `SELECT COALESCE(cefr, '') FROM item WHERE id = $1`, card.ItemID).Scan(&cefr); err != nil {
+		t.Fatal(err)
+	}
+	want := domain.ReviewPoints(true, false, cefr) + domain.ReviewPoints(false, false, "")
+	if got := count(t, f.pool, `SELECT points FROM study_day WHERE user_id = $1`, f.user); got != want {
+		t.Errorf("pontos do dia: %d, esperava %d", got, want)
+	}
 }

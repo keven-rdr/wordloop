@@ -30,6 +30,8 @@ type Server struct {
 	Learning Learning
 	// Progress e o modulo de progresso (painel e heatmap); nulo = progresso indisponivel.
 	Progress Progress
+	// Leaderboard e o modulo do ranking (pontos, nivel e podio); nulo = indisponivel.
+	Leaderboard Leaderboard
 	// Privacy e o modulo dos direitos da pessoa sobre os dados (exportar e apagar); nulo = indisponivel.
 	Privacy     Privacy
 	AuthLimiter *ratelimit.Limiter
