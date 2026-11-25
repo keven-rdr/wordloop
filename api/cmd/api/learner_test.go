@@ -11,6 +11,7 @@ import (
 	identityhttp "github.com/keven-rdr/wordloop/api/internal/identity/adapters/http"
 	identity "github.com/keven-rdr/wordloop/api/internal/identity/app"
 	identitydomain "github.com/keven-rdr/wordloop/api/internal/identity/domain"
+	leaderboard "github.com/keven-rdr/wordloop/api/internal/leaderboard/app"
 	learning "github.com/keven-rdr/wordloop/api/internal/learning/app"
 	privacy "github.com/keven-rdr/wordloop/api/internal/privacy/app"
 	progress "github.com/keven-rdr/wordloop/api/internal/progress/app"
@@ -62,6 +63,19 @@ func TestProgressViewersMapTheSessionToWhoAsks(t *testing.T) {
 	}
 }
 
+func TestRankingIdentityMapsTheSessionToWhoAsks(t *testing.T) {
+	got, err := rankingIdentity{who: principal(identitydomain.RoleUser)}.Who(context.Background())
+	if err != nil || got.UserID != someone {
+		t.Errorf("pergunta: %+v %v", got, err)
+	}
+	if _, err := (rankingIdentity{who: failing(identity.ErrNoSession)}).Who(context.Background()); !errors.Is(err, leaderboard.ErrNoSession) {
+		t.Errorf("sem sessao vira o erro do modulo: %v", err)
+	}
+	if _, err := (rankingIdentity{who: failing(errBroken)}).Who(context.Background()); !errors.Is(err, errBroken) {
+		t.Errorf("outro erro passa direto: %v", err)
+	}
+}
+
 func TestPrivacyIdentityCarriesTheRoleAndWhenTheSessionWasAuthenticated(t *testing.T) {
 	got, err := privacyIdentity{who: principal(identitydomain.RoleUser)}.Who(context.Background())
 	if err != nil || got.UserID != someone || got.Admin || !got.AuthenticatedAt.Equal(loggedAt) {
@@ -90,5 +104,8 @@ func TestTheModulesAreWiredToTheirRepositoryAndTheSession(t *testing.T) {
 	}
 	if p := buildPrivacy(nil, who); p.Service.Store == nil || p.Service.Identity == nil {
 		t.Errorf("privacidade: %+v", p)
+	}
+	if r := buildLeaderboard(nil, who); r.Service.Store == nil || r.Service.Identity == nil {
+		t.Errorf("ranking: %+v", r)
 	}
 }

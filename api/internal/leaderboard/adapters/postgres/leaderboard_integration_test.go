@@ -117,6 +117,22 @@ func TestRankingAddsTheGoalBonuses(t *testing.T) {
 	}
 }
 
+// O fuso e o corte vem dos ajustes da pessoa; sem ajustes ainda, UTC sem corte.
+func TestClockReadsTheTimezoneOrFallsBackToUTC(t *testing.T) {
+	f := setup(t)
+	ana, bia := f.person(t, "", false), f.person(t, "", false)
+	f.exec(t, `INSERT INTO user_settings (user_id, tz, day_cutoff_hour) VALUES ($1, 'America/Sao_Paulo', 4)`, ana)
+	if tz, cutoff, err := f.store.Clock(context.Background(), ana); err != nil || tz != "America/Sao_Paulo" || cutoff != 4 {
+		t.Errorf("ajustes da pessoa: %s %d %v", tz, cutoff, err)
+	}
+	if tz, cutoff, err := f.store.Clock(context.Background(), bia); err != nil || tz != "UTC" || cutoff != 0 {
+		t.Errorf("sem ajustes: %s %d %v", tz, cutoff, err)
+	}
+	if p, found, err := f.store.Profile(context.Background(), bia); err != nil || found || p.Nickname != "" {
+		t.Errorf("sem perfil: %+v %v %v", p, found, err)
+	}
+}
+
 func TestProfileIsUniqueIgnoringCaseAndGoesAwayWithTheAccount(t *testing.T) {
 	f := setup(t)
 	ana, bia := f.person(t, "", false), f.person(t, "", false)

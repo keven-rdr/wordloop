@@ -2,6 +2,7 @@ package httpapi_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -70,7 +71,48 @@ func TestLeaderboardEndpoints(t *testing.T) {
 			t.Errorf("%s: %d, esperava %d", body, rec.Code, want)
 		}
 	}
-	if rec := do(server(uuid.Nil), http.MethodGet, "/api/v1/leaderboard", ""); rec.Code != http.StatusUnauthorized {
-		t.Errorf("sem sessao: %d", rec.Code)
+	if rec := do(h, http.MethodGet, "/api/v1/leaderboard/profile", ""); rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"visible":false`) {
+		t.Errorf("perfil: %d %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestLeaderboardEndpointsWithoutASessionAreUnauthorized(t *testing.T) {
+	h := server(uuid.Nil)
+	for _, c := range []struct{ method, path, body string }{
+		{http.MethodGet, "/api/v1/leaderboard", ""},
+		{http.MethodGet, "/api/v1/leaderboard/me", ""},
+		{http.MethodGet, "/api/v1/leaderboard/profile", ""},
+		{http.MethodPut, "/api/v1/leaderboard/profile", `{"nickname":"ana_1","visible":true}`},
+	} {
+		if rec := do(h, c.method, c.path, c.body); rec.Code != http.StatusUnauthorized {
+			t.Errorf("%s %s sem sessao: %d", c.method, c.path, rec.Code)
+		}
+	}
+}
+
+// failing e o banco que sempre falha: toda rota vira 500, sem corpo pela metade.
+type failing struct{ store }
+
+var errDown = errors.New("banco fora")
+
+func (failing) Clock(context.Context, uuid.UUID) (string, int, error) { return "", 0, errDown }
+func (failing) Profile(context.Context, uuid.UUID) (domain.Profile, bool, error) {
+	return domain.Profile{}, false, errDown
+}
+func (failing) SaveProfile(context.Context, uuid.UUID, domain.Profile) (domain.Profile, error) {
+	return domain.Profile{}, errDown
+}
+
+func TestLeaderboardEndpointsTurnStoreFailuresInto500(t *testing.T) {
+	h := api.Handler(api.Server{Leaderboard: httpapi.Handler{Service: app.Service{Identity: who{me}, Store: failing{}}}})
+	for _, c := range []struct{ method, path, body string }{
+		{http.MethodGet, "/api/v1/leaderboard", ""},
+		{http.MethodGet, "/api/v1/leaderboard/me", ""},
+		{http.MethodGet, "/api/v1/leaderboard/profile", ""},
+		{http.MethodPut, "/api/v1/leaderboard/profile", `{"nickname":"ana_1","visible":true}`},
+	} {
+		if rec := do(h, c.method, c.path, c.body); rec.Code != http.StatusInternalServerError {
+			t.Errorf("%s %s com o banco fora: %d", c.method, c.path, rec.Code)
+		}
 	}
 }
