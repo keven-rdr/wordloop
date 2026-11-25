@@ -190,4 +190,5 @@ type LogRow struct {
 	ScheduledDays               float64
 	Scheduler, SchedulerVersion string
 	Production                  bool
+	Level                       string // nivel CEFR do item (pontos); vazio se o item nao tem
 }

@@ -68,6 +68,9 @@ func (u SubmitReviews) commit(ctx context.Context, tx Tx, v domain.Viewer, a dom
 	if err != nil {
 		return rejected(a.ID, domain.ReasonInvalidTime), nil
 	}
+	if row.Level, err = tx.ItemLevel(ctx, d.card.ItemID); err != nil {
+		return domain.Result{}, err
+	}
 	inserted, err := tx.InsertReview(ctx, row)
 	if err != nil {
 		return domain.Result{}, err

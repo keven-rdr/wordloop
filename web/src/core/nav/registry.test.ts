@@ -12,11 +12,11 @@ const item = (id: string, order: number, to: NavItem['to'] = '/study'): NavItem 
 });
 
 describe('registro do menu', () => {
-  it('as features declaram Perfil, Início, Estudar e Palavras, nessa ordem', () => {
-    expect(navItems.map((entry) => entry.id)).toEqual(['profile', 'home', 'study', 'words']);
-    expect(navItems.map((entry) => entry.to)).toEqual(['/settings', '/', '/study', '/words']);
+  it('as features declaram Perfil, Início, Estudar, Ranking e Palavras, nessa ordem', () => {
+    expect(navItems.map((entry) => entry.id)).toEqual(['profile', 'home', 'study', 'ranking', 'words']);
+    expect(navItems.map((entry) => entry.to)).toEqual(['/settings', '/', '/study', '/ranking', '/words']);
     expect(navItems[0]?.icon).toBe('avatar');
-    expect(navItems[3]?.icon).toBe(CardsIcon);
+    expect(navItems[4]?.icon).toBe(CardsIcon);
   });
 
   it('uma feature nova entra no menu só com o próprio feature.ts, na posição de `order`', () => {

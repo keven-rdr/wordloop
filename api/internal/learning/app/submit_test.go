@@ -245,7 +245,7 @@ func TestSubmitRequiresASessionAndAValidBatch(t *testing.T) {
 }
 
 func TestSubmitPropagatesRepositoryFailuresAndRollsBack(t *testing.T) {
-	for _, method := range []string{"LockCard", "ExpectedTerm", "Settings", "InsertReview", "SaveCard", "BumpDay", "CardLog"} {
+	for _, method := range []string{"LockCard", "ExpectedTerm", "Settings", "InsertReview", "ItemLevel", "SaveCard", "BumpDay", "CardLog"} {
 		s := store("house", "cat")
 		c := newCard(s, domain.Productive)
 		// um cartao ja respondido, para a resposta antiga forcar o CardLog (replay)

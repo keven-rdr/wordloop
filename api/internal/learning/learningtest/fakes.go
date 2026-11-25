@@ -50,7 +50,8 @@ type Store struct {
 	Sessions []uuid.UUID
 	FailOn   string // nome do metodo que deve falhar (para testar o erro)
 	Related  map[uuid.UUID]uuid.UUID
-	Stretch  []uuid.UUID // o que StretchItems devolve (as palavras de desafio), se ainda novas
+	Stretch  []uuid.UUID          // o que StretchItems devolve (as palavras de desafio), se ainda novas
+	Levels   map[uuid.UUID]string // nivel CEFR por item (ItemLevel)
 }
 
 var _ app.Repository = (*Store)(nil)
@@ -222,6 +223,11 @@ func (t *tx) LockCard(_ context.Context, _ uuid.UUID, id uuid.UUID) (domain.Card
 		return domain.Card{}, false, t.fail("LockCard")
 	}
 	return *c, true, t.fail("LockCard")
+}
+
+// ItemLevel devolve o nivel guardado em Levels (vazio se nao ha).
+func (t *tx) ItemLevel(_ context.Context, item uuid.UUID) (string, error) {
+	return t.s.Levels[item], t.fail("ItemLevel")
 }
 
 func (t *tx) ExpectedTerm(_ context.Context, item uuid.UUID) (string, error) {

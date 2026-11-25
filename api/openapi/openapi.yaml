@@ -13,6 +13,7 @@ tags:
   - name: catalog
   - name: learning
   - name: progress
+  - name: leaderboard
   - name: privacy
 paths:
   /version:
@@ -137,6 +138,73 @@ paths:
               schema: { $ref: "#/components/schemas/Settings" }
         "400": { description: cabecalho de protecao ausente, fuso desconhecido ou valor fora das opcoes }
         "401": { description: sem sessao valida }
+  /leaderboard:
+    get:
+      tags: [leaderboard]
+      operationId: getLeaderboard
+      description: >
+        O podio do periodo (ADR 0032): semana (de segunda a domingo, a semana da meta, no dia de estudo de quem
+        pergunta) ou geral (desde sempre). Pontos = os das respostas (acerto 10 no reconhecimento ou 15 na producao,
+        vezes o nivel do item; erro 2; teto de 3.000 por dia) + 50 por dia com a meta cumprida + 300 pela semana com
+        os 7 dias cumpridos. So aparece quem participa (apelido visivel); empate divide a posicao. Quem pergunta vem
+        em me mesmo sem participar (sem apelido): a posicao dele e so para ele.
+      parameters:
+        - { name: period, in: query, schema: { type: string, enum: [week, all], default: week } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses:
+        "200":
+          description: as primeiras posicoes e a linha de quem pergunta
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Leaderboard" }
+        "400": { description: periodo ou limite invalido }
+        "401": { description: sem sessao valida }
+  /leaderboard/me:
+    get:
+      tags: [leaderboard]
+      operationId: getMyScore
+      description: Os pontos de quem pergunta (da semana e de sempre), o nivel e os dias da meta cumpridos na semana.
+      responses:
+        "200":
+          description: o resumo de pontos
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MyScore" }
+        "401": { description: sem sessao valida }
+  /leaderboard/profile:
+    get:
+      tags: [leaderboard]
+      operationId: getLeaderboardProfile
+      description: Como quem pergunta aparece no ranking. Sem perfil, vem nickname vazio e visible = false.
+      responses:
+        "200":
+          description: o perfil do ranking
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LeaderboardProfile" }
+        "401": { description: sem sessao valida }
+    put:
+      tags: [leaderboard]
+      operationId: saveLeaderboardProfile
+      description: >
+        Escolhe o apelido (3 a 20 letras sem acento, numeros ou _; unico sem diferenciar maiusculas) e se participa do
+        ranking. O nome do perfil nunca aparece no ranking.
+      parameters:
+        - { $ref: "#/components/parameters/CsrfHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LeaderboardProfile" }
+      responses:
+        "200":
+          description: o perfil gravado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LeaderboardProfile" }
+        "400": { description: cabecalho de protecao ausente ou apelido invalido }
+        "401": { description: sem sessao valida }
+        "409": { description: apelido ja em uso por outra pessoa }
   /me/export:
     get:
       tags: [privacy]
@@ -1025,6 +1093,39 @@ components:
         goal: { $ref: "#/components/schemas/Goal" }
         progress: { $ref: "#/components/schemas/GoalProgress" }
         ended: { type: boolean, description: "o ciclo ja acabou: mostrar a retrospectiva e perguntar a proxima meta" }
+    Leaderboard:
+      type: object
+      required: [period, from, to, entries]
+      properties:
+        period: { type: string, enum: [week, all] }
+        from: { type: string, format: date, description: "primeiro dia do periodo (na semana, a segunda)" }
+        to: { type: string, format: date }
+        entries: { type: array, items: { $ref: "#/components/schemas/LeaderboardEntry" } }
+        me: { $ref: "#/components/schemas/LeaderboardEntry" }
+    LeaderboardEntry:
+      type: object
+      required: [position, points, me]
+      properties:
+        position: { type: integer, minimum: 1 }
+        nickname: { type: string, description: "ausente na linha de quem pergunta e ainda nao participa" }
+        points: { type: integer }
+        me: { type: boolean, description: "e a linha de quem pergunta" }
+    MyScore:
+      type: object
+      required: [week_points, total_points, level, level_floor, next_level, week_days_met]
+      properties:
+        week_points: { type: integer }
+        total_points: { type: integer }
+        level: { type: integer, minimum: 1 }
+        level_floor: { type: integer, description: "pontos em que o nivel atual comecou" }
+        next_level: { type: integer, description: "pontos para o proximo nivel" }
+        week_days_met: { type: integer, minimum: 0, maximum: 7, description: "dias da semana com o tempo da meta cumprido" }
+    LeaderboardProfile:
+      type: object
+      required: [nickname, visible]
+      properties:
+        nickname: { type: string, maxLength: 20 }
+        visible: { type: boolean, description: "participa do ranking (aparece para os outros)" }
     GoalSuggestion:
       type: object
       required: [preset, daily_minutes, days_target]

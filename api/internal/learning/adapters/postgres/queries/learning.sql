@@ -117,6 +117,9 @@ VALUES (@id, @user_id, @mode, @minutes::smallint, @now::timestamptz, @expires::t
 SELECT id, item_id, direction, state, stability, due_at, last_review_at, reps, lapses, since_lapse, scheduler
 FROM card WHERE id = @id AND user_id = @user_id FOR UPDATE;
 
+-- name: ItemLevel :one
+SELECT COALESCE(cefr, '')::text AS cefr FROM item WHERE id = @item_id;
+
 -- name: ExpectedTerm :one
 SELECT term.body
 FROM item i
@@ -154,10 +157,12 @@ ORDER BY answered_at, received_at;
 
 -- name: BumpStudyDay :exec
 -- Soma a resposta no dia (P-01), na mesma transacao do log; known_lexemes e a foto depois desta resposta.
-INSERT INTO study_day (user_id, local_date, active_ms, reviews, correct, lapses, new_items, known_lexemes)
+-- Os pontos param no teto do dia (3.000, domain.DailyPointsCap).
+INSERT INTO study_day (user_id, local_date, active_ms, reviews, correct, lapses, new_items, known_lexemes, points)
 VALUES (@user_id, @local_date, @active_ms, 1, @correct, @lapses, @new_items,
-        (SELECT count(*) FROM user_lexeme_known WHERE user_id = @user_id)::int)
+        (SELECT count(*) FROM user_lexeme_known WHERE user_id = @user_id)::int, LEAST(3000, @points::int))
 ON CONFLICT (user_id, local_date) DO UPDATE SET
+    points        = LEAST(3000, study_day.points + EXCLUDED.points),
     active_ms     = study_day.active_ms + EXCLUDED.active_ms,
     reviews       = study_day.reviews + 1,
     correct       = study_day.correct + EXCLUDED.correct,

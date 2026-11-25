@@ -1,0 +1,48 @@
+{
+  "title": "Ranking",
+  "subtitle": "Points from everyone studying. The week runs Monday to Sunday.",
+  "failed": "I couldn't load the ranking right now.",
+  "empty": "Nobody has scored in this period yet. Study to open the podium!",
+  "position": "#{{position}}",
+  "points_one": "{{count}} point",
+  "points_other": "{{count}} points",
+  "you": "You",
+  "meName": "{{name}} (you)",
+  "list": "Other places",
+  "mine": "Your place",
+  "hiddenNote": "Only you see this row. Choose a nickname below to show up in the ranking.",
+  "tabs": {
+    "label": "Ranking period",
+    "week": "Week",
+    "all": "All time"
+  },
+  "podium": {
+    "label": "Podium"
+  },
+  "join": {
+    "title": "Join the ranking",
+    "text": "Choose a nickname. Your name is never shown to others.",
+    "nickname": "Nickname",
+    "hint": "3 to 20 letters without accents, numbers or _",
+    "visible": "Show me in the ranking",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved!",
+    "taken": "That nickname is already taken. Choose another one.",
+    "invalid": "Use 3 to 20 letters without accents, numbers or _ (no swear words).",
+    "failed": "I couldn't save right now. Try again."
+  },
+  "score": {
+    "title": "Your points",
+    "week_one": "{{count}} point this week",
+    "week_other": "{{count}} points this week",
+    "levelLine_one": "Level {{level}} · {{count}} point in total",
+    "levelLine_other": "Level {{level}} · {{count}} points in total",
+    "bar": "Level progress",
+    "toNext_one": "{{count}} point to level {{next}}",
+    "toNext_other": "{{count}} points to level {{next}}",
+    "days_one": "Goal met on {{count}} of 7 days",
+    "days_other": "Goal met on {{count}} of 7 days",
+    "see": "See the ranking"
+  }
+}

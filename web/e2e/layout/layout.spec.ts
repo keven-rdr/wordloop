@@ -78,7 +78,7 @@ test.describe('mobile (375px)', () => {
       await mockApi(page);
       await page.goto(path);
       await expect(menu(page)).toBeVisible();
-      await expect(menu(page).getByRole('link')).toHaveCount(4);
+      await expect(menu(page).getByRole('link')).toHaveCount(5); // Perfil, Início, Estudar, Ranking e Palavras
       await expect(menu(page).getByText('wordloop')).toHaveCount(0);
       await noHorizontalScroll(page);
     });

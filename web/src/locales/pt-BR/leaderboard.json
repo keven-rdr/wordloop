@@ -1,0 +1,48 @@
+{
+  "title": "Ranking",
+  "subtitle": "Pontos de quem estuda. A semana vai de segunda a domingo.",
+  "failed": "Não consegui carregar o ranking agora.",
+  "empty": "Ninguém pontuou neste período ainda. Estude para abrir o pódio!",
+  "position": "{{position}}º",
+  "points_one": "{{count}} ponto",
+  "points_other": "{{count}} pontos",
+  "you": "Você",
+  "meName": "{{name}} (você)",
+  "list": "Demais posições",
+  "mine": "Sua posição",
+  "hiddenNote": "Só você vê esta linha. Escolha um apelido abaixo para aparecer no ranking.",
+  "tabs": {
+    "label": "Período do ranking",
+    "week": "Semana",
+    "all": "Geral"
+  },
+  "podium": {
+    "label": "Pódio"
+  },
+  "join": {
+    "title": "Participar do ranking",
+    "text": "Escolha um apelido. Seu nome nunca aparece para os outros.",
+    "nickname": "Apelido",
+    "hint": "3 a 20 letras sem acento, números ou _",
+    "visible": "Aparecer no ranking",
+    "save": "Salvar",
+    "saving": "Salvando…",
+    "saved": "Salvo!",
+    "taken": "Esse apelido já está em uso. Escolha outro.",
+    "invalid": "Use de 3 a 20 letras sem acento, números ou _ (sem palavrões).",
+    "failed": "Não consegui salvar agora. Tente de novo."
+  },
+  "score": {
+    "title": "Seus pontos",
+    "week_one": "{{count}} ponto nesta semana",
+    "week_other": "{{count}} pontos nesta semana",
+    "levelLine_one": "Nível {{level}} · {{count}} ponto no total",
+    "levelLine_other": "Nível {{level}} · {{count}} pontos no total",
+    "bar": "Progresso do nível",
+    "toNext_one": "Falta {{count}} ponto para o nível {{next}}",
+    "toNext_other": "Faltam {{count}} pontos para o nível {{next}}",
+    "days_one": "Meta cumprida em {{count}} de 7 dias",
+    "days_other": "Meta cumprida em {{count}} de 7 dias",
+    "see": "Ver o ranking"
+  }
+}

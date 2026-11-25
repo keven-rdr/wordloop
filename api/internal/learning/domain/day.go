@@ -25,14 +25,14 @@ func ValidTZ(tz string) bool {
 
 // DayDelta e o que uma resposta soma no dia de estudo (study_day).
 type DayDelta struct {
-	ActiveMS                  int64
-	Correct, Lapses, NewItems int
+	ActiveMS                          int64
+	Correct, Lapses, NewItems, Points int
 }
 
 // DayDelta resume a resposta para a agregacao diaria: tempo ativo, acerto, lapso (o cartao perdeu forca) e
-// palavra nova (1a revisao do cartao).
+// palavra nova (1a revisao do cartao) e os pontos da resposta (o teto do dia e aplicado ao somar).
 func (r LogRow) DayDelta() DayDelta {
-	d := DayDelta{ActiveMS: int64(r.ResponseMS)}
+	d := DayDelta{ActiveMS: int64(r.ResponseMS), Points: ReviewPoints(r.Correct, r.Production, r.Level)}
 	if r.Correct {
 		d.Correct = 1
 	}

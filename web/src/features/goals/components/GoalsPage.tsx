@@ -2,11 +2,11 @@ import * as stylex from '@stylexjs/stylex';
 import { useTranslation } from 'react-i18next';
 import type { CurrentGoal, GoalSuggestions } from '../../../api/generated/types.gen';
 import { BrandScreen } from '../../../shared/ui/BrandScreen';
+import { panel } from '../../../shared/ui/panelStyles';
 import { useCurrentGoal, useSuggestions } from '../hooks/useGoals';
 import { GoalChooser } from './GoalChooser';
 import { GoalProgressView } from './GoalProgressView';
 import { Retrospective } from './Retrospective';
-import { g } from './styles';
 
 // Onde a pessoa está: retrospectiva (ciclo acabou), meta em andamento ou nada ainda.
 function Status({ current }: Readonly<{ current: CurrentGoal }>) {
@@ -15,8 +15,8 @@ function Status({ current }: Readonly<{ current: CurrentGoal }>) {
   if (!goal || !progress) return null;
   if (ended) return <Retrospective progress={progress} />;
   return (
-    <section aria-labelledby="goal-current" {...stylex.props(g.card)}>
-      <h2 id="goal-current" {...stylex.props(g.title)}>
+    <section aria-labelledby="goal-current" {...stylex.props(panel.card)}>
+      <h2 id="goal-current" {...stylex.props(panel.title)}>
         {t('page.current')}
       </h2>
       <GoalProgressView progress={progress} />
@@ -34,8 +34,8 @@ function Content({ current, suggestions }: Readonly<{ current: CurrentGoal; sugg
   return (
     <BrandScreen title={t('title')} subtitle={t('subtitle')}>
       <Status current={current} />
-      <section aria-labelledby="goal-next" {...stylex.props(g.section)}>
-        <h2 id="goal-next" {...stylex.props(g.heading)}>
+      <section aria-labelledby="goal-next" {...stylex.props(panel.section)}>
+        <h2 id="goal-next" {...stylex.props(panel.heading)}>
           {t(nextHeading(current))}
         </h2>
         <GoalChooser suggestions={suggestions} goal={current.goal} ended={current.ended} />
@@ -54,7 +54,7 @@ export function GoalsPage() {
   if (current.isError || suggestions.isError) {
     return (
       <BrandScreen title={t('title')}>
-        <p role="status" {...stylex.props(g.error)}>
+        <p role="status" {...stylex.props(panel.error)}>
           {t('failed')}
         </p>
       </BrandScreen>

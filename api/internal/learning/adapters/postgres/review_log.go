@@ -63,6 +63,7 @@ func (t *txn) BumpDay(ctx context.Context, r domain.LogRow) error {
 	err := t.q.BumpStudyDay(ctx, db.BumpStudyDayParams{
 		UserID: r.UserID, LocalDate: pgtype.Date{Time: r.LocalDate, Valid: true},
 		ActiveMs: d.ActiveMS, Correct: int32(d.Correct), Lapses: int32(d.Lapses), NewItems: int32(d.NewItems), //nolint:gosec // 0 ou 1
+		Points: int32(d.Points), //nolint:gosec // no maximo 30 por resposta
 	})
 	if err != nil {
 		return fmt.Errorf("somar no dia: %w", err)

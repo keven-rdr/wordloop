@@ -1,6 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { useTranslation } from 'react-i18next';
 import type { GoalProgress } from '../../../api/generated/types.gen';
+import { panel } from '../../../shared/ui/panelStyles';
 import { daysPercent, isLastDay } from '../domain/choice';
 import { g } from './styles';
 
@@ -12,7 +13,7 @@ export function GoalProgressView({ progress, ended }: Readonly<{ progress: GoalP
   if (isLastDay(progress)) remaining = t('progress.lastDay');
   return (
     <>
-      <p {...stylex.props(g.big)}>{t('progress.days', { done, count: target })}</p>
+      <p {...stylex.props(panel.big)}>{t('progress.days', { done, count: target })}</p>
       <div
         role="progressbar"
         aria-label={t('progress.bar')}
@@ -23,11 +24,11 @@ export function GoalProgressView({ progress, ended }: Readonly<{ progress: GoalP
       >
         <div {...stylex.props(g.fill(daysPercent(progress)))} />
       </div>
-      <p {...stylex.props(g.text)}>
+      <p {...stylex.props(panel.text)}>
         {t('progress.minutes', { done: progress.minutes_studied, goal: progress.minutes_goal })}
       </p>
-      {!ended && <p {...stylex.props(g.text)}>{remaining}</p>}
-      {progress.met && <p {...stylex.props(g.good)}>{t('progress.met')}</p>}
+      {!ended && <p {...stylex.props(panel.text)}>{remaining}</p>}
+      {progress.met && <p {...stylex.props(panel.good)}>{t('progress.met')}</p>}
     </>
   );
 }
